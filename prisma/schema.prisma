@@ -1,0 +1,191 @@
+// prisma\schema.prisma
+
+// ============================================================
+// PRISMA SCHEMA
+// SISTEMA DE GESTIÓN DE ALMACÉN DE CONTENEDORES
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum EstadoGuia {
+  ALMACENADO
+  RETIRADO
+  ANULADO
+}
+
+enum MetodoPago {
+  EFECTIVO
+  YAPE
+  PLIN
+  TRANSFERENCIA
+  TARJETA
+  OTRO
+}
+
+enum TipoContenedor {
+  NORMAL 
+  REEFER
+}
+
+// ============================================================
+// MODELOS
+// ============================================================
+
+model Cliente {
+  id             Int      @id @default(autoincrement())
+  dni            String?  @unique @db.VarChar(8)
+  nombreCompleto String?  @map("nombre_completo") @db.VarChar(150)
+  telefono       String?  @db.VarChar(20)
+  observaciones  String?  @db.Text
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relaciones
+  guiasInternamiento GuiaInternamiento[]
+  pagos              Pago[]
+
+  @@map("clientes")
+}
+
+model EmpresaTransporte {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(150)
+  ruc       String?  @unique @db.VarChar(11)
+  telefono  String?  @db.VarChar(20)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relaciones
+  guiasIngreso GuiaInternamiento[] @relation("EmpresaIngreso")
+  guiasSalida  GuiaInternamiento[] @relation("EmpresaSalida")
+
+  @@map("empresas_transporte")
+}
+
+model Conductor {
+  id             Int      @id @default(autoincrement())
+  nombreCompleto String   @map("nombre_completo") @db.VarChar(100)
+  numeroLicencia String   @unique @map("numero_licencia") @db.VarChar(30)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relaciones
+  guiasIngreso GuiaInternamiento[] @relation("ConductorIngreso")
+  guiasSalida  GuiaInternamiento[] @relation("ConductorSalida")
+
+  @@map("conductores")
+}
+
+model Vehiculo {
+  id        Int      @id @default(autoincrement())
+  placa     String   @unique @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relaciones
+  guiasIngreso GuiaInternamiento[] @relation("VehiculoIngreso")
+  guiasSalida  GuiaInternamiento[] @relation("VehiculoSalida")
+
+  @@map("vehiculos")
+}
+
+model Contenedor {
+  id               Int              @id @default(autoincrement())
+  numeroContenedor String           @unique @map("numero_contenedor") @db.VarChar(20)
+  marca            String           @db.VarChar(100)
+  medida           Int 
+  tipo             TipoContenedor   // Solo permite NORMAL o REEFER
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relaciones
+  guiasInternamiento GuiaInternamiento[]
+
+  @@map("contenedores")
+}
+
+model GuiaInternamiento {
+  id Int @id @default(autoincrement())
+
+  // Información general
+  numeroGuia   String  @unique @map("numero_guia") @db.VarChar(30) // Ahora es String para conservar ceros a la izquierda
+  clienteId    Int?    @map("cliente_id")
+  contenedorId Int     @map("contenedor_id")
+
+  // Información de ingreso
+  empresaTransporteIngresoId Int      @map("empresa_transporte_ingreso_id")
+  vehiculoIngresoId          Int      @map("vehiculo_ingreso_id")
+  conductorIngresoId         Int      @map("conductor_ingreso_id")
+  fechaIngreso               DateTime @map("fecha_ingreso") @db.Date
+  horaIngreso                DateTime @map("hora_ingreso") @db.Time(0)
+
+  // Información de salida
+  empresaTransporteSalidaId Int?      @map("empresa_transporte_salida_id")
+  vehiculoSalidaId          Int?      @map("vehiculo_salida_id")
+  conductorSalidaId         Int?      @map("conductor_salida_id")
+  fechaSalida               DateTime? @map("fecha_salida") @db.Date
+  horaSalida                DateTime? @map("hora_salida") @db.Time(0)
+
+  // Almacenamiento y Estado
+  diasAlmacenamiento Int?        @map("dias_almacenamiento")
+  montoTotal         Decimal?    @map("monto_total") @db.Decimal(10, 2)
+  estado             EstadoGuia  @default(ALMACENADO)
+
+  // Otros y Auditoría
+  observaciones String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Definición de Relaciones
+  cliente                  Cliente?          @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  contenedor               Contenedor        @relation(fields: [contenedorId], references: [id])
+  empresaTransporteIngreso EmpresaTransporte @relation("EmpresaIngreso", fields: [empresaTransporteIngresoId], references: [id])
+  vehiculoIngreso          Vehiculo          @relation("VehiculoIngreso", fields: [vehiculoIngresoId], references: [id])
+  conductorIngreso         Conductor         @relation("ConductorIngreso", fields: [conductorIngresoId], references: [id])
+  empresaTransporteSalida  EmpresaTransporte? @relation("EmpresaSalida", fields: [empresaTransporteSalidaId], references: [id], onDelete: SetNull)
+  vehiculoSalida           Vehiculo?         @relation("VehiculoSalida", fields: [vehiculoSalidaId], references: [id], onDelete: SetNull)
+  conductorSalida          Conductor?        @relation("ConductorSalida", fields: [conductorSalidaId], references: [id], onDelete: SetNull)
+
+  // Índices
+  @@index([clienteId], map: "idx_guias_cliente_id")
+  @@index([contenedorId], map: "idx_guias_contenedor_id")
+  @@index([empresaTransporteIngresoId], map: "idx_guias_empresa_transporte_ingreso_id")
+  @@index([vehiculoIngresoId], map: "idx_guias_vehiculo_ingreso_id")
+  @@index([conductorIngresoId], map: "idx_guias_conductor_ingreso_id")
+  @@index([empresaTransporteSalidaId], map: "idx_guias_empresa_transporte_salida_id")
+  @@index([vehiculoSalidaId], map: "idx_guias_vehiculo_salida_id")
+  @@index([conductorSalidaId], map: "idx_guias_conductor_salida_id")
+  @@map("guias_internamiento")
+}
+
+model Pago {
+  id              Int        @id @default(autoincrement())
+  clienteId       Int        @map("cliente_id")
+  monto           Decimal    @db.Decimal(10, 2)
+  metodoPago      MetodoPago @map("metodo_pago")
+  numeroOperacion String?    @map("numero_operacion") @db.VarChar(100)
+  fechaPago       DateTime   @map("fecha_pago") @db.Date
+  horaPago        DateTime   @map("hora_pago") @db.Time(0)
+  observaciones   String?    @db.Text
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relaciones
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  // Índices
+  @@index([clienteId], map: "idx_pagos_cliente_id")
+  @@map("pagos")
+}
