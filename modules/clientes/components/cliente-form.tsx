@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -9,7 +8,6 @@ import { clienteSchema } from "../cliente.schema";
 import type { ClienteFormData } from "../cliente.types";
 
 import {
-  buscarClientePorDni,
   crearCliente,
   editarCliente,
 } from "../cliente.actions";
@@ -30,18 +28,13 @@ export function ClienteForm({
   cliente,
   onSuccess,
 }: ClienteFormProps) {
-  const [buscandoDni, setBuscandoDni] = useState(false);
-  const [mensajeDni, setMensajeDni] = useState("");
-
   const esEdicion = Boolean(cliente?.id);
 
   const {
     register,
     handleSubmit,
-    setValue,
-    getValues,
-    setError,
     reset,
+    setError,
     formState: {
       errors,
       isSubmitting,
@@ -49,77 +42,19 @@ export function ClienteForm({
   } = useForm<ClienteFormData>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      dni: cliente?.dni ?? "",
-      nombreCompleto: cliente?.nombreCompleto ?? "",
-      telefono: cliente?.telefono ?? "",
-      observaciones: cliente?.observaciones ?? "",
-      activo: cliente?.activo ?? true,
+      tipoDocumento: cliente?.tipoDocumento ?? "DNI",
+      numeroDocumento:
+        cliente?.numeroDocumento ?? "",
+      nombreCompleto:
+        cliente?.nombreCompleto ?? "",
+      telefono:
+        cliente?.telefono ?? "",
+      observaciones:
+        cliente?.observaciones ?? "",
+      activo:
+        cliente?.activo ?? true,
     },
   });
-
-  async function handleBuscarDni() {
-    const dni = getValues("dni");
-
-    if (!/^\d{8}$/.test(dni)) {
-      setError("dni", {
-        message: "Ingresa un DNI válido de 8 dígitos",
-      });
-
-      return;
-    }
-
-    setBuscandoDni(true);
-    setMensajeDni("");
-
-    const result = await buscarClientePorDni(dni);
-
-    setBuscandoDni(false);
-
-    if (!result.success) {
-      setMensajeDni(result.error);
-      return;
-    }
-
-    if (!result.data) {
-      setMensajeDni(
-        "No existe un cliente con este DNI. Puedes registrarlo.",
-      );
-
-      return;
-    }
-
-    if (esEdicion && result.data.id !== cliente?.id) {
-      setError("dni", {
-        message: "Este DNI pertenece a otro cliente.",
-      });
-
-      return;
-    }
-
-    setValue(
-      "nombreCompleto",
-      result.data.nombreCompleto ?? "",
-    );
-
-    setValue(
-      "telefono",
-      result.data.telefono ?? "",
-    );
-
-    setValue(
-      "observaciones",
-      result.data.observaciones ?? "",
-    );
-
-    setValue(
-      "activo",
-      result.data.activo,
-    );
-
-    setMensajeDni(
-      "Cliente encontrado. Sus datos fueron cargados.",
-    );
-  }
 
   async function onSubmit(data: ClienteFormData) {
     const result = esEdicion
@@ -144,58 +79,67 @@ export function ClienteForm({
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-6"
     >
+      {/* =====================================================
+          DOCUMENTO
+      ====================================================== */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* DNI */}
+        {/* Tipo de documento */}
         <div className="space-y-2">
-          <Label htmlFor="dni">
-            DNI
+          <Label htmlFor="tipoDocumento">
+            Tipo de documento
           </Label>
 
-          <div className="flex gap-2">
-            <Input
-              id="dni"
-              maxLength={8}
-              placeholder="12345678"
-              disabled={buscandoDni}
-              {...register("dni")}
-            />
+          <select
+            id="tipoDocumento"
+            {...register("tipoDocumento")}
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
+            <option value="DNI">
+              DNI
+            </option>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleBuscarDni}
-              disabled={buscandoDni}
-            >
-              {buscandoDni && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <option value="RUC">
+              RUC
+            </option>
+          </select>
 
-              Buscar
-            </Button>
-          </div>
-
-          {errors.dni && (
+          {errors.tipoDocumento && (
             <p className="text-sm text-destructive">
-              {errors.dni.message}
-            </p>
-          )}
-
-          {mensajeDni && (
-            <p className="text-sm text-muted-foreground">
-              {mensajeDni}
+              {errors.tipoDocumento.message}
             </p>
           )}
         </div>
 
-        {/* Nombre */}
+        {/* Número de documento */}
+        <div className="space-y-2">
+          <Label htmlFor="numeroDocumento">
+            Número de documento
+          </Label>
+
+          <Input
+            id="numeroDocumento"
+            placeholder="12345678"
+            inputMode="numeric"
+            maxLength={11}
+            {...register("numeroDocumento")}
+          />
+
+          {errors.numeroDocumento && (
+            <p className="text-sm text-destructive">
+              {errors.numeroDocumento.message}
+            </p>
+          )}
+        </div>
+
+        {/* Nombre completo */}
         <div className="space-y-2">
           <Label htmlFor="nombreCompleto">
-            Nombre completo
+            Nombre / Razón social
           </Label>
 
           <Input
             id="nombreCompleto"
-            placeholder="Nombre completo del cliente"
+            placeholder="Nombre completo o razón social"
             {...register("nombreCompleto")}
           />
 
@@ -215,6 +159,7 @@ export function ClienteForm({
           <Input
             id="telefono"
             placeholder="987654321"
+            inputMode="tel"
             {...register("telefono")}
           />
 
@@ -226,7 +171,9 @@ export function ClienteForm({
         </div>
       </div>
 
-      {/* Observaciones */}
+      {/* =====================================================
+          OBSERVACIONES
+      ====================================================== */}
       <div className="space-y-2">
         <Label htmlFor="observaciones">
           Observaciones
@@ -246,15 +193,45 @@ export function ClienteForm({
         )}
       </div>
 
-      {/* Error general */}
-      {errors.root && (
-        <p className="text-sm text-destructive">
-          {errors.root.message}
-        </p>
+      {/* =====================================================
+          ACTIVO
+      ====================================================== */}
+
+      {esEdicion && (
+        <div className="flex items-center gap-2">
+          <input
+            id="activo"
+            type="checkbox"
+            {...register("activo")}
+            className="size-4 rounded border-input"
+          />
+
+          <Label
+            htmlFor="activo"
+            className="cursor-pointer"
+          >
+            Cliente activo
+          </Label>
+        </div>
       )}
 
-      {/* Botón */}
-      <div className="flex justify-end">
+      {/* =====================================================
+          ERROR GENERAL
+      ====================================================== */}
+
+      {errors.root && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3">
+          <p className="text-sm text-destructive">
+            {errors.root.message}
+          </p>
+        </div>
+      )}
+
+      {/* =====================================================
+          BOTONES
+      ====================================================== */}
+
+      <div className="flex justify-end gap-2">
         <Button
           type="submit"
           disabled={isSubmitting}

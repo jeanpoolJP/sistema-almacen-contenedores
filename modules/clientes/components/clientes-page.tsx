@@ -1,7 +1,13 @@
+// modules/clientes/components/clientes-page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 
 import type { Cliente } from "../cliente.types";
 import { listarClientes } from "../cliente.actions";
@@ -20,23 +26,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] =
+    useState<Cliente[]>([]);
 
-  const [clienteSeleccionado, setClienteSeleccionado] =
-    useState<Cliente | null>(null);
+  const [
+    clienteSeleccionado,
+    setClienteSeleccionado,
+  ] = useState<Cliente | null>(null);
 
-  const [openForm, setOpenForm] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [openForm, setOpenForm] =
+    useState(false);
+
+  const [busqueda, setBusqueda] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(true);
 
   /**
-   * Obtiene la lista de clientes desde el servidor.
+   * Obtiene los clientes desde el servidor.
    */
   async function cargarClientes() {
     setLoading(true);
 
     try {
-      const result = await listarClientes();
+      const result =
+        await listarClientes();
 
       if (result.success) {
         setClientes(result.data);
@@ -47,35 +62,47 @@ export function ClientesPage() {
   }
 
   /**
-   * Cargar clientes al montar el componente.
+   * Carga inicial.
    */
   useEffect(() => {
     cargarClientes();
   }, []);
 
   /**
-   * Filtra clientes por DNI, nombre o teléfono.
+   * Filtra clientes por:
+   *
+   * - Tipo de documento
+   * - Número de documento
+   * - Nombre / razón social
+   * - Teléfono
    */
-  const clientesFiltrados = clientes.filter((cliente) => {
-    const termino = busqueda.toLowerCase().trim();
+  const clientesFiltrados =
+    clientes.filter((cliente) => {
+      const termino =
+        busqueda.trim().toLowerCase();
 
-    if (!termino) {
-      return true;
-    }
+      if (!termino) {
+        return true;
+      }
 
-    return (
-      cliente.dni?.toLowerCase().includes(termino) ||
-      cliente.nombreCompleto
-        ?.toLowerCase()
-        .includes(termino) ||
-      cliente.telefono
-        ?.toLowerCase()
-        .includes(termino)
-    );
-  });
+      return (
+        cliente.numeroDocumento
+          .toLowerCase()
+          .includes(termino) ||
+        cliente.tipoDocumento
+          .toLowerCase()
+          .includes(termino) ||
+        cliente.nombreCompleto
+          ?.toLowerCase()
+          .includes(termino) ||
+        cliente.telefono
+          ?.toLowerCase()
+          .includes(termino)
+      );
+    });
 
   /**
-   * Abre el formulario para registrar un nuevo cliente.
+   * Nuevo cliente.
    */
   function handleNuevoCliente() {
     setClienteSeleccionado(null);
@@ -83,16 +110,17 @@ export function ClientesPage() {
   }
 
   /**
-   * Abre el formulario para editar un cliente.
+   * Editar cliente.
    */
-  function handleEditarCliente(cliente: Cliente) {
+  function handleEditarCliente(
+    cliente: Cliente,
+  ) {
     setClienteSeleccionado(cliente);
     setOpenForm(true);
   }
 
   /**
-   * Se ejecuta después de crear o actualizar
-   * correctamente un cliente.
+   * Se ejecuta después de crear o actualizar.
    */
   async function handleSuccess() {
     setOpenForm(false);
@@ -102,9 +130,11 @@ export function ClientesPage() {
   }
 
   /**
-   * Controla el cierre del diálogo.
+   * Controla el diálogo.
    */
-  function handleOpenChange(open: boolean) {
+  function handleOpenChange(
+    open: boolean,
+  ) {
     setOpenForm(open);
 
     if (!open) {
@@ -117,6 +147,7 @@ export function ClientesPage() {
       {/* =====================================================
           HEADER
       ====================================================== */}
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -124,13 +155,15 @@ export function ClientesPage() {
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Administra los clientes registrados en el sistema.
+            Administra las personas y empresas
+            registradas en el sistema.
           </p>
         </div>
 
-        {/* Botón nuevo cliente */}
-        <Button onClick={handleNuevoCliente}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          onClick={handleNuevoCliente}
+        >
+          <Plus className="mr-2 size-4" />
           Nuevo cliente
         </Button>
       </div>
@@ -138,6 +171,7 @@ export function ClientesPage() {
       {/* =====================================================
           DIALOG CREAR / EDITAR
       ====================================================== */}
+
       <Dialog
         open={openForm}
         onOpenChange={handleOpenChange}
@@ -155,15 +189,29 @@ export function ClientesPage() {
             cliente={
               clienteSeleccionado
                 ? {
-                    id: clienteSeleccionado.id,
-                    dni: clienteSeleccionado.dni ?? "",
+                    id:
+                      clienteSeleccionado.id,
+
+                    tipoDocumento:
+                      clienteSeleccionado.tipoDocumento,
+
+                    numeroDocumento:
+                      clienteSeleccionado.numeroDocumento,
+
                     nombreCompleto:
-                      clienteSeleccionado.nombreCompleto ?? "",
+                      clienteSeleccionado.nombreCompleto ??
+                      "",
+
                     telefono:
-                      clienteSeleccionado.telefono ?? "",
+                      clienteSeleccionado.telefono ??
+                      "",
+
                     observaciones:
-                      clienteSeleccionado.observaciones ?? "",
-                    activo: clienteSeleccionado.activo,
+                      clienteSeleccionado.observaciones ??
+                      "",
+
+                    activo:
+                      clienteSeleccionado.activo,
                   }
                 : undefined
             }
@@ -175,17 +223,20 @@ export function ClientesPage() {
       {/* =====================================================
           BARRA DE HERRAMIENTAS
       ====================================================== */}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Buscador */}
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
           <Input
             value={busqueda}
             onChange={(event) =>
-              setBusqueda(event.target.value)
+              setBusqueda(
+                event.target.value,
+              )
             }
-            placeholder="Buscar por DNI, nombre o teléfono..."
+            placeholder="Buscar por DNI, RUC, nombre o teléfono..."
             className="pl-9"
           />
         </div>
@@ -197,8 +248,10 @@ export function ClientesPage() {
           disabled={loading}
         >
           <RefreshCw
-            className={`mr-2 h-4 w-4 ${
-              loading ? "animate-spin" : ""
+            className={`mr-2 size-4 ${
+              loading
+                ? "animate-spin"
+                : ""
             }`}
           />
 
@@ -209,9 +262,10 @@ export function ClientesPage() {
       {/* =====================================================
           TABLA
       ====================================================== */}
+
       {loading ? (
         <div className="rounded-lg border p-8 text-center">
-          <RefreshCw className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
+          <RefreshCw className="mx-auto size-5 animate-spin text-muted-foreground" />
 
           <p className="mt-2 text-sm text-muted-foreground">
             Cargando clientes...
@@ -228,6 +282,7 @@ export function ClientesPage() {
       {/* =====================================================
           INFORMACIÓN
       ====================================================== */}
+
       {!loading && (
         <div className="text-sm text-muted-foreground">
           Mostrando{" "}

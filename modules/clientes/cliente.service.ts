@@ -1,12 +1,14 @@
+// modules/clientes/cliente.service.ts
+
 import {
-  clienteDniSchema,
+  clienteBuscarDocumentoSchema,
   clienteSchema,
 } from "./cliente.schema";
 
 import {
   createCliente,
   deactivateCliente,
-  findClienteByDni,
+  findClienteByDocumento,
   findClienteById,
   findClientes,
   updateCliente,
@@ -14,37 +16,67 @@ import {
 
 import type { ClienteFormData } from "./cliente.types";
 
-export async function obtenerClientePorDni(dni: string) {
-  const { dni: dniValido } = clienteDniSchema.parse({
-    dni,
-  });
+/**
+ * Busca un cliente por su número de documento.
+ *
+ * Acepta:
+ * - DNI: 8 dígitos
+ * - RUC: 11 dígitos
+ */
+export async function obtenerClientePorDocumento(
+  numeroDocumento: string,
+) {
+  const { numeroDocumento: documentoValido } =
+    clienteBuscarDocumentoSchema.parse({
+      numeroDocumento,
+    });
 
-  return findClienteByDni(dniValido);
+  return findClienteByDocumento(documentoValido);
 }
 
+/**
+ * Busca un cliente por su ID.
+ */
 export async function obtenerClientePorId(id: number) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("El ID del cliente no es válido");
+  }
+
   return findClienteById(id);
 }
 
+/**
+ * Obtiene todos los clientes.
+ */
 export async function obtenerClientes() {
   return findClientes();
 }
 
-export async function registrarCliente(data: ClienteFormData) {
+/**
+ * Registra un nuevo cliente.
+ *
+ * Reglas:
+ * - El documento debe ser un DNI o RUC válido.
+ * - No puede existir otro cliente con el mismo documento.
+ */
+export async function registrarCliente(
+  data: ClienteFormData,
+) {
   const datosValidados = clienteSchema.parse(data);
 
-  const clienteExistente = await findClienteByDni(
-    datosValidados.dni,
+  const clienteExistente = await findClienteByDocumento(
+    datosValidados.numeroDocumento,
   );
 
   if (clienteExistente) {
     throw new Error(
-      "Ya existe un cliente registrado con este DNI",
+      `Ya existe un cliente registrado con este ${datosValidados.tipoDocumento}.`,
     );
   }
 
   return createCliente({
-    dni: datosValidados.dni,
+    tipoDocumento: datosValidados.tipoDocumento,
+    numeroDocumento: datosValidados.numeroDocumento,
     nombreCompleto: datosValidados.nombreCompleto,
     telefono: datosValidados.telefono || null,
     observaciones: datosValidados.observaciones || null,
@@ -52,14 +84,26 @@ export async function registrarCliente(data: ClienteFormData) {
   });
 }
 
+/**
+ * Actualiza un cliente existente.
+ *
+ * Verifica que el documento no pertenezca
+ * a otro cliente.
+ */
 export async function actualizarCliente(
   id: number,
   data: ClienteFormData,
 ) {
   const datosValidados = clienteSchema.parse(data);
 
-  const clienteExistente = await findClienteByDni(
-    datosValidados.dni,
+  const cliente = await findClienteById(id);
+
+  if (!cliente) {
+    throw new Error("El cliente no existe");
+  }
+
+  const clienteExistente = await findClienteByDocumento(
+    datosValidados.numeroDocumento,
   );
 
   if (
@@ -67,12 +111,13 @@ export async function actualizarCliente(
     clienteExistente.id !== id
   ) {
     throw new Error(
-      "Ya existe otro cliente registrado con este DNI",
+      `Ya existe otro cliente registrado con este ${datosValidados.tipoDocumento}.`,
     );
   }
 
   return updateCliente(id, {
-    dni: datosValidados.dni,
+    tipoDocumento: datosValidados.tipoDocumento,
+    numeroDocumento: datosValidados.numeroDocumento,
     nombreCompleto: datosValidados.nombreCompleto,
     telefono: datosValidados.telefono || null,
     observaciones: datosValidados.observaciones || null,
@@ -80,6 +125,11 @@ export async function actualizarCliente(
   });
 }
 
+/**
+ * Desactiva un cliente.
+ *
+ * No elimina físicamente el registro.
+ */
 export async function desactivarCliente(id: number) {
   const cliente = await findClienteById(id);
 

@@ -1,3 +1,5 @@
+// modules\clientes\cliente.actions.ts
+
 "use server";
 
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -6,7 +8,7 @@ import { ZodError } from "zod";
 import {
   actualizarCliente as actualizarClienteService,
   desactivarCliente as desactivarClienteService,
-  obtenerClientePorDni,
+  obtenerClientePorDocumento,
   obtenerClientePorId,
   obtenerClientes,
   registrarCliente,
@@ -14,6 +16,9 @@ import {
 
 import type { ClienteFormData } from "./cliente.types";
 
+/**
+ * Resultado estándar de las Server Actions.
+ */
 type ActionResult<T> =
   | {
       success: true;
@@ -24,13 +29,28 @@ type ActionResult<T> =
       error: string;
     };
 
-export async function buscarClientePorDni(
-  dni: string,
+/**
+ * ============================================================
+ * BUSCAR CLIENTE POR DOCUMENTO
+ * ============================================================
+ *
+ * Permite buscar utilizando:
+ *
+ * - DNI
+ * - RUC
+ *
+ * La validación del documento se realiza en el service.
+ */
+export async function buscarClientePorDocumento(
+  numeroDocumento: string,
 ): Promise<
-  ActionResult<Awaited<ReturnType<typeof obtenerClientePorDni>>>
+  ActionResult<
+    Awaited<ReturnType<typeof obtenerClientePorDocumento>>
+  >
 > {
   try {
-    const cliente = await obtenerClientePorDni(dni);
+    const cliente =
+      await obtenerClientePorDocumento(numeroDocumento);
 
     return {
       success: true,
@@ -42,12 +62,12 @@ export async function buscarClientePorDni(
         success: false,
         error:
           error.issues[0]?.message ??
-          "El DNI no es válido",
+          "El número de documento no es válido",
       };
     }
 
     console.error(
-      "Error al buscar cliente por DNI:",
+      "Error al buscar cliente por documento:",
       error,
     );
 
@@ -58,10 +78,17 @@ export async function buscarClientePorDni(
   }
 }
 
+/**
+ * ============================================================
+ * BUSCAR CLIENTE POR ID
+ * ============================================================
+ */
 export async function buscarClientePorId(
   id: number,
 ): Promise<
-  ActionResult<Awaited<ReturnType<typeof obtenerClientePorId>>>
+  ActionResult<
+    Awaited<ReturnType<typeof obtenerClientePorId>>
+  >
 > {
   try {
     if (!Number.isInteger(id) || id <= 0) {
@@ -86,7 +113,7 @@ export async function buscarClientePorId(
     };
   } catch (error) {
     console.error(
-      "Error al buscar cliente:",
+      "Error al buscar cliente por ID:",
       error,
     );
 
@@ -97,8 +124,15 @@ export async function buscarClientePorId(
   }
 }
 
+/**
+ * ============================================================
+ * LISTAR CLIENTES
+ * ============================================================
+ */
 export async function listarClientes(): Promise<
-  ActionResult<Awaited<ReturnType<typeof obtenerClientes>>>
+  ActionResult<
+    Awaited<ReturnType<typeof obtenerClientes>>
+  >
 > {
   try {
     const clientes = await obtenerClientes();
@@ -120,10 +154,17 @@ export async function listarClientes(): Promise<
   }
 }
 
+/**
+ * ============================================================
+ * CREAR CLIENTE
+ * ============================================================
+ */
 export async function crearCliente(
   data: ClienteFormData,
 ): Promise<
-  ActionResult<Awaited<ReturnType<typeof registrarCliente>>>
+  ActionResult<
+    Awaited<ReturnType<typeof registrarCliente>>
+  >
 > {
   try {
     const cliente = await registrarCliente(data);
@@ -133,6 +174,9 @@ export async function crearCliente(
       data: cliente,
     };
   } catch (error) {
+    /**
+     * Error de validación de Zod.
+     */
     if (error instanceof ZodError) {
       return {
         success: false,
@@ -142,6 +186,11 @@ export async function crearCliente(
       };
     }
 
+    /**
+     * Error de restricción UNIQUE de Prisma.
+     *
+     * numeroDocumento es único en la base de datos.
+     */
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
@@ -149,10 +198,13 @@ export async function crearCliente(
       return {
         success: false,
         error:
-          "Ya existe un cliente registrado con este DNI",
+          "Ya existe un cliente registrado con este número de documento",
       };
     }
 
+    /**
+     * Errores de negocio lanzados desde el service.
+     */
     if (error instanceof Error) {
       return {
         success: false,
@@ -172,11 +224,18 @@ export async function crearCliente(
   }
 }
 
+/**
+ * ============================================================
+ * EDITAR CLIENTE
+ * ============================================================
+ */
 export async function editarCliente(
   id: number,
   data: ClienteFormData,
 ): Promise<
-  ActionResult<Awaited<ReturnType<typeof actualizarClienteService>>>
+  ActionResult<
+    Awaited<ReturnType<typeof actualizarClienteService>>
+  >
 > {
   try {
     if (!Number.isInteger(id) || id <= 0) {
@@ -194,6 +253,9 @@ export async function editarCliente(
       data: cliente,
     };
   } catch (error) {
+    /**
+     * Error de validación de Zod.
+     */
     if (error instanceof ZodError) {
       return {
         success: false,
@@ -203,17 +265,26 @@ export async function editarCliente(
       };
     }
 
+    /**
+     * Errores conocidos de Prisma.
+     */
     if (
       error instanceof Prisma.PrismaClientKnownRequestError
     ) {
+      /**
+       * Documento duplicado.
+       */
       if (error.code === "P2002") {
         return {
           success: false,
           error:
-            "Ya existe otro cliente registrado con este DNI",
+            "Ya existe otro cliente registrado con este número de documento",
         };
       }
 
+      /**
+       * Registro no encontrado.
+       */
       if (error.code === "P2025") {
         return {
           success: false,
@@ -222,6 +293,9 @@ export async function editarCliente(
       }
     }
 
+    /**
+     * Errores de negocio.
+     */
     if (error instanceof Error) {
       return {
         success: false,
@@ -241,6 +315,11 @@ export async function editarCliente(
   }
 }
 
+/**
+ * ============================================================
+ * DESACTIVAR CLIENTE
+ * ============================================================
+ */
 export async function desactivarCliente(
   id: number,
 ): Promise<
@@ -264,6 +343,9 @@ export async function desactivarCliente(
       data: cliente,
     };
   } catch (error) {
+    /**
+     * Cliente no encontrado.
+     */
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
@@ -274,6 +356,9 @@ export async function desactivarCliente(
       };
     }
 
+    /**
+     * Errores de negocio.
+     */
     if (error instanceof Error) {
       return {
         success: false,

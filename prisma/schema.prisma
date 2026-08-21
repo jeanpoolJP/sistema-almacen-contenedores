@@ -38,19 +38,30 @@ enum TipoContenedor {
   REEFER
 }
 
+
+enum TipoDocumento {
+  DNI
+  RUC
+}
+
 // ============================================================
 // MODELOS
 // ============================================================
 
 model Cliente {
-  id             Int      @id @default(autoincrement())
-  dni            String?  @unique @db.VarChar(8)
-  nombreCompleto String?  @map("nombre_completo") @db.VarChar(150)
-  telefono       String?  @db.VarChar(20)
-  observaciones  String?  @db.Text
-  activo         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  id              Int           @id @default(autoincrement())
+
+  tipoDocumento   TipoDocumento  @map("tipo_documento")
+  numeroDocumento String        @unique @map("numero_documento") @db.VarChar(11)
+
+  nombreCompleto  String?       @map("nombre_completo") @db.VarChar(150)
+  telefono        String?       @db.VarChar(20)
+  observaciones   String?       @db.Text
+
+  activo          Boolean       @default(true)
+
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
 
   // Relaciones
   guiasInternamiento GuiaInternamiento[]
