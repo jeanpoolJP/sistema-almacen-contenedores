@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
@@ -9,6 +8,7 @@ import {
   Users,
   FileText,
   Container,
+  Truck,
   CreditCard,
   BarChart3,
   Settings,
@@ -53,6 +53,11 @@ const menuItems = [
     icon: Container,
   },
   {
+    title: "Vehículos",
+    href: "/admin/vehiculos",
+    icon: Truck,
+  },
+  {
     title: "Pagos",
     href: "/admin/pagos",
     icon: CreditCard,
@@ -78,14 +83,9 @@ const systemItems = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
-  const { theme, setTheme, resolvedTheme } = useTheme();
-
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isDark = theme === "dark";
 
   function isActive(href: string) {
     if (href === "/admin") {
@@ -100,23 +100,8 @@ export function AdminSidebar() {
   }
 
   function toggleTheme() {
-    const currentTheme =
-      theme === "system"
-        ? resolvedTheme
-        : theme;
-
-    setTheme(
-      currentTheme === "dark"
-        ? "light"
-        : "dark"
-    );
+    setTheme(isDark ? "light" : "dark");
   }
-
-  const isDark =
-    mounted &&
-    (theme === "system"
-      ? resolvedTheme
-      : theme) === "dark";
 
   return (
     <Sidebar collapsible="icon">
@@ -173,15 +158,11 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() =>
-                        navigateTo(item.href)
-                      }
+                      onClick={() => navigateTo(item.href)}
                     >
                       <Icon />
 
-                      <span>
-                        {item.title}
-                      </span>
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -190,7 +171,7 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* REPORTES */}
+        {/* INFORMACIÓN */}
 
         <SidebarGroup>
           <SidebarGroupLabel>
@@ -208,15 +189,11 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() =>
-                        navigateTo(item.href)
-                      }
+                      onClick={() => navigateTo(item.href)}
                     >
                       <Icon />
 
-                      <span>
-                        {item.title}
-                      </span>
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -243,15 +220,11 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() =>
-                        navigateTo(item.href)
-                      }
+                      onClick={() => navigateTo(item.href)}
                     >
                       <Icon />
 
-                      <span>
-                        {item.title}
-                      </span>
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -267,32 +240,27 @@ export function AdminSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
-
           {/* MODO OSCURO / CLARO */}
 
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={
-                mounted
-                  ? isDark
-                    ? "Cambiar a modo claro"
-                    : "Cambiar a modo oscuro"
-                  : "Cambiar tema"
+                isDark
+                  ? "Cambiar a modo claro"
+                  : "Cambiar a modo oscuro"
               }
               onClick={toggleTheme}
             >
-              {mounted && isDark ? (
-                <Sun />
+              {isDark ? (
+                <Sun className="size-4" />
               ) : (
-                <Moon />
+                <Moon className="size-4" />
               )}
 
               <span>
-                {mounted
-                  ? isDark
-                    ? "Modo claro"
-                    : "Modo oscuro"
-                  : "Cambiar tema"}
+                {isDark
+                  ? "Modo claro"
+                  : "Modo oscuro"}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -307,14 +275,13 @@ export function AdminSidebar() {
                 console.log("Cerrar sesión");
               }}
             >
-              <LogOut />
+              <LogOut className="size-4" />
 
               <span>
                 Cerrar sesión
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
