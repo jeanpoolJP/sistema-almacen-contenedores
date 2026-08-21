@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import {
+  Download,
   Pencil,
   UserRound,
   UserX,
 } from "lucide-react";
 
 import type { Conductor } from "../conductores.types";
+
+import { exportarExcel } from "@/lib/exportar-excel";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,28 @@ export function ConductorTable({
     setConductorAEliminar,
   ] = useState<Conductor | null>(null);
 
+  /**
+   * Exporta los conductores actualmente mostrados
+   * en la tabla a un archivo Excel.
+   */
+  function handleExportarExcel() {
+    if (conductores.length === 0) {
+      return;
+    }
+
+    const datos = conductores.map((conductor) => ({
+      "Nombre completo": conductor.nombreCompleto,
+      "N.º de licencia": conductor.numeroLicencia,
+      Estado: "Activo",
+    }));
+
+    exportarExcel({
+      datos,
+      nombreArchivo: "conductores",
+      nombreHoja: "Conductores",
+    });
+  }
+
   if (conductores.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center">
@@ -57,15 +82,53 @@ export function ConductorTable({
 
   return (
     <>
+      {/* =====================================================
+          ENCABEZADO DE LA TABLA
+      ====================================================== */}
+
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-medium">
+            Conductores registrados
+          </h2>
+
+          <p className="text-sm text-muted-foreground">
+            {conductores.length}{" "}
+            {conductores.length === 1
+              ? "conductor"
+              : "conductores"}
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          onClick={handleExportarExcel}
+        >
+          <Download className="mr-2 size-4" />
+
+          Exportar Excel
+        </Button>
+      </div>
+
+      {/* =====================================================
+          TABLA
+      ====================================================== */}
+
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Conductor</TableHead>
+              <TableHead>
+                Conductor
+              </TableHead>
 
-              <TableHead>N.º de licencia</TableHead>
+              <TableHead>
+                N.º de licencia
+              </TableHead>
 
-              <TableHead>Estado</TableHead>
+              <TableHead>
+                Estado
+              </TableHead>
 
               <TableHead className="text-right">
                 Acciones
@@ -76,7 +139,10 @@ export function ConductorTable({
           <TableBody>
             {conductores.map((conductor) => (
               <TableRow key={conductor.id}>
-                {/* Conductor */}
+                {/* =================================================
+                    CONDUCTOR
+                ================================================== */}
+
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="flex size-9 items-center justify-center rounded-full bg-muted">
@@ -95,21 +161,30 @@ export function ConductorTable({
                   </div>
                 </TableCell>
 
-                {/* Licencia */}
+                {/* =================================================
+                    LICENCIA
+                ================================================== */}
+
                 <TableCell>
                   <span className="font-medium">
                     {conductor.numeroLicencia}
                   </span>
                 </TableCell>
 
-                {/* Estado */}
+                {/* =================================================
+                    ESTADO
+                ================================================== */}
+
                 <TableCell>
                   <Badge>
                     Activo
                   </Badge>
                 </TableCell>
 
-                {/* Acciones */}
+                {/* =================================================
+                    ACCIONES
+                ================================================== */}
+
                 <TableCell>
                   <div className="flex justify-end gap-1">
                     <Button
@@ -126,7 +201,7 @@ export function ConductorTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Desactivar conductor"
+                      title="Eliminar conductor"
                       onClick={() =>
                         setConductorAEliminar(
                           conductor,
@@ -142,6 +217,10 @@ export function ConductorTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* =====================================================
+          DIÁLOGO ELIMINAR
+      ====================================================== */}
 
       <ConductorDeleteDialog
         conductor={conductorAEliminar}
