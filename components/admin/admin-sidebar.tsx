@@ -10,6 +10,7 @@ import {
   Container,
   Truck,
   CreditCard,
+  UsersRound,
   BarChart3,
   Settings,
   LogOut,
@@ -56,6 +57,11 @@ const menuItems = [
     title: "Vehículos",
     href: "/admin/vehiculos",
     icon: Truck,
+  },
+  {
+    title: "Conductores",
+    href: "/admin/conductores",
+    icon: UsersRound,
   },
   {
     title: "Pagos",
