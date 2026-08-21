@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 import {
   LayoutDashboard,
@@ -12,6 +14,8 @@ import {
   Settings,
   LogOut,
   Warehouse,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import {
@@ -75,6 +79,14 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   function isActive(href: string) {
     if (href === "/admin") {
       return pathname === "/admin";
@@ -87,11 +99,31 @@ export function AdminSidebar() {
     router.push(href);
   }
 
+  function toggleTheme() {
+    const currentTheme =
+      theme === "system"
+        ? resolvedTheme
+        : theme;
+
+    setTheme(
+      currentTheme === "dark"
+        ? "light"
+        : "dark"
+    );
+  }
+
+  const isDark =
+    mounted &&
+    (theme === "system"
+      ? resolvedTheme
+      : theme) === "dark";
+
   return (
     <Sidebar collapsible="icon">
       {/* =====================================================
           HEADER
       ====================================================== */}
+
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -121,8 +153,10 @@ export function AdminSidebar() {
       {/* =====================================================
           CONTENT
       ====================================================== */}
+
       <SidebarContent>
         {/* PRINCIPAL */}
+
         <SidebarGroup>
           <SidebarGroupLabel>
             Principal
@@ -139,11 +173,15 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
+                      onClick={() =>
+                        navigateTo(item.href)
+                      }
                     >
                       <Icon />
 
-                      <span>{item.title}</span>
+                      <span>
+                        {item.title}
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -153,6 +191,7 @@ export function AdminSidebar() {
         </SidebarGroup>
 
         {/* REPORTES */}
+
         <SidebarGroup>
           <SidebarGroupLabel>
             Información
@@ -169,11 +208,15 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
+                      onClick={() =>
+                        navigateTo(item.href)
+                      }
                     >
                       <Icon />
 
-                      <span>{item.title}</span>
+                      <span>
+                        {item.title}
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -183,6 +226,7 @@ export function AdminSidebar() {
         </SidebarGroup>
 
         {/* SISTEMA */}
+
         <SidebarGroup>
           <SidebarGroupLabel>
             Sistema
@@ -199,11 +243,15 @@ export function AdminSidebar() {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
+                      onClick={() =>
+                        navigateTo(item.href)
+                      }
                     >
                       <Icon />
 
-                      <span>{item.title}</span>
+                      <span>
+                        {item.title}
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -216,8 +264,41 @@ export function AdminSidebar() {
       {/* =====================================================
           FOOTER
       ====================================================== */}
+
       <SidebarFooter>
         <SidebarMenu>
+
+          {/* MODO OSCURO / CLARO */}
+
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={
+                mounted
+                  ? isDark
+                    ? "Cambiar a modo claro"
+                    : "Cambiar a modo oscuro"
+                  : "Cambiar tema"
+              }
+              onClick={toggleTheme}
+            >
+              {mounted && isDark ? (
+                <Sun />
+              ) : (
+                <Moon />
+              )}
+
+              <span>
+                {mounted
+                  ? isDark
+                    ? "Modo claro"
+                    : "Modo oscuro"
+                  : "Cambiar tema"}
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          {/* CERRAR SESIÓN */}
+
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Cerrar sesión"
@@ -228,9 +309,12 @@ export function AdminSidebar() {
             >
               <LogOut />
 
-              <span>Cerrar sesión</span>
+              <span>
+                Cerrar sesión
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
