@@ -38,7 +38,6 @@ enum TipoContenedor {
   REEFER
 }
 
-
 enum TipoDocumento {
   DNI
   RUC
@@ -49,19 +48,19 @@ enum TipoDocumento {
 // ============================================================
 
 model Cliente {
-  id              Int           @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  tipoDocumento   TipoDocumento  @map("tipo_documento")
+  tipoDocumento   TipoDocumento @map("tipo_documento")
   numeroDocumento String        @unique @map("numero_documento") @db.VarChar(11)
 
-  nombreCompleto  String?       @map("nombre_completo") @db.VarChar(150)
-  telefono        String?       @db.VarChar(20)
-  observaciones   String?       @db.Text
+  nombreCompleto String? @map("nombre_completo") @db.VarChar(150)
+  telefono       String? @db.VarChar(20)
+  observaciones  String? @db.Text
 
-  activo          Boolean       @default(true)
+  activo Boolean @default(true)
 
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamp(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
   // Relaciones
   guiasInternamiento GuiaInternamiento[]
@@ -128,49 +127,127 @@ model Contenedor {
   @@map("contenedores")
 }
 
+enum TipoPrecioGuia {
+  ESTANDAR
+  PERSONALIZADO
+}
+
+enum TratamientoIGV {
+  SIN_IGV
+  CON_IGV
+}
+
+model ConfiguracionPrecio {
+  id                 Int      @id @default(autoincrement())
+  precioPrimerDia    Decimal  @map("precio_primer_dia") @db.Decimal(10, 2)
+  precioDiaAdicional Decimal  @map("precio_dia_adicional") @db.Decimal(10, 2)
+  porcentajeIGV      Decimal  @default(18.00) @map("porcentaje_igv") @db.Decimal(5, 2)
+  activo             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("configuracion_precios")
+}
+
 model GuiaInternamiento {
   id Int @id @default(autoincrement())
 
-  // Información general
-  numeroGuia   String @unique @map("numero_guia") @db.VarChar(30) // Ahora es String para conservar ceros a la izquierda
+  // ============================================================
+  // INFORMACIÓN GENERAL
+  // ============================================================
+
+  numeroGuia   String @unique @map("numero_guia") @db.VarChar(30)
   clienteId    Int?   @map("cliente_id")
   contenedorId Int    @map("contenedor_id")
 
-  // Información de ingreso
-  empresaTransporteIngresoId Int      @map("empresa_transporte_ingreso_id")
-  vehiculoIngresoId          Int      @map("vehiculo_ingreso_id")
-  conductorIngresoId         Int      @map("conductor_ingreso_id")
-  fechaIngreso               DateTime @map("fecha_ingreso") @db.Date
-  horaIngreso                DateTime @map("hora_ingreso") @db.Time(0)
+  // ============================================================
+  // INFORMACIÓN DE INGRESO
+  // ============================================================
 
-  // Información de salida
-  empresaTransporteSalidaId Int?      @map("empresa_transporte_salida_id")
-  vehiculoSalidaId          Int?      @map("vehiculo_salida_id")
-  conductorSalidaId         Int?      @map("conductor_salida_id")
-  fechaSalida               DateTime? @map("fecha_salida") @db.Date
-  horaSalida                DateTime? @map("hora_salida") @db.Time(0)
+  empresaTransporteIngresoId Int @map("empresa_transporte_ingreso_id")
+  vehiculoIngresoId          Int @map("vehiculo_ingreso_id")
+  conductorIngresoId         Int @map("conductor_ingreso_id")
 
-  // Almacenamiento y Estado
-  diasAlmacenamiento Int?       @map("dias_almacenamiento")
-  montoTotal         Decimal?   @map("monto_total") @db.Decimal(10, 2)
-  estado             EstadoGuia @default(ALMACENADO)
+  fechaIngreso DateTime @map("fecha_ingreso") @db.Date
+  horaIngreso  DateTime @map("hora_ingreso") @db.Time(0)
 
-  // Otros y Auditoría
-  observaciones String?  @db.Text
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  // ============================================================
+  // INFORMACIÓN DE SALIDA
+  // ============================================================
 
-  // Definición de Relaciones
-  cliente                  Cliente?           @relation(fields: [clienteId], references: [id], onDelete: SetNull)
-  contenedor               Contenedor         @relation(fields: [contenedorId], references: [id])
-  empresaTransporteIngreso EmpresaTransporte  @relation("EmpresaIngreso", fields: [empresaTransporteIngresoId], references: [id])
-  vehiculoIngreso          Vehiculo           @relation("VehiculoIngreso", fields: [vehiculoIngresoId], references: [id])
-  conductorIngreso         Conductor          @relation("ConductorIngreso", fields: [conductorIngresoId], references: [id])
-  empresaTransporteSalida  EmpresaTransporte? @relation("EmpresaSalida", fields: [empresaTransporteSalidaId], references: [id], onDelete: SetNull)
-  vehiculoSalida           Vehiculo?          @relation("VehiculoSalida", fields: [vehiculoSalidaId], references: [id], onDelete: SetNull)
-  conductorSalida          Conductor?         @relation("ConductorSalida", fields: [conductorSalidaId], references: [id], onDelete: SetNull)
+  empresaTransporteSalidaId Int? @map("empresa_transporte_salida_id")
+  vehiculoSalidaId          Int? @map("vehiculo_salida_id")
+  conductorSalidaId         Int? @map("conductor_salida_id")
 
-  // Índices
+  fechaSalida DateTime? @map("fecha_salida") @db.Date
+  horaSalida  DateTime? @map("hora_salida") @db.Time(0)
+
+  // ============================================================
+  // ALMACENAMIENTO Y PRECIO
+  // ============================================================
+
+  diasAlmacenamiento Int? @map("dias_almacenamiento")
+
+  tipoPrecio TipoPrecioGuia @default(ESTANDAR) @map("tipo_precio")
+
+  precioPrimerDia Decimal @map("precio_primer_dia") @db.Decimal(10, 2)
+
+  precioDiaAdicional Decimal @map("precio_dia_adicional") @db.Decimal(10, 2)
+
+  subtotal Decimal? @db.Decimal(10, 2)
+
+  porcentajeIGV Decimal? @map("porcentaje_igv") @db.Decimal(5, 2)
+
+  montoIGV Decimal? @map("monto_igv") @db.Decimal(10, 2)
+
+  montoTotal Decimal? @map("monto_total") @db.Decimal(10, 2)
+
+  // ============================================================
+  // TRATAMIENTO TRIBUTARIO
+  // ============================================================
+
+  tratamientoIGV TratamientoIGV @default(SIN_IGV) @map("tratamiento_igv")
+
+  // ============================================================
+  // ESTADO
+  // ============================================================
+
+  estado EstadoGuia @default(ALMACENADO)
+
+  // ============================================================
+  // OTROS Y AUDITORÍA
+  // ============================================================
+
+  observaciones String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // ============================================================
+  // RELACIONES
+  // ============================================================
+
+  cliente Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+
+  contenedor Contenedor @relation(fields: [contenedorId], references: [id])
+
+  empresaTransporteIngreso EmpresaTransporte @relation("EmpresaIngreso", fields: [empresaTransporteIngresoId], references: [id])
+
+  vehiculoIngreso Vehiculo @relation("VehiculoIngreso", fields: [vehiculoIngresoId], references: [id])
+
+  conductorIngreso Conductor @relation("ConductorIngreso", fields: [conductorIngresoId], references: [id])
+
+  empresaTransporteSalida EmpresaTransporte? @relation("EmpresaSalida", fields: [empresaTransporteSalidaId], references: [id], onDelete: SetNull)
+
+  vehiculoSalida Vehiculo? @relation("VehiculoSalida", fields: [vehiculoSalidaId], references: [id], onDelete: SetNull)
+
+  conductorSalida Conductor? @relation("ConductorSalida", fields: [conductorSalidaId], references: [id], onDelete: SetNull)
+
+  // ============================================================
+  // ÍNDICES
+  // ============================================================
+
   @@index([clienteId], map: "idx_guias_cliente_id")
   @@index([contenedorId], map: "idx_guias_contenedor_id")
   @@index([empresaTransporteIngresoId], map: "idx_guias_empresa_transporte_ingreso_id")
