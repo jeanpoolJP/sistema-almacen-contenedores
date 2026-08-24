@@ -8,6 +8,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+import { Toaster } from "@/components/ui/sonner";
+
 type AdminLayoutProps = {
   children: ReactNode;
 };
@@ -36,6 +38,8 @@ export default function AdminLayout({
           {children}
         </main>
       </SidebarInset>
+
+      <Toaster />
     </SidebarProvider>
   );
 }

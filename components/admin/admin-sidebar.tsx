@@ -11,6 +11,7 @@ import {
   Truck,
   CreditCard,
   UsersRound,
+  Building2,
   BarChart3,
   Settings,
   LogOut,
@@ -57,6 +58,11 @@ const menuItems = [
     title: "Vehículos",
     href: "/admin/vehiculos",
     icon: Truck,
+  },
+  {
+    title: "Empresas de transporte",
+    href: "/admin/empresas-transporte",
+    icon: Building2,
   },
   {
     title: "Conductores",
