@@ -1,7 +1,5 @@
-
+import { GuiasPage } from "@/modules/guias/components/guias_page";
 
 export default function GuiasAdminPage() {
-  return <>
-  <h1>Guias</h1>
-  </>;
+  return <GuiasPage />;
 }
