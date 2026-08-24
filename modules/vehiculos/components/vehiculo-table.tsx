@@ -117,18 +117,6 @@ export function VehiculoTable({
                       <Pencil className="size-4" />
                     </Button>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Eliminar vehículo"
-                      onClick={() =>
-                        setVehiculoAEliminar(
-                          vehiculo,
-                        )
-                      }
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -137,21 +125,6 @@ export function VehiculoTable({
         </Table>
       </div>
 
-      <VehiculoDeleteDialog
-        vehiculo={vehiculoAEliminar}
-        open={Boolean(
-          vehiculoAEliminar,
-        )}
-        onOpenChange={(open) => {
-          if (!open) {
-            setVehiculoAEliminar(null);
-          }
-        }}
-        onSuccess={() => {
-          setVehiculoAEliminar(null);
-          onRefresh();
-        }}
-      />
     </>
   );
 }

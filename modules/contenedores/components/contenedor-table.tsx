@@ -142,18 +142,6 @@ export function ContenedorTable({
                         <Pencil className="size-4" />
                       </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Eliminar contenedor"
-                        onClick={() =>
-                          setContenedorAEliminar(
-                            contenedor,
-                          )
-                        }
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -163,28 +151,6 @@ export function ContenedorTable({
         </Table>
       </div>
 
-      <ContenedorDeleteDialog
-        contenedor={
-          contenedorAEliminar
-        }
-        open={Boolean(
-          contenedorAEliminar,
-        )}
-        onOpenChange={(open) => {
-          if (!open) {
-            setContenedorAEliminar(
-              null,
-            );
-          }
-        }}
-        onSuccess={() => {
-          setContenedorAEliminar(
-            null,
-          );
-
-          onRefresh();
-        }}
-      />
     </>
   );
 }

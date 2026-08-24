@@ -197,19 +197,7 @@ export function ConductorTable({
                     >
                       <Pencil className="size-4" />
                     </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      title="Eliminar conductor"
-                      onClick={() =>
-                        setConductorAEliminar(
-                          conductor,
-                        )
-                      }
-                    >
-                      <UserX className="size-4" />
-                    </Button>
+                    
                   </div>
                 </TableCell>
               </TableRow>
@@ -217,24 +205,6 @@ export function ConductorTable({
           </TableBody>
         </Table>
       </div>
-
-      {/* =====================================================
-          DIÁLOGO ELIMINAR
-      ====================================================== */}
-
-      <ConductorDeleteDialog
-        conductor={conductorAEliminar}
-        open={Boolean(conductorAEliminar)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConductorAEliminar(null);
-          }
-        }}
-        onSuccess={() => {
-          setConductorAEliminar(null);
-          onRefresh();
-        }}
-      />
     </>
   );
 }

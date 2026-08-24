@@ -165,20 +165,6 @@ export function ClienteTable({
                         <Pencil className="size-4" />
                       </Button>
 
-                      {cliente.activo && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Desactivar cliente"
-                          onClick={() =>
-                            setClienteAEliminar(
-                              cliente,
-                            )
-                          }
-                        >
-                          <UserX className="size-4" />
-                        </Button>
-                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -188,22 +174,6 @@ export function ClienteTable({
         </Table>
       </div>
 
-      {/* =====================================================
-          DIÁLOGO DESACTIVAR CLIENTE
-      ====================================================== */}
-      <ClienteDeleteDialog
-        cliente={clienteAEliminar}
-        open={Boolean(clienteAEliminar)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setClienteAEliminar(null);
-          }
-        }}
-        onSuccess={() => {
-          setClienteAEliminar(null);
-          onRefresh();
-        }}
-      />
     </>
   );
 }
