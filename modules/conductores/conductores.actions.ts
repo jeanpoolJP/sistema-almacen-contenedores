@@ -11,8 +11,10 @@ import {
   obtenerConductorPorLicencia,
   obtenerConductorPorId,
   obtenerConductores,
+  countConductores,
   registrarConductor,
 } from "./conductores.service";
+
 
 import type { ConductorFormData } from "./conductores.types";
 
@@ -135,26 +137,45 @@ export async function buscarConductorPorId(
     };
   }
 }
-
 /**
  * ============================================================
  * LISTAR CONDUCTORES
  * ============================================================
  */
-export async function listarConductores(): Promise<
-  ActionResult<
-    Awaited<
+export async function listarConductores(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<
+  ActionResult<{
+    data: Awaited<
       ReturnType<typeof obtenerConductores>
-    >
-  >
+    >;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>
 > {
   try {
-    const conductores =
-      await obtenerConductores();
+    const [conductores, total] =
+      await Promise.all([
+        obtenerConductores(page, pageSize),
+        countConductores(),
+      ]);
+
+    const totalPages = Math.ceil(
+      total / pageSize,
+    );
 
     return {
       success: true,
-      data: conductores,
+      data: {
+        data: conductores,
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
     };
   } catch (error) {
     console.error(

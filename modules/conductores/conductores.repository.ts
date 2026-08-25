@@ -34,17 +34,35 @@ export async function findConductorById(
 }
 
 /**
- * Obtiene todos los conductores.
+ * Obtiene una página de conductores.
  *
  * Los más recientemente registrados
  * aparecen primero.
  */
-export async function findConductores() {
+export async function findConductores(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const skip = (page - 1) * pageSize;
+
   return prisma.conductor.findMany({
+    skip,
+    take: pageSize,
+
     orderBy: {
       createdAt: "desc",
     },
   });
+}
+
+/**
+ * Obtiene la cantidad total de conductores.
+ *
+ * Se utiliza para calcular la cantidad
+ * de páginas disponibles.
+ */
+export async function countConductores() {
+  return prisma.conductor.count();
 }
 
 /**

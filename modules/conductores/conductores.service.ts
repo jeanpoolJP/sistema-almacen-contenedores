@@ -77,12 +77,14 @@ export async function obtenerConductorPorId(
 }
 
 /**
- * Obtiene todos los conductores.
+ * Obtiene los conductores paginados.
  */
-export async function obtenerConductores() {
-  return findConductores();
+export async function obtenerConductores(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  return findConductores(page, pageSize);
 }
-
 /**
  * Registra un nuevo conductor.
  */
