@@ -34,9 +34,15 @@ export async function crearEmpresaTransporteService(
 ) {
   const datosValidados = empresaTransporteSchema.parse(data);
 
-  const nombre = normalizarNombreEmpresa(
-    datosValidados.nombre,
-  );
+  const nombre = normalizarNombreEmpresa(datosValidados.nombre);
+
+  const empresaExistente = await obtenerEmpresaTransportePorNombre(nombre);
+
+  if (empresaExistente) {
+    throw new Error(
+      "Ya existe una empresa de transporte con ese nombre",
+    );
+  }
 
   return crearEmpresaTransporte({
     nombre,
