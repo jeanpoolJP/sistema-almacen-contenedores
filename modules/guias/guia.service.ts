@@ -379,13 +379,56 @@ const vehiculoSalida =
   // 7. CALCULAR DÍAS
   // ============================================================
 
-  const diasAlmacenamiento =
-    calcularDiasAlmacenamiento(
-      guia.fechaIngreso,
-      guia.horaIngreso,
-      datosValidados.fechaSalida,
-      datosValidados.horaSalida,
-    );
+  
+console.log("========== CÁLCULO ALMACENAMIENTO ==========");
+
+console.log("Fecha ingreso:", guia.fechaIngreso);
+console.log("Hora ingreso:", guia.horaIngreso);
+
+console.log(
+  "Fecha salida:",
+  datosValidados.fechaSalida,
+);
+
+console.log(
+  "Hora salida:",
+  datosValidados.horaSalida,
+);
+
+console.log(
+  "Fecha ingreso ISO:",
+  guia.fechaIngreso.toISOString(),
+);
+
+console.log(
+  "Hora ingreso ISO:",
+  guia.horaIngreso.toISOString(),
+);
+
+console.log(
+  "Fecha salida ISO:",
+  datosValidados.fechaSalida.toISOString(),
+);
+
+console.log(
+  "Hora salida ISO:",
+  datosValidados.horaSalida.toISOString(),
+);
+
+const diasAlmacenamiento =
+  calcularDiasAlmacenamiento(
+    guia.fechaIngreso,
+    guia.horaIngreso,
+    datosValidados.fechaSalida,
+    datosValidados.horaSalida,
+  );
+
+console.log(
+  "DÍAS CALCULADOS:",
+  diasAlmacenamiento,
+);
+
+console.log("==============================================");
 
 
   // ============================================================
@@ -519,7 +562,18 @@ export async function obtenerGuiaPorNumeroService(
  * Obtiene todas las guías.
  */
 export async function obtenerGuiasService() {
-  return obtenerGuias();
+  const guias = await obtenerGuias();
+
+  return guias.map((guia) => ({
+    ...guia,
+    precioPrimerDia: Number(guia.precioPrimerDia),
+    precioDiaAdicional: Number(guia.precioDiaAdicional),
+    subtotal: guia.subtotal === null ? null : Number(guia.subtotal),
+    porcentajeIGV:
+      guia.porcentajeIGV === null ? null : Number(guia.porcentajeIGV),
+    montoIGV: guia.montoIGV === null ? null : Number(guia.montoIGV),
+    montoTotal: guia.montoTotal === null ? null : Number(guia.montoTotal),
+  }));
 }
 
 /**

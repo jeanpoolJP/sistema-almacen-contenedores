@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Save, Copy } from "lucide-react";
+import {
+  Clock3,
+  Loader2,
+  Save,
+} from "lucide-react";
 import { toast } from "sonner";
+
+import { registrarSalidaGuiaAction } from "../guia.actions";
+
+import type {
+  RegistrarSalidaGuiaInput,
+} from "../guia.types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,125 +24,233 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export function GuiaSalidaForm() {
-  const [numeroGuia, setNumeroGuia] =
-    useState("");
+type TratamientoIGV =
+  | "SIN_IGV"
+  | "CON_IGV";
 
-  const [empresaTransporte, setEmpresaTransporte] =
-    useState("");
+type FormState = {
+  transportistaSalida: {
+    empresaNombre: string;
+    empresaRuc: string;
+    empresaTelefono: string;
+    placa: string;
+    conductorNombre: string;
+    numeroLicencia: string;
+  };
 
-  const [placa, setPlaca] =
-    useState("");
+  fechaSalida: string;
+  horaSalida: string;
 
-  const [numeroLicencia, setNumeroLicencia] =
-    useState("");
+  tratamientoIGV: TratamientoIGV;
+};
 
-  const [nombreConductor, setNombreConductor] =
-    useState("");
+const estadoInicial: FormState = {
+  transportistaSalida: {
+    empresaNombre: "",
+    empresaRuc: "",
+    empresaTelefono: "",
+    placa: "",
+    conductorNombre: "",
+    numeroLicencia: "",
+  },
 
-  const [fechaSalida, setFechaSalida] =
-    useState("");
+  fechaSalida: "",
+  horaSalida: "",
 
-  const [horaSalida, setHoraSalida] =
-    useState("");
+  tratamientoIGV: "SIN_IGV",
+};
 
-  const [tratamientoIGV, setTratamientoIGV] =
-    useState<"SIN_IGV" | "CON_IGV">(
-      "SIN_IGV"
+function obtenerFechaActual() {
+  const ahora = new Date();
+
+  return ahora.toISOString().split("T")[0];
+}
+
+function obtenerHoraActual() {
+  const ahora = new Date();
+
+  return `${String(
+    ahora.getHours(),
+  ).padStart(2, "0")}:${String(
+    ahora.getMinutes(),
+  ).padStart(2, "0")}`;
+}
+
+type SalidaGuiaFormProps = {
+  guiaId: number;
+};
+
+export function SalidaGuiaForm({
+  guiaId,
+}: SalidaGuiaFormProps) {
+  const [form, setForm] =
+    useState<FormState>(
+      estadoInicial,
     );
 
   const [guardando, setGuardando] =
     useState(false);
 
-  /*
-   * Estos valores posteriormente vendrán
-   * desde la guía seleccionada.
-   */
-  const [diasAlmacenamiento] =
-    useState<number | null>(null);
-
-  const [subtotal] =
-    useState<number | null>(null);
-
-  const [montoIGV] =
-    useState<number | null>(null);
-
-  const [montoTotal] =
-    useState<number | null>(null);
-
-  function usarFechaHoraActual() {
-    const ahora = new Date();
-
-    const fecha = ahora
-      .toISOString()
-      .split("T")[0];
-
-    const hora = ahora
-      .toTimeString()
-      .slice(0, 5);
-
-    setFechaSalida(fecha);
-    setHoraSalida(hora);
+  function actualizarTransportista(
+    campo: keyof FormState["transportistaSalida"],
+    valor: string,
+  ) {
+    setForm((actual) => ({
+      ...actual,
+      transportistaSalida: {
+        ...actual.transportistaSalida,
+        [campo]: valor,
+      },
+    }));
   }
 
-  function repetirTransportistaEntrega() {
-    toast.info(
-      "Aquí se cargarán los datos del transportista de entrega."
-    );
+  function actualizarFechaHoraActual() {
+    setForm((actual) => ({
+      ...actual,
+      fechaSalida:
+        obtenerFechaActual(),
+      horaSalida:
+        obtenerHoraActual(),
+    }));
   }
 
   async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
-    if (!numeroGuia.trim()) {
-      toast.error(
-        "Ingrese el número de guía."
-      );
-      return;
-    }
-
-    if (!fechaSalida || !horaSalida) {
-      toast.error(
-        "Ingrese la fecha y hora de salida."
-      );
-      return;
-    }
-
-    setGuardando(true);
-
     try {
-      /*
-       * Aquí conectaremos posteriormente
-       * registrarSalidaAction().
-       */
+      setGuardando(true);
 
-      console.log({
-        numeroGuia,
+      if (
+        !form.transportistaSalida
+          .empresaNombre.trim()
+      ) {
+        toast.error(
+          "La empresa de transporte es obligatoria",
+        );
+        return;
+      }
 
-        empresaTransporte,
-        placa,
+      if (
+        !form.transportistaSalida
+          .placa.trim()
+      ) {
+        toast.error(
+          "La placa es obligatoria",
+        );
+        return;
+      }
 
-        numeroLicencia,
-        nombreConductor,
+      if (
+        !form.transportistaSalida
+          .conductorNombre.trim()
+      ) {
+        toast.error(
+          "El nombre del conductor es obligatorio",
+        );
+        return;
+      }
 
-        fechaSalida,
-        horaSalida,
+      if (
+        !form.transportistaSalida
+          .numeroLicencia.trim()
+      ) {
+        toast.error(
+          "El número de licencia es obligatorio",
+        );
+        return;
+      }
 
-        tratamientoIGV,
-      });
+      if (!form.fechaSalida) {
+        toast.error(
+          "La fecha de salida es obligatoria",
+        );
+        return;
+      }
+
+      if (!form.horaSalida) {
+        toast.error(
+          "La hora de salida es obligatoria",
+        );
+        return;
+      }
+
+      const data: RegistrarSalidaGuiaInput = {
+        guiaId,
+
+        transportistaSalida: {
+          empresaNombre:
+            form.transportistaSalida
+              .empresaNombre.trim(),
+
+          empresaRuc:
+            form.transportistaSalida
+              .empresaRuc.trim() ||
+            null,
+
+          empresaTelefono:
+            form.transportistaSalida
+              .empresaTelefono.trim() ||
+            null,
+
+          placa:
+            form.transportistaSalida
+              .placa.trim(),
+
+          conductorNombre:
+            form.transportistaSalida
+              .conductorNombre.trim(),
+
+          numeroLicencia:
+            form.transportistaSalida
+              .numeroLicencia.trim(),
+        },
+
+        fechaSalida: new Date(
+          `${form.fechaSalida}T00:00:00`,
+        ),
+
+        horaSalida: new Date(
+          `1970-01-01T${form.horaSalida}:00`,
+        ),
+
+        tratamientoIGV:
+          form.tratamientoIGV,
+      };
+
+      const resultado =
+        await registrarSalidaGuiaAction(
+          data,
+        );
+
+      if (!resultado.success) {
+        toast.error(
+          resultado.message,
+        );
+        return;
+      }
 
       toast.success(
-        "Datos de salida validados correctamente."
+        resultado.message,
       );
+
+      setForm(estadoInicial);
     } catch (error) {
       console.error(error);
 
       toast.error(
-        "No se pudo registrar la salida."
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error inesperado",
       );
     } finally {
       setGuardando(false);
@@ -144,131 +262,128 @@ export function GuiaSalidaForm() {
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      {/* ===================================================== */}
-      {/* GUÍA */}
-      {/* ===================================================== */}
-
       <Card>
         <CardHeader>
           <CardTitle>
-            Guía a retirar
+            Registrar salida
           </CardTitle>
 
           <CardDescription>
-            Busca la guía que se encuentra almacenada.
+            Registra el transportista que
+            retira el contenedor del almacén.
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="numeroGuiaSalida">
-              Número de guía
-            </Label>
-
-            <Input
-              id="numeroGuiaSalida"
-              value={numeroGuia}
-              onChange={(event) =>
-                setNumeroGuia(
-                  event.target.value
-                )
-              }
-              placeholder="Ej. GUIA-000001"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ===================================================== */}
-      {/* TRANSPORTISTA */}
-      {/* ===================================================== */}
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle>
-                Transportista de recogida
-              </CardTitle>
-
-              <CardDescription>
-                Datos del vehículo que retirará el contenedor.
-              </CardDescription>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={
-                repetirTransportistaEntrega
-              }
-            >
-              <Copy className="mr-2 size-4" />
-              Repetir datos de entrega
-            </Button>
-          </div>
-        </CardHeader>
-
-        <CardContent className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="empresaSalida">
+            <Label>
               Empresa de transporte
             </Label>
 
             <Input
-              id="empresaSalida"
-              value={empresaTransporte}
-              onChange={(event) =>
-                setEmpresaTransporte(
-                  event.target.value
+              value={
+                form.transportistaSalida
+                  .empresaNombre
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "empresaNombre",
+                  e.target.value,
                 )
               }
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="placaSalida">
-              Placa
+            <Label>
+              RUC
             </Label>
 
             <Input
-              id="placaSalida"
-              value={placa}
-              onChange={(event) =>
-                setPlaca(
-                  event.target.value.toUpperCase()
+              value={
+                form.transportistaSalida
+                  .empresaRuc
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "empresaRuc",
+                  e.target.value,
                 )
               }
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="licenciaSalida">
-              Número de licencia
+            <Label>
+              Teléfono
             </Label>
 
             <Input
-              id="licenciaSalida"
-              value={numeroLicencia}
-              onChange={(event) =>
-                setNumeroLicencia(
-                  event.target.value.toUpperCase()
+              value={
+                form.transportistaSalida
+                  .empresaTelefono
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "empresaTelefono",
+                  e.target.value,
                 )
               }
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="conductorSalida">
+            <Label>
+              Placa / Camión
+            </Label>
+
+            <Input
+              value={
+                form.transportistaSalida
+                  .placa
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "placa",
+                  e.target.value.toUpperCase(),
+                )
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
               Nombre del conductor
             </Label>
 
             <Input
-              id="conductorSalida"
-              value={nombreConductor}
-              onChange={(event) =>
-                setNombreConductor(
-                  event.target.value
+              value={
+                form.transportistaSalida
+                  .conductorNombre
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "conductorNombre",
+                  e.target.value,
+                )
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              Número de licencia
+            </Label>
+
+            <Input
+              value={
+                form.transportistaSalida
+                  .numeroLicencia
+              }
+              onChange={(e) =>
+                actualizarTransportista(
+                  "numeroLicencia",
+                  e.target.value.toUpperCase(),
                 )
               }
             />
@@ -276,195 +391,134 @@ export function GuiaSalidaForm() {
         </CardContent>
       </Card>
 
-      {/* ===================================================== */}
-      {/* SALIDA */}
-      {/* ===================================================== */}
-
       <Card>
         <CardHeader>
           <CardTitle>
-            Salida del almacén
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={usarFechaHoraActual}
-            >
-              <Clock className="mr-2 size-4" />
-              Usar fecha y hora actual
-            </Button>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fechaSalida">
-                Fecha de salida
-              </Label>
-
-              <Input
-                id="fechaSalida"
-                type="date"
-                value={fechaSalida}
-                onChange={(event) =>
-                  setFechaSalida(
-                    event.target.value
-                  )
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="horaSalida">
-                Hora de salida
-              </Label>
-
-              <Input
-                id="horaSalida"
-                type="time"
-                value={horaSalida}
-                onChange={(event) =>
-                  setHoraSalida(
-                    event.target.value
-                  )
-                }
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ===================================================== */}
-      {/* FACTURACIÓN */}
-      {/* ===================================================== */}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Facturación
-          </CardTitle>
-
-          <CardDescription>
-            Selecciona si el cliente requiere factura.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="space-y-2">
-            <Label>
-              Tratamiento tributario
-            </Label>
-
-            <select
-              value={tratamientoIGV}
-              onChange={(event) =>
-                setTratamientoIGV(
-                  event.target.value as
-                    | "SIN_IGV"
-                    | "CON_IGV"
-                )
-              }
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm"
-            >
-              <option value="SIN_IGV">
-                Sin IGV
-              </option>
-
-              <option value="CON_IGV">
-                Con IGV
-              </option>
-            </select>
-
-            <p className="text-sm text-muted-foreground">
-              El porcentaje del IGV es administrado
-              desde la configuración del sistema y
-              no puede modificarse aquí.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ===================================================== */}
-      {/* RESUMEN */}
-      {/* ===================================================== */}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Resumen del almacenamiento
+            Fecha y hora de salida
           </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              Días de almacenamiento
-            </span>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={
+                actualizarFechaHoraActual
+              }
+            >
+              <Clock3 className="mr-2 h-4 w-4" />
 
-            <span className="font-medium">
-              {diasAlmacenamiento ?? "-"}
-            </span>
+              Usar fecha y hora actual
+            </Button>
           </div>
 
-          <Separator />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>
+                Fecha de salida
+              </Label>
 
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              Subtotal
-            </span>
+              <Input
+                type="date"
+                value={
+                  form.fechaSalida
+                }
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    fechaSalida:
+                      e.target.value,
+                  }))
+                }
+              />
+            </div>
 
-            <span className="font-medium">
-              {subtotal !== null
-                ? `S/ ${subtotal.toFixed(2)}`
-                : "-"}
-            </span>
-          </div>
+            <div className="space-y-2">
+              <Label>
+                Hora de salida
+              </Label>
 
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              IGV
-            </span>
-
-            <span className="font-medium">
-              {montoIGV !== null
-                ? `S/ ${montoIGV.toFixed(2)}`
-                : "-"}
-            </span>
-          </div>
-
-          <Separator />
-
-          <div className="flex justify-between text-lg">
-            <span className="font-semibold">
-              Total
-            </span>
-
-            <span className="font-bold">
-              {montoTotal !== null
-                ? `S/ ${montoTotal.toFixed(2)}`
-                : "-"}
-            </span>
+              <Input
+                type="time"
+                value={
+                  form.horaSalida
+                }
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    horaSalida:
+                      e.target.value,
+                  }))
+                }
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ===================================================== */}
-      {/* BOTÓN */}
-      {/* ===================================================== */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Tratamiento del IGV
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="max-w-sm space-y-2">
+            <Label>
+              Facturación
+            </Label>
+
+            <Select
+              value={
+                form.tratamientoIGV
+              }
+              onValueChange={(value) =>
+                setForm((actual) => ({
+                  ...actual,
+                  tratamientoIGV:
+                    value as TratamientoIGV,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="SIN_IGV">
+                  Sin IGV
+                </SelectItem>
+
+                <SelectItem value="CON_IGV">
+                  Con IGV
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end">
         <Button
           type="submit"
           disabled={guardando}
+          size="lg"
         >
-          <Save className="mr-2 size-4" />
+          {guardando ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
 
-          {guardando
-            ? "Registrando..."
-            : "Registrar salida"}
+              Registrando salida...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+
+              Registrar salida
+            </>
+          )}
         </Button>
       </div>
     </form>

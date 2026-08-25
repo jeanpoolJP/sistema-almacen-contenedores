@@ -15,7 +15,8 @@ export async function crearCliente(data: CrearClienteData) {
   try {
     const cliente = await prisma.cliente.create({
       data: {
-        dni: data.dni || null,
+        tipoDocumento: "DNI",
+        numeroDocumento: data.dni || "",
         nombreCompleto: data.nombreCompleto || null,
         telefono: data.telefono || null,
         observaciones: data.observaciones || null,
