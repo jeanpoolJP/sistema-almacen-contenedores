@@ -1,19 +1,33 @@
+// modules/guias/guia.types.ts
+
 import type {
   EstadoGuia,
+  TipoContenedor,
+  TipoDocumento,
   TipoPrecioGuia,
   TratamientoIGV,
 } from "@/lib/generated/prisma";
 
+/**
+ * Resultado del cálculo de días de almacenamiento.
+ */
 export type CalculoAlmacenamiento = {
   diasAlmacenamiento: number;
 };
 
+/**
+ * Resultado del cálculo monetario.
+ */
 export type CalculoMonto = {
   subtotal: number;
   montoIGV: number;
   montoTotal: number;
 };
 
+/**
+ * Datos necesarios para calcular
+ * el monto de una guía.
+ */
 export type DatosCalculoMonto = {
   diasAlmacenamiento: number;
   precioPrimerDia: number;
@@ -22,7 +36,102 @@ export type DatosCalculoMonto = {
   porcentajeIGV: number;
 };
 
+/**
+ * Datos del cliente utilizados
+ * al registrar una guía.
+ */
+export type ClienteGuiaInput = {
+  tipoDocumento: TipoDocumento;
+  numeroDocumento: string;
+  nombreCompleto?: string | null;
+};
+
+/**
+ * Datos del contenedor utilizados
+ * al registrar una guía.
+ */
+export type ContenedorGuiaInput = {
+  numeroContenedor: string;
+  marca: string;
+  medida: number;
+  tipo: TipoContenedor;
+};
+
+/**
+ * Datos del transportista utilizados
+ * al registrar una guía.
+ */
+export type TransportistaGuiaInput = {
+  empresaNombre: string;
+  empresaRuc?: string | null;
+  empresaTelefono?: string | null;
+
+  placa: string;
+
+  conductorNombre: string;
+  numeroLicencia: string;
+};
+
+/**
+ * Datos necesarios para crear una guía.
+ *
+ * Los IDs de las entidades relacionadas NO se reciben
+ * desde el formulario.
+ *
+ * El servicio de guías se encarga de buscar o crear:
+ * - Cliente
+ * - Contenedor
+ * - Empresa de transporte
+ * - Vehículo
+ * - Conductor
+ */
 export type CrearGuiaInput = {
+  numeroGuia: string;
+
+  cliente?: ClienteGuiaInput | null;
+
+  contenedor: ContenedorGuiaInput;
+
+  transportistaIngreso: TransportistaGuiaInput;
+
+  fechaIngreso: Date;
+  horaIngreso: Date;
+
+  tipoPrecio: TipoPrecioGuia;
+
+  /**
+   * Solo se utilizan cuando
+   * tipoPrecio = PERSONALIZADO.
+   */
+  precioPrimerDia?: number;
+  precioDiaAdicional?: number;
+
+  tratamientoIGV: TratamientoIGV;
+
+  observaciones?: string | null;
+};
+
+/**
+ * Datos necesarios para registrar
+ * la salida de una guía.
+ */
+export type RegistrarSalidaGuiaInput = {
+  guiaId: number;
+
+  transportistaSalida: TransportistaGuiaInput;
+
+  fechaSalida: Date;
+  horaSalida: Date;
+
+  tratamientoIGV: TratamientoIGV;
+};
+
+/**
+ * Datos internos que utiliza el repository
+ * después de que el service haya resuelto
+ * todas las relaciones.
+ */
+export type CrearGuiaRepositoryInput = {
   numeroGuia: string;
 
   clienteId?: number | null;
@@ -35,41 +144,16 @@ export type CrearGuiaInput = {
   fechaIngreso: Date;
   horaIngreso: Date;
 
-  empresaTransporteSalidaId?: number | null;
-  vehiculoSalidaId?: number | null;
-  conductorSalidaId?: number | null;
-
-  fechaSalida?: Date | null;
-  horaSalida?: Date | null;
-
-  diasAlmacenamiento?: number | null;
-
   tipoPrecio: TipoPrecioGuia;
 
   precioPrimerDia: number;
   precioDiaAdicional: number;
 
-  subtotal?: number | null;
-  porcentajeIGV?: number | null;
-  montoIGV?: number | null;
-  montoTotal?: number | null;
+  porcentajeIGV: number;
 
   tratamientoIGV: TratamientoIGV;
 
   estado: EstadoGuia;
 
   observaciones?: string | null;
-};
-
-export type ActualizarSalidaGuiaInput = {
-  guiaId: number;
-
-  empresaTransporteSalidaId: number;
-  vehiculoSalidaId: number;
-  conductorSalidaId: number;
-
-  fechaSalida: Date;
-  horaSalida: Date;
-
-  tratamientoIGV: TratamientoIGV;
 };

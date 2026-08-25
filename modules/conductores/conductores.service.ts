@@ -25,29 +25,28 @@ import type { ConductorFormData } from "./conductores.types";
  * Esta función puede ser utilizada por el módulo
  * de Guías al momento de registrar una nueva guía.
  */
-export async function obtenerOCrearConductor(
-  data: ConductorFormData,
-) {
-  // 1. Validar los datos del conductor
+export async function obtenerOCrearConductor(data: {
+  nombreCompleto: string;
+  numeroLicencia: string;
+}) {
   const datosValidados = conductorSchema.parse(data);
 
-  // 2. Buscar si ya existe por número de licencia
-  const conductorExistente = await findConductorByLicencia(
-    datosValidados.numeroLicencia,
-  );
+  const conductorExistente =
+    await findConductorByLicencia(
+      datosValidados.numeroLicencia
+    );
 
-  // 3. Si existe, devolverlo
   if (conductorExistente) {
     return conductorExistente;
   }
 
-  // 4. Si no existe, crearlo
   return createConductor({
-    nombreCompleto: datosValidados.nombreCompleto,
-    numeroLicencia: datosValidados.numeroLicencia,
+    nombreCompleto:
+      datosValidados.nombreCompleto,
+    numeroLicencia:
+      datosValidados.numeroLicencia,
   });
 }
-
 /**
  * Obtiene un conductor mediante su número de licencia.
  *

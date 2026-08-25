@@ -1,14 +1,101 @@
-// modules\guias\guia.repository.ts
+// modules/guias/guia.repository.ts
 
 import { prisma } from "@/lib/prisma";
 
+import type {
+  CrearGuiaRepositoryInput,
+} from "./guia.types";
+
+/**
+ * Crea una guía de internamiento.
+ *
+ * Este repository NO busca ni crea clientes,
+ * contenedores, vehículos, conductores, etc.
+ *
+ * Esa responsabilidad pertenece al service.
+ */
+export async function crearGuia(
+  data: CrearGuiaRepositoryInput,
+) {
+  return prisma.guiaInternamiento.create({
+    data: {
+      numeroGuia:
+        data.numeroGuia,
+
+      clienteId:
+        data.clienteId ?? null,
+
+      contenedorId:
+        data.contenedorId,
+
+      empresaTransporteIngresoId:
+        data.empresaTransporteIngresoId,
+
+      vehiculoIngresoId:
+        data.vehiculoIngresoId,
+
+      conductorIngresoId:
+        data.conductorIngresoId,
+
+      fechaIngreso:
+        data.fechaIngreso,
+
+      horaIngreso:
+        data.horaIngreso,
+
+      tipoPrecio:
+        data.tipoPrecio,
+
+      precioPrimerDia:
+        data.precioPrimerDia,
+
+      precioDiaAdicional:
+        data.precioDiaAdicional,
+
+      porcentajeIGV:
+        data.porcentajeIGV,
+
+      tratamientoIGV:
+        data.tratamientoIGV,
+
+      estado:
+        data.estado,
+
+      observaciones:
+        data.observaciones ?? null,
+    },
+
+    include: {
+      cliente: true,
+
+      contenedor: true,
+
+      empresaTransporteIngreso: true,
+
+      vehiculoIngreso: true,
+
+      conductorIngreso: true,
+
+      empresaTransporteSalida: true,
+
+      vehiculoSalida: true,
+
+      conductorSalida: true,
+    },
+  });
+}
+
+/**
+ * Busca una guía por ID.
+ */
 export async function obtenerGuiaPorId(
-  id: number
+  id: number,
 ) {
   return prisma.guiaInternamiento.findUnique({
     where: {
       id,
     },
+
     include: {
       cliente: true,
       contenedor: true,
@@ -24,13 +111,17 @@ export async function obtenerGuiaPorId(
   });
 }
 
+/**
+ * Busca una guía por número.
+ */
 export async function obtenerGuiaPorNumero(
-  numeroGuia: string
+  numeroGuia: string,
 ) {
   return prisma.guiaInternamiento.findUnique({
     where: {
       numeroGuia,
     },
+
     include: {
       cliente: true,
       contenedor: true,
@@ -46,30 +137,10 @@ export async function obtenerGuiaPorNumero(
   });
 }
 
-export async function obtenerGuiaPorContenedor(
-  contenedorId: number
-) {
-  return prisma.guiaInternamiento.findFirst({
-    where: {
-      contenedorId,
-      estado: "ALMACENADO",
-    },
-    include: {
-      cliente: true,
-      contenedor: true,
-
-      empresaTransporteIngreso: true,
-      vehiculoIngreso: true,
-      conductorIngreso: true,
-
-      empresaTransporteSalida: true,
-      vehiculoSalida: true,
-      conductorSalida: true,
-    },
-  });
-}
-
-export async function listarGuias() {
+/**
+ * Obtiene todas las guías.
+ */
+export async function obtenerGuias() {
   return prisma.guiaInternamiento.findMany({
     include: {
       cliente: true,
@@ -90,152 +161,19 @@ export async function listarGuias() {
   });
 }
 
-export async function crearGuia(data: {
-  numeroGuia: string;
-
-  clienteId?: number | null;
-  contenedorId: number;
-
-  empresaTransporteIngresoId: number;
-  vehiculoIngresoId: number;
-  conductorIngresoId: number;
-
-  fechaIngreso: Date;
-  horaIngreso: Date;
-
-  tipoPrecio: "ESTANDAR" | "PERSONALIZADO";
-
-  precioPrimerDia: number;
-  precioDiaAdicional: number;
-
-  subtotal?: number | null;
-  porcentajeIGV?: number | null;
-  montoIGV?: number | null;
-  montoTotal?: number | null;
-
-  tratamientoIGV: "SIN_IGV" | "CON_IGV";
-
-  estado: "ALMACENADO" | "RETIRADO" | "ANULADO";
-
-  observaciones?: string | null;
-}) {
-  return prisma.guiaInternamiento.create({
-    data: {
-      numeroGuia: data.numeroGuia,
-
-      clienteId: data.clienteId ?? null,
-      contenedorId: data.contenedorId,
-
-      empresaTransporteIngresoId:
-        data.empresaTransporteIngresoId,
-
-      vehiculoIngresoId:
-        data.vehiculoIngresoId,
-
-      conductorIngresoId:
-        data.conductorIngresoId,
-
-      fechaIngreso: data.fechaIngreso,
-      horaIngreso: data.horaIngreso,
-
-      tipoPrecio: data.tipoPrecio,
-
-      precioPrimerDia: data.precioPrimerDia,
-      precioDiaAdicional:
-        data.precioDiaAdicional,
-
-      subtotal: data.subtotal ?? null,
-      porcentajeIGV:
-        data.porcentajeIGV ?? null,
-
-      montoIGV: data.montoIGV ?? null,
-      montoTotal: data.montoTotal ?? null,
-
-      tratamientoIGV:
-        data.tratamientoIGV,
-
-      estado: data.estado,
-
-      observaciones:
-        data.observaciones ?? null,
-    },
-
-    include: {
-      cliente: true,
-      contenedor: true,
-
-      empresaTransporteIngreso: true,
-      vehiculoIngreso: true,
-      conductorIngreso: true,
-    },
-  });
-}
-
-export async function actualizarSalidaGuia(
+/**
+ * Actualiza una guía.
+ */
+export async function actualizarGuia(
   id: number,
-  data: {
-    empresaTransporteSalidaId: number;
-    vehiculoSalidaId: number;
-    conductorSalidaId: number;
-
-    fechaSalida: Date;
-    horaSalida: Date;
-
-    diasAlmacenamiento: number;
-
-    subtotal: number;
-    porcentajeIGV: number;
-    montoIGV: number;
-    montoTotal: number;
-
-    tratamientoIGV:
-      "SIN_IGV" | "CON_IGV";
-
-    estado: "RETIRADO";
-  }
+  data: Record<string, unknown>,
 ) {
   return prisma.guiaInternamiento.update({
     where: {
       id,
     },
 
-    data: {
-      empresaTransporteSalidaId:
-        data.empresaTransporteSalidaId,
-
-      vehiculoSalidaId:
-        data.vehiculoSalidaId,
-
-      conductorSalidaId:
-        data.conductorSalidaId,
-
-      fechaSalida:
-        data.fechaSalida,
-
-      horaSalida:
-        data.horaSalida,
-
-      diasAlmacenamiento:
-        data.diasAlmacenamiento,
-
-      subtotal:
-        data.subtotal,
-
-      porcentajeIGV:
-        data.porcentajeIGV,
-
-      montoIGV:
-        data.montoIGV,
-
-      montoTotal:
-        data.montoTotal,
-
-      tratamientoIGV:
-        data.tratamientoIGV,
-
-      estado:
-        data.estado,
-    },
+    data,
 
     include: {
       cliente: true,
@@ -248,6 +186,23 @@ export async function actualizarSalidaGuia(
       empresaTransporteSalida: true,
       vehiculoSalida: true,
       conductorSalida: true,
+    },
+  });
+}
+
+/**
+ * Anula una guía.
+ */
+export async function anularGuia(
+  id: number,
+) {
+  return prisma.guiaInternamiento.update({
+    where: {
+      id,
+    },
+
+    data: {
+      estado: "ANULADO",
     },
   });
 }

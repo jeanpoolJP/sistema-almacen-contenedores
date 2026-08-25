@@ -1,3 +1,5 @@
+// modules\configuracion\configuracion.service.ts
+
 import {
   actualizarConfiguracionPrecio,
   crearConfiguracionPrecio,

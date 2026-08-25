@@ -39,14 +39,20 @@ export const clienteSchema = z
       .trim()
       .min(1, "El número de documento es obligatorio"),
 
-    nombreCompleto: z
-      .string()
-      .trim()
-      .min(3, "El nombre o razón social debe tener al menos 3 caracteres")
-      .max(
-        150,
-        "El nombre o razón social no puede superar los 150 caracteres",
-      ),
+nombreCompleto: z
+  .string()
+  .trim()
+  .min(
+    3,
+    "El nombre o razón social debe tener al menos 3 caracteres"
+  )
+  .max(
+    150,
+    "El nombre o razón social no puede superar los 150 caracteres"
+  )
+  .optional()
+  .or(z.literal(""))
+  .nullable(),
 
     telefono: z
       .string()

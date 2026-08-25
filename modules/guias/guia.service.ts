@@ -1,12 +1,23 @@
 // modules/guias/guia.service.ts
 
 import {
+  actualizarGuia,
+  anularGuia,
+  crearGuia,
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
-  obtenerGuiaPorContenedor,
-  crearGuia,
-  actualizarSalidaGuia,
+  obtenerGuias,
 } from "./guia.repository";
+
+import {
+  crearGuiaSchema,
+  registrarSalidaGuiaSchema,
+} from "./guia.schema";
+
+import type {
+  CrearGuiaInput,
+  RegistrarSalidaGuiaInput,
+} from "./guia.types";
 
 import {
   calcularDiasAlmacenamiento,
@@ -16,251 +27,436 @@ import {
   calcularMontoGuia,
 } from "./utils/calcular-monto";
 
-import type {
-  CrearGuiaInput,
-  ActualizarSalidaGuiaInput,
-} from "./guia.types";
+import {
+  obtenerConfiguracionPrecioService,
+} from "@/modules/configuracion/configuracion.service";
 
+import {
+  obtenerOCrearCliente,
+} from "@/modules/clientes/cliente.service";
+
+import {
+  obtenerOCrearContenedor,
+} from "@/modules/contenedores/contenedores.service";
+
+import {
+  obtenerOCrearEmpresaTransporte,
+} from "@/modules/empresas-transporte/empresa-transporte.service";
+
+import {
+  obtenerOCrearVehiculo,
+} from "@/modules/vehiculos/vehiculos.service";
+
+import {
+  obtenerOCrearConductor,
+} from "@/modules/conductores/conductores.service";
+
+/**
+ * Crea una guía de internamiento.
+ *
+ * Este service coordina todos los módulos
+ * relacionados con una guía.
+ */
 export async function crearGuiaService(
-  datos: CrearGuiaInput
+  data: CrearGuiaInput,
 ) {
   // ============================================================
-  // 1. VALIDACIONES
+  // 1. VALIDAR DATOS
   // ============================================================
 
-  if (!datos.numeroGuia.trim()) {
-    throw new Error(
-      "El número de guía es obligatorio."
-    );
-  }
+  const datosValidados =
+    crearGuiaSchema.parse(data);
 
-  if (!datos.fechaIngreso) {
-    throw new Error(
-      "La fecha de ingreso es obligatoria."
-    );
-  }
-
-  if (!datos.horaIngreso) {
-    throw new Error(
-      "La hora de ingreso es obligatoria."
-    );
-  }
 
   // ============================================================
-  // 2. VERIFICAR QUE NO EXISTA LA GUÍA
+  // 2. VERIFICAR NÚMERO DE GUÍA
   // ============================================================
 
   const guiaExistente =
     await obtenerGuiaPorNumero(
-      datos.numeroGuia
+      datosValidados.numeroGuia,
     );
 
   if (guiaExistente) {
     throw new Error(
-      "Ya existe una guía con ese número."
+      `Ya existe una guía con el número ${datosValidados.numeroGuia}`,
     );
   }
 
-  // ============================================================
-  // 3. OBTENER LOS PRECIOS
-  // ============================================================
-  //
-  // IMPORTANTE:
-  // La configuración de precios todavía pertenece
-  // al módulo de configuración.
-  //
-  // Por eso posteriormente el service deberá recibir
-  // la configuración mediante su repository/service.
-  //
-  // Por ahora utilizamos los precios que llegan en datos.
-  // ============================================================
-
-  const precioPrimerDia =
-    datos.precioPrimerDia;
-
-  const precioDiaAdicional =
-    datos.precioDiaAdicional;
 
   // ============================================================
-  // 4. DETERMINAR TIPO DE PRECIO
-  // ============================================================
-  //
-  // Esto NO lo decide el usuario.
-  //
-  // Se determina comparando los precios utilizados
-  // contra la configuración estándar.
-  //
-  // Esta comparación posteriormente se hará contra
-  // ConfiguracionPrecio.
+  // 3. CLIENTE
   // ============================================================
 
-  const tipoPrecio =
-    datos.tipoPrecio ?? "ESTANDAR";
+  let cliente = null;
+
+  if (datosValidados.cliente) {
+    cliente =
+      await obtenerOCrearCliente({
+        tipoDocumento:
+          datosValidados.cliente
+            .tipoDocumento,
+
+        numeroDocumento:
+          datosValidados.cliente
+            .numeroDocumento,
+
+        nombreCompleto:
+          datosValidados.cliente
+            .nombreCompleto,
+      });
+  }
+
 
   // ============================================================
-  // 5. CREAR LA GUÍA
+  // 4. CONTENEDOR
   // ============================================================
-  //
-  // Al momento del ingreso todavía no conocemos:
-  //
-  // - fecha de salida
-  // - hora de salida
-  // - días de almacenamiento
-  // - subtotal
-  // - IGV
-  // - monto total
-  //
-  // Esos datos se calculan al registrar la salida.
+
+  const contenedor =
+    await obtenerOCrearContenedor({
+      numeroContenedor:
+        datosValidados.contenedor
+          .numeroContenedor,
+
+      marca:
+        datosValidados.contenedor.marca,
+
+      medida:
+        datosValidados.contenedor.medida,
+
+      tipo:
+        datosValidados.contenedor.tipo,
+    });
+
+
+  // ============================================================
+  // 5. EMPRESA DE TRANSPORTE
+  // ============================================================
+
+  const empresaIngreso =
+    await obtenerOCrearEmpresaTransporte({
+      nombre:
+        datosValidados
+          .transportistaIngreso
+          .empresaNombre,
+
+      ruc:
+        datosValidados
+          .transportistaIngreso
+          .empresaRuc,
+
+      telefono:
+        datosValidados
+          .transportistaIngreso
+          .empresaTelefono,
+    });
+
+
+  // ============================================================
+  // 6. VEHÍCULO
+  // ============================================================
+
+const vehiculoIngreso =
+  await obtenerOCrearVehiculo({
+    placa:
+      datosValidados
+        .transportistaIngreso
+        .placa,
+  });
+
+  // ============================================================
+  // 7. CONDUCTOR
+  // ============================================================
+
+  const conductorIngreso =
+    await obtenerOCrearConductor({
+      nombreCompleto:
+        datosValidados
+          .transportistaIngreso
+          .conductorNombre,
+
+      numeroLicencia:
+        datosValidados
+          .transportistaIngreso
+          .numeroLicencia,
+    });
+
+
+  // ============================================================
+  // 8. CONFIGURACIÓN DE PRECIOS
+  // ============================================================
+
+  const configuracion =
+    await obtenerConfiguracionPrecioService();
+
+
+  // ============================================================
+  // 9. DETERMINAR PRECIOS
+  // ============================================================
+
+  let precioPrimerDia: number;
+
+  let precioDiaAdicional: number;
+
+  if (
+    datosValidados.tipoPrecio ===
+    "ESTANDAR"
+  ) {
+    precioPrimerDia =
+      Number(
+        configuracion.precioPrimerDia,
+      );
+
+    precioDiaAdicional =
+      Number(
+        configuracion.precioDiaAdicional,
+      );
+  } else {
+    precioPrimerDia =
+      datosValidados
+        .precioPrimerDia!;
+
+    precioDiaAdicional =
+      datosValidados
+        .precioDiaAdicional!;
+  }
+
+
+  // ============================================================
+  // 10. PORCENTAJE IGV
+  // ============================================================
+
+  const porcentajeIGV =
+    Number(
+      configuracion.porcentajeIGV,
+    );
+
+
+  // ============================================================
+  // 11. CREAR GUÍA
   // ============================================================
 
   return crearGuia({
     numeroGuia:
-      datos.numeroGuia,
+      datosValidados.numeroGuia,
 
     clienteId:
-      datos.clienteId ?? null,
+      cliente?.id ?? null,
 
     contenedorId:
-      datos.contenedorId,
+      contenedor.id,
 
     empresaTransporteIngresoId:
-      datos.empresaTransporteIngresoId,
+      empresaIngreso.id,
 
     vehiculoIngresoId:
-      datos.vehiculoIngresoId,
+      vehiculoIngreso.id,
 
     conductorIngresoId:
-      datos.conductorIngresoId,
+      conductorIngreso.id,
 
     fechaIngreso:
-      datos.fechaIngreso,
+      datosValidados.fechaIngreso,
 
     horaIngreso:
-      datos.horaIngreso,
+      datosValidados.horaIngreso,
 
-    tipoPrecio,
+    tipoPrecio:
+      datosValidados.tipoPrecio,
 
     precioPrimerDia,
 
     precioDiaAdicional,
 
-    subtotal: null,
-
-    porcentajeIGV:
-      datos.porcentajeIGV,
-
-    montoIGV: null,
-
-    montoTotal: null,
+    porcentajeIGV,
 
     tratamientoIGV:
-      datos.tratamientoIGV,
+      datosValidados.tratamientoIGV,
 
-    estado: "ALMACENADO",
+    estado:
+      "ALMACENADO",
 
     observaciones:
-      datos.observaciones ?? null,
+      datosValidados.observaciones ?? null,
   });
 }
 
-
-// ============================================================
-// REGISTRAR SALIDA
-// ============================================================
-
-export async function registrarSalidaService(
-  datos: ActualizarSalidaGuiaInput
+/**
+ * Registra la salida de un contenedor.
+ */
+export async function registrarSalidaGuiaService(
+  data: RegistrarSalidaGuiaInput,
 ) {
   // ============================================================
-  // 1. BUSCAR GUÍA
+  // 1. VALIDAR
   // ============================================================
 
-  const guia = await obtenerGuiaPorId(
-    datos.guiaId
-  );
+  const datosValidados =
+    registrarSalidaGuiaSchema.parse(data);
+
+
+  // ============================================================
+  // 2. BUSCAR GUÍA
+  // ============================================================
+
+  const guia =
+    await obtenerGuiaPorId(
+      datosValidados.guiaId,
+    );
 
   if (!guia) {
     throw new Error(
-      "La guía no existe."
+      "La guía no existe",
     );
   }
 
+
   // ============================================================
-  // 2. VALIDAR ESTADO
+  // 3. VALIDAR ESTADO
   // ============================================================
 
   if (guia.estado !== "ALMACENADO") {
     throw new Error(
-      "La guía no se encuentra almacenada."
+      "Solo se puede registrar la salida de una guía almacenada",
     );
   }
 
+
   // ============================================================
-  // 3. VALIDAR FECHA/HORA DE SALIDA
+  // 4. EMPRESA DE TRANSPORTE DE SALIDA
+  // ============================================================
+
+  const empresaSalida =
+    await obtenerOCrearEmpresaTransporte({
+      nombre:
+        datosValidados
+          .transportistaSalida
+          .empresaNombre,
+
+      ruc:
+        datosValidados
+          .transportistaSalida
+          .empresaRuc,
+
+      telefono:
+        datosValidados
+          .transportistaSalida
+          .empresaTelefono,
+    });
+
+
+  // ============================================================
+  // 5. VEHÍCULO DE SALIDA
+  // ============================================================
+
+const vehiculoSalida =
+  await obtenerOCrearVehiculo({
+    placa:
+      datosValidados
+        .transportistaSalida
+        .placa,
+  });
+
+  // ============================================================
+  // 6. CONDUCTOR DE SALIDA
+  // ============================================================
+
+  const conductorSalida =
+    await obtenerOCrearConductor({
+      nombreCompleto:
+        datosValidados
+          .transportistaSalida
+          .conductorNombre,
+
+      numeroLicencia:
+        datosValidados
+          .transportistaSalida
+          .numeroLicencia,
+    });
+
+
+  // ============================================================
+  // 7. CALCULAR DÍAS
   // ============================================================
 
   const diasAlmacenamiento =
     calcularDiasAlmacenamiento(
       guia.fechaIngreso,
       guia.horaIngreso,
-      datos.fechaSalida,
-      datos.horaSalida
+      datosValidados.fechaSalida,
+      datosValidados.horaSalida,
     );
 
+
   // ============================================================
-  // 4. OBTENER PORCENTAJE DE IGV
+  // 8. OBTENER PRECIOS GUARDADOS EN LA GUÍA
   // ============================================================
-  //
-  // El porcentaje de IGV ya fue guardado en la guía
-  // cuando se creó.
-  //
-  // No se modifica desde el formulario de salida.
-  //
+
+  const precioPrimerDia =
+    Number(
+      guia.precioPrimerDia,
+    );
+
+  const precioDiaAdicional =
+    Number(
+      guia.precioDiaAdicional,
+    );
+
+
+  // ============================================================
+  // 9. OBTENER PORCENTAJE IGV
+  // ============================================================
+
+  const configuracion =
+    await obtenerConfiguracionPrecioService();
 
   const porcentajeIGV =
-    Number(guia.porcentajeIGV ?? 0);
+    Number(
+      guia.porcentajeIGV ??
+      configuracion.porcentajeIGV,
+    );
+
 
   // ============================================================
-  // 5. CALCULAR MONTO
+  // 10. CALCULAR MONTO
   // ============================================================
 
   const calculo =
     calcularMontoGuia({
       diasAlmacenamiento,
 
-      precioPrimerDia:
-        Number(guia.precioPrimerDia),
+      precioPrimerDia,
 
-      precioDiaAdicional:
-        Number(guia.precioDiaAdicional),
+      precioDiaAdicional,
 
       tratamientoIGV:
-        datos.tratamientoIGV,
+        datosValidados.tratamientoIGV,
 
       porcentajeIGV,
     });
 
+
   // ============================================================
-  // 6. ACTUALIZAR GUÍA
+  // 11. ACTUALIZAR GUÍA
   // ============================================================
 
-  return actualizarSalidaGuia(
-    datos.guiaId,
+  return actualizarGuia(
+    guia.id,
     {
       empresaTransporteSalidaId:
-        datos.empresaTransporteSalidaId,
+        empresaSalida.id,
 
       vehiculoSalidaId:
-        datos.vehiculoSalidaId,
+        vehiculoSalida.id,
 
       conductorSalidaId:
-        datos.conductorSalidaId,
+        conductorSalida.id,
 
       fechaSalida:
-        datos.fechaSalida,
+        datosValidados.fechaSalida,
 
       horaSalida:
-        datos.horaSalida,
+        datosValidados.horaSalida,
 
       diasAlmacenamiento,
 
@@ -276,9 +472,84 @@ export async function registrarSalidaService(
         calculo.montoTotal,
 
       tratamientoIGV:
-        datos.tratamientoIGV,
+        datosValidados.tratamientoIGV,
 
-      estado: "RETIRADO",
-    }
+      estado:
+        "RETIRADO",
+    },
   );
+}
+
+/**
+ * Obtiene una guía por ID.
+ */
+export async function obtenerGuiaPorIdService(
+  id: number,
+) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(
+      "El ID de la guía no es válido",
+    );
+  }
+
+  return obtenerGuiaPorId(id);
+}
+
+/**
+ * Obtiene una guía mediante su número.
+ */
+export async function obtenerGuiaPorNumeroService(
+  numeroGuia: string,
+) {
+  const numero =
+    numeroGuia.trim();
+
+  if (!numero) {
+    throw new Error(
+      "El número de guía es obligatorio",
+    );
+  }
+
+  return obtenerGuiaPorNumero(
+    numero,
+  );
+}
+
+/**
+ * Obtiene todas las guías.
+ */
+export async function obtenerGuiasService() {
+  return obtenerGuias();
+}
+
+/**
+ * Anula una guía.
+ *
+ * No elimina físicamente el registro.
+ */
+export async function anularGuiaService(
+  id: number,
+) {
+  const guia =
+    await obtenerGuiaPorId(id);
+
+  if (!guia) {
+    throw new Error(
+      "La guía no existe",
+    );
+  }
+
+  if (guia.estado === "ANULADO") {
+    throw new Error(
+      "La guía ya se encuentra anulada",
+    );
+  }
+
+  if (guia.estado === "RETIRADO") {
+    throw new Error(
+      "Una guía retirada no puede ser anulada",
+    );
+  }
+
+  return anularGuia(id);
 }
