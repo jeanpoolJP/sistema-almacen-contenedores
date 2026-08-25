@@ -1,29 +1,105 @@
+// modules/empresas-transporte/empresa-transporte.service.ts
+
 import {
   actualizarEmpresaTransporte,
   cambiarEstadoEmpresaTransporte,
   crearEmpresaTransporte,
   obtenerEmpresaTransportePorId,
+  obtenerEmpresaTransportePorNombre,
   obtenerEmpresasTransporte,
 } from "./empresa-transporte.repository";
+
+import { empresaTransporteSchema } from "./empresa-transporte.schema";
 
 import type {
   ActualizarEmpresaTransporteInput,
   CrearEmpresaTransporteInput,
 } from "./empresa-transporte.types";
 
-export async function crearEmpresaTransporteService(
-  data: CrearEmpresaTransporteInput
-) {
-  const nombre = data.nombre.trim();
+/**
+ * Normaliza el nombre de una empresa de transporte.
+ *
+ * - Elimina espacios al inicio y al final.
+ * - Convierte el nombre a mayúsculas.
+ */
+function normalizarNombreEmpresa(nombre: string) {
+  return nombre.trim().toUpperCase();
+}
 
-  if (!nombre) {
-    throw new Error("El nombre de la empresa es obligatorio");
-  }
+/**
+ * Crea una empresa de transporte.
+ */
+export async function crearEmpresaTransporteService(
+  data: CrearEmpresaTransporteInput,
+) {
+  const datosValidados = empresaTransporteSchema.parse(data);
+
+  const nombre = normalizarNombreEmpresa(
+    datosValidados.nombre,
+  );
 
   return crearEmpresaTransporte({
     nombre,
-    ruc: data.ruc?.trim() || null,
-    telefono: data.telefono?.trim() || null,
+    ruc: datosValidados.ruc?.trim() || null,
+    telefono: datosValidados.telefono?.trim() || null,
+  });
+}
+
+/**
+ * Busca una empresa de transporte por nombre.
+ *
+ * El nombre se normaliza antes de realizar la búsqueda.
+ */
+export async function obtenerEmpresaTransportePorNombreService(
+  nombre: string,
+) {
+  const nombreNormalizado = normalizarNombreEmpresa(nombre);
+
+  if (!nombreNormalizado) {
+    throw new Error(
+      "El nombre de la empresa es obligatorio",
+    );
+  }
+
+  return obtenerEmpresaTransportePorNombre(
+    nombreNormalizado,
+  );
+}
+
+/**
+ * Busca una empresa de transporte por su nombre.
+ *
+ * Si existe, la devuelve.
+ * Si no existe, la crea y la devuelve.
+ *
+ * Esta función puede ser utilizada por el módulo
+ * de Guías al registrar una nueva guía.
+ */
+export async function obtenerOCrearEmpresaTransporte(
+  data: CrearEmpresaTransporteInput,
+) {
+  const datosValidados = empresaTransporteSchema.parse(data);
+
+  const nombre = normalizarNombreEmpresa(
+    datosValidados.nombre,
+  );
+
+  // Buscar si ya existe
+  const empresaExistente =
+    await obtenerEmpresaTransportePorNombre(
+      nombre,
+    );
+
+  // Si existe, devolverla
+  if (empresaExistente) {
+    return empresaExistente;
+  }
+
+  // Si no existe, crearla
+  return crearEmpresaTransporte({
+    nombre,
+    ruc: datosValidados.ruc?.trim() || null,
+    telefono: datosValidados.telefono?.trim() || null,
   });
 }
 

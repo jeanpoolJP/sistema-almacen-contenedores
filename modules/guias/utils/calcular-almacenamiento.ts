@@ -1,5 +1,10 @@
 // modules\guias\utils\calcular-almacenamiento.ts
 
+/**
+ * Calcula los dias de almacenamiento, redondeando cualquier fraccion hacia arriba.
+ *
+ * @throws {Error} Si la salida no ocurre despues del ingreso.
+ */
 export function calcularDiasAlmacenamiento(
   fechaIngreso: Date,
   horaIngreso: Date,
@@ -33,6 +38,7 @@ export function calcularDiasAlmacenamiento(
   return Math.max(1, dias);
 }
 
+/** Combina la fecha de un valor con la hora de otro sin modificar los originales. */
 function combinarFechaHora(
   fecha: Date,
   hora: Date

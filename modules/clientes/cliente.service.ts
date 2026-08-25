@@ -19,6 +19,42 @@ import type { ClienteFormData } from "./cliente.types";
 /**
  * Busca un cliente por su número de documento.
  *
+ * Si existe, lo devuelve.
+ * Si no existe, lo crea y lo devuelve.
+ *
+ * Esta función puede ser utilizada por el módulo
+ * de Guías al momento de registrar una nueva guía.
+ */
+export async function obtenerOCrearCliente(
+  data: ClienteFormData,
+) {
+  // 1. Validar los datos del cliente
+  const datosValidados = clienteSchema.parse(data);
+
+  // 2. Buscar si ya existe por número de documento
+  const clienteExistente = await findClienteByDocumento(
+    datosValidados.numeroDocumento,
+  );
+
+  // 3. Si existe, devolverlo
+  if (clienteExistente) {
+    return clienteExistente;
+  }
+
+  // 4. Si no existe, crearlo
+  return createCliente({
+    tipoDocumento: datosValidados.tipoDocumento,
+    numeroDocumento: datosValidados.numeroDocumento,
+    nombreCompleto: datosValidados.nombreCompleto,
+    telefono: datosValidados.telefono || null,
+    observaciones: datosValidados.observaciones || null,
+    activo: datosValidados.activo,
+  });
+}
+
+/**
+ * Busca un cliente por su número de documento.
+ *
  * Acepta:
  * - DNI: 8 dígitos
  * - RUC: 11 dígitos

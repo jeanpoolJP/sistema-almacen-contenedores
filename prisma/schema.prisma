@@ -71,7 +71,7 @@ model Cliente {
 
 model EmpresaTransporte {
   id        Int      @id @default(autoincrement())
-  nombre    String   @db.VarChar(150)
+  nombre String @unique @db.VarChar(150)
   ruc       String?  @unique @db.VarChar(11)
   telefono  String?  @db.VarChar(20)
   activo    Boolean  @default(true)

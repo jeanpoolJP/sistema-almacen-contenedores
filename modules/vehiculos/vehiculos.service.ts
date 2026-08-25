@@ -16,6 +16,38 @@ import type { VehiculoFormData } from "./vehiculos.types";
 /**
  * Busca un vehículo por su placa.
  *
+ * Si existe, lo devuelve.
+ * Si no existe, lo crea y lo devuelve.
+ *
+ * Esta función será utilizada por el módulo
+ * de Guías al momento de registrar una guía.
+ */
+export async function obtenerOCrearVehiculo(
+  data: VehiculoFormData,
+) {
+  // 1. Validar los datos del vehículo.
+  // El schema también normaliza la placa a mayúsculas.
+  const datosValidados = vehiculoSchema.parse(data);
+
+  // 2. Buscar si el vehículo ya existe por placa.
+  const vehiculoExistente = await findVehiculoByPlaca(
+    datosValidados.placa,
+  );
+
+  // 3. Si existe, devolverlo.
+  if (vehiculoExistente) {
+    return vehiculoExistente;
+  }
+
+  // 4. Si no existe, crearlo.
+  return createVehiculo({
+    placa: datosValidados.placa,
+  });
+}
+
+/**
+ * Busca un vehículo por su placa.
+ *
  * Esta función será utilizada posteriormente
  * al momento de crear una guía.
  */

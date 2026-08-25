@@ -1,3 +1,5 @@
+// modules\empresas-transporte\empresa-transporte.repository.ts
+
 import { prisma } from "@/lib/prisma";
 
 import type {
@@ -5,8 +7,27 @@ import type {
   CrearEmpresaTransporteInput,
 } from "./empresa-transporte.types";
 
+/**
+ * Busca una empresa de transporte por su nombre.
+ *
+ * El nombre debe estar previamente normalizado
+ * a mayúsculas.
+ */
+export async function obtenerEmpresaTransportePorNombre(
+  nombre: string,
+) {
+  return prisma.empresaTransporte.findUnique({
+    where: {
+      nombre,
+    },
+  });
+}
+
+/**
+ * Crea una empresa de transporte.
+ */
 export async function crearEmpresaTransporte(
-  data: CrearEmpresaTransporteInput
+  data: CrearEmpresaTransporteInput,
 ) {
   return prisma.empresaTransporte.create({
     data: {

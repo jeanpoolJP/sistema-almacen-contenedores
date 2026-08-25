@@ -7,6 +7,12 @@ import type {
   DatosCalculoMonto,
 } from "../guia.types";
 
+/**
+ * Calcula el subtotal, el IGV y el monto total de una guía.
+ * El primer día usa un precio independiente y los días restantes el precio adicional.
+ *
+ * @throws {Error} Si los días, precios o porcentaje de IGV no son válidos.
+ */
 export function calcularMontoGuia({
   diasAlmacenamiento,
   precioPrimerDia,
@@ -62,6 +68,7 @@ export function calcularMontoGuia({
   };
 }
 
+/** Redondea un importe a dos decimales para evitar errores de precisión monetaria. */
 function redondear(valor: number): number {
   return Math.round(
     (valor + Number.EPSILON) * 100

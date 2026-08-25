@@ -1,3 +1,5 @@
+// modules\empresas-transporte\empresa-transporte.types.ts
+
 export type EmpresaTransporte = {
   id: number;
   nombre: string;
