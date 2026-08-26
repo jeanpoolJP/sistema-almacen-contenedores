@@ -11,10 +11,10 @@ import {
   obtenerConductorPorLicencia,
   obtenerConductorPorId,
   obtenerConductores,
-  countConductores,
   registrarConductor,
 } from "./conductores.service";
 
+import { countConductores} from "./conductores.repository";
 
 import type { ConductorFormData } from "./conductores.types";
 

@@ -42,18 +42,55 @@ export function ConductoresPage() {
   const [loading, setLoading] =
     useState(true);
 
+  // ============================================================
+  // PAGINACIÓN
+  // ============================================================
+
+  const [page, setPage] = useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(10);
+
+  const [totalPages, setTotalPages] =
+    useState(1);
+
+  const [totalConductores, setTotalConductores] =
+    useState(0);
+
   /**
    * Obtiene los conductores desde el servidor.
    */
-  async function cargarConductores() {
+  async function cargarConductores(
+    pagina: number = page,
+    cantidad: number = pageSize,
+  ) {
     setLoading(true);
 
     try {
       const result =
-        await listarConductores();
+        await listarConductores(
+          pagina,
+          cantidad,
+        );
 
       if (result.success) {
-        setConductores(result.data);
+        setConductores(
+          result.data.data,
+        );
+
+        setPage(result.data.page);
+
+        setPageSize(
+          result.data.pageSize,
+        );
+
+        setTotalPages(
+          result.data.totalPages,
+        );
+
+        setTotalConductores(
+          result.data.total,
+        );
       }
     } finally {
       setLoading(false);
@@ -64,8 +101,35 @@ export function ConductoresPage() {
    * Carga inicial.
    */
   useEffect(() => {
-    cargarConductores();
+    cargarConductores(1, 10);
   }, []);
+
+  /**
+   * Cambia de página.
+   */
+  function handlePageChange(
+    nuevaPagina: number,
+  ) {
+    cargarConductores(
+      nuevaPagina,
+      pageSize,
+    );
+  }
+
+  /**
+   * Cambia la cantidad de filas
+   * mostradas por página.
+   */
+  function handlePageSizeChange(
+    nuevaCantidad: number,
+  ) {
+    setPageSize(nuevaCantidad);
+
+    cargarConductores(
+      1,
+      nuevaCantidad,
+    );
+  }
 
   /**
    * Filtra por:
@@ -117,7 +181,10 @@ export function ConductoresPage() {
     setOpenForm(false);
     setConductorSeleccionado(null);
 
-    await cargarConductores();
+    await cargarConductores(
+      page,
+      pageSize,
+    );
   }
 
   /**
@@ -207,6 +274,7 @@ export function ConductoresPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Buscador */}
+
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -223,9 +291,15 @@ export function ConductoresPage() {
         </div>
 
         {/* Actualizar */}
+
         <Button
           variant="outline"
-          onClick={cargarConductores}
+          onClick={() =>
+            cargarConductores(
+              page,
+              pageSize,
+            )
+          }
           disabled={loading}
         >
           <RefreshCw
@@ -260,8 +334,21 @@ export function ConductoresPage() {
           onEdit={
             handleEditarConductor
           }
-          onRefresh={
-            cargarConductores
+          onRefresh={() =>
+            cargarConductores(
+              page,
+              pageSize,
+            )
+          }
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          total={totalConductores}
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
           }
         />
       )}
@@ -280,7 +367,7 @@ export function ConductoresPage() {
           </span>{" "}
           de{" "}
           <span className="font-medium text-foreground">
-            {conductores.length}
+            {totalConductores}
           </span>{" "}
           conductores.
         </div>
