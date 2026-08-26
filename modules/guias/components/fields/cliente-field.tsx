@@ -160,7 +160,7 @@ export function ClienteField() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>
-              Nombre completo{" "}
+              Nombre / Razon Social{" "}
               <span className="font-normal text-muted-foreground">
                 (opcional)
               </span>

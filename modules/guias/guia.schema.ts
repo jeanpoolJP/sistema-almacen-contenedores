@@ -93,26 +93,6 @@ const transportistaGuiaSchema = z.object({
       "El nombre de la empresa no puede superar los 150 caracteres",
     ),
 
-  empresaRuc: z
-    .string()
-    .trim()
-    .regex(
-      /^\d{11}$/,
-      "El RUC debe tener exactamente 11 dígitos",
-    )
-    .optional()
-    .or(z.literal("")),
-
-  empresaTelefono: z
-    .string()
-    .trim()
-    .max(
-      20,
-      "El teléfono no puede superar los 20 caracteres",
-    )
-    .optional()
-    .or(z.literal("")),
-
   placa: z
     .string()
     .trim()

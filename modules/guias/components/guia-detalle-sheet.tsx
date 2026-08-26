@@ -1,12 +1,12 @@
 // modules/guias/components/guia-detalle-sheet.tsx
 
-"use client";
+"use client"
 
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
-import { formatearHora } from "../utils/formatear-hora";
-import { formatearFecha } from "../utils/formatear-fecha";
+import { formatearHora } from "../utils/formatear-hora"
+import { formatearFecha } from "../utils/formatear-fecha"
 
 import {
   Sheet,
@@ -14,53 +14,45 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 
-import { EstadoBadge } from "./estado-badge";
-import type { GuiaConRelaciones } from "./guia-con-relaciones.type";
+import { EstadoBadge } from "./estado-badge"
+import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 type GuiaDetalleSheetProps = {
-  guia: GuiaConRelaciones | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
+  guia: GuiaConRelaciones | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
-function Dato({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function Dato({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-medium">{value ?? "—"}</p>
     </div>
-  );
+  )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-sm font-semibold text-foreground">{children}</p>
-  );
+  return <p className="text-sm font-semibold text-foreground">{children}</p>
 }
 
 function formatFecha(fecha: Date | null) {
-  if (!fecha) return null;
-  return format(new Date(fecha), "dd MMM yyyy", { locale: es });
+  if (!fecha) return null
+  return format(new Date(fecha), "dd MMM yyyy", { locale: es })
 }
 
 function formatHora(hora: Date | null) {
-  if (!hora) return null;
-  return format(new Date(hora), "HH:mm");
+  if (!hora) return null
+  return format(new Date(hora), "HH:mm")
 }
 
 function formatMoneda(valor: number | null) {
-  if (valor === null || valor === undefined) return null;
-  return `S/ ${valor.toFixed(2)}`;
+  if (valor === null || valor === undefined) return null
+  return `S/ ${valor.toFixed(2)}`
 }
 
 export function GuiaDetalleSheet({
@@ -68,7 +60,7 @@ export function GuiaDetalleSheet({
   open,
   onOpenChange,
 }: GuiaDetalleSheetProps) {
-  if (!guia) return null;
+  if (!guia) return null
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -99,10 +91,7 @@ export function GuiaDetalleSheet({
                       : null
                   }
                 />
-                <Dato
-                  label="Nombre"
-                  value={guia.cliente?.nombreCompleto}
-                />
+                <Dato label="Nombre" value={guia.cliente?.nombreCompleto} />
               </div>
             </div>
 
@@ -128,14 +117,8 @@ export function GuiaDetalleSheet({
             <div className="space-y-2">
               <SectionTitle>Ingreso</SectionTitle>
               <div className="grid grid-cols-2 gap-3">
-<Dato
-  label="Fecha"
-  value={formatearFecha(guia.fechaIngreso)}
-/>
-<Dato
-  label="Hora"
-  value={formatearHora(guia.horaIngreso)}
-/>
+                <Dato label="Fecha" value={formatearFecha(guia.fechaIngreso)} />
+                <Dato label="Hora" value={formatearHora(guia.horaIngreso)} />
                 <Dato
                   label="Empresa de transporte"
                   value={guia.empresaTransporteIngreso.nombre}
@@ -158,14 +141,11 @@ export function GuiaDetalleSheet({
               <SectionTitle>Salida</SectionTitle>
               {guia.fechaSalida ? (
                 <div className="grid grid-cols-2 gap-3">
-<Dato
-  label="Fecha"
-  value={formatearFecha(guia.fechaSalida)}
-/>
-<Dato
-  label="Hora"
-  value={formatearHora(guia.horaSalida)}
-/>
+                  <Dato
+                    label="Fecha"
+                    value={formatearFecha(guia.fechaSalida)}
+                  />
+                  <Dato label="Hora" value={formatearHora(guia.horaSalida)} />
                   <Dato
                     label="Empresa de transporte"
                     value={guia.empresaTransporteSalida?.nombre}
@@ -227,9 +207,7 @@ export function GuiaDetalleSheet({
                 />
               </div>
               <div className="rounded-lg bg-muted p-3">
-                <p className="text-xs text-muted-foreground">
-                  Monto total
-                </p>
+                <p className="text-xs text-muted-foreground">Monto total</p>
                 <p className="text-lg font-semibold">
                   {formatMoneda(guia.montoTotal) ?? "Pendiente de calcular"}
                 </p>
@@ -251,5 +229,5 @@ export function GuiaDetalleSheet({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  );
+  )
 }
