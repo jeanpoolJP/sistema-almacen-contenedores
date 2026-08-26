@@ -1,6 +1,6 @@
 // modules\guias\guia.actions.ts
 
-"use server";
+"use server"
 
 import {
   crearGuiaService,
@@ -9,12 +9,11 @@ import {
   obtenerGuiaPorNumeroService,
   obtenerGuiasService,
   anularGuiaService,
-} from "./guia.service";
+} from "./guia.service"
 
-import type {
-  CrearGuiaInput,
-  RegistrarSalidaGuiaInput,
-} from "./guia.types";
+import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
+
+import type { EstadoGuia } from "@/lib/generated/prisma"
 
 /**
  * ============================================================
@@ -24,24 +23,17 @@ import type {
  * Server Action utilizada por el formulario
  * de registro de una nueva guía.
  */
-export async function crearGuiaAction(
-  data: CrearGuiaInput,
-) {
+export async function crearGuiaAction(data: CrearGuiaInput) {
   try {
-    const guia =
-      await crearGuiaService(data);
+    const guia = await crearGuiaService(data)
 
     return {
       success: true,
       data: guia,
-      message:
-        "La guía se registró correctamente",
-    };
+      message: "La guía se registró correctamente",
+    }
   } catch (error) {
-    console.error(
-      "Error al crear guía:",
-      error,
-    );
+    console.error("Error al crear guía:", error)
 
     return {
       success: false,
@@ -50,7 +42,7 @@ export async function crearGuiaAction(
         error instanceof Error
           ? error.message
           : "Ocurrió un error al registrar la guía",
-    };
+    }
   }
 }
 
@@ -63,23 +55,18 @@ export async function crearGuiaAction(
  * sale del almacén.
  */
 export async function registrarSalidaGuiaAction(
-  data: RegistrarSalidaGuiaInput,
+  data: RegistrarSalidaGuiaInput
 ) {
   try {
-    const guia =
-      await registrarSalidaGuiaService(data);
+    const guia = await registrarSalidaGuiaService(data)
 
     return {
       success: true,
       data: guia,
-      message:
-        "La salida del contenedor se registró correctamente",
-    };
+      message: "La salida del contenedor se registró correctamente",
+    }
   } catch (error) {
-    console.error(
-      "Error al registrar salida:",
-      error,
-    );
+    console.error("Error al registrar salida:", error)
 
     return {
       success: false,
@@ -88,7 +75,7 @@ export async function registrarSalidaGuiaAction(
         error instanceof Error
           ? error.message
           : "Ocurrió un error al registrar la salida",
-    };
+    }
   }
 }
 
@@ -97,32 +84,25 @@ export async function registrarSalidaGuiaAction(
  * OBTENER GUÍA POR ID
  * ============================================================
  */
-export async function obtenerGuiaPorIdAction(
-  id: number,
-) {
+export async function obtenerGuiaPorIdAction(id: number) {
   try {
-    const guia =
-      await obtenerGuiaPorIdService(id);
+    const guia = await obtenerGuiaPorIdService(id)
 
     if (!guia) {
       return {
         success: false,
         data: null,
-        message:
-          "La guía no existe",
-      };
+        message: "La guía no existe",
+      }
     }
 
     return {
       success: true,
       data: guia,
       message: null,
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al obtener guía por ID:",
-      error,
-    );
+    console.error("Error al obtener guía por ID:", error)
 
     return {
       success: false,
@@ -131,7 +111,7 @@ export async function obtenerGuiaPorIdAction(
         error instanceof Error
           ? error.message
           : "Ocurrió un error al obtener la guía",
-    };
+    }
   }
 }
 
@@ -140,34 +120,25 @@ export async function obtenerGuiaPorIdAction(
  * OBTENER GUÍA POR NÚMERO
  * ============================================================
  */
-export async function obtenerGuiaPorNumeroAction(
-  numeroGuia: string,
-) {
+export async function obtenerGuiaPorNumeroAction(numeroGuia: string) {
   try {
-    const guia =
-      await obtenerGuiaPorNumeroService(
-        numeroGuia,
-      );
+    const guia = await obtenerGuiaPorNumeroService(numeroGuia)
 
     if (!guia) {
       return {
         success: false,
         data: null,
-        message:
-          "No se encontró una guía con ese número",
-      };
+        message: "No se encontró una guía con ese número",
+      }
     }
 
     return {
       success: true,
       data: guia,
       message: null,
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al obtener guía:",
-      error,
-    );
+    console.error("Error al obtener guía:", error)
 
     return {
       success: false,
@@ -176,7 +147,7 @@ export async function obtenerGuiaPorNumeroAction(
         error instanceof Error
           ? error.message
           : "Ocurrió un error al obtener la guía",
-    };
+    }
   }
 }
 
@@ -185,30 +156,72 @@ export async function obtenerGuiaPorNumeroAction(
  * OBTENER TODAS LAS GUÍAS
  * ============================================================
  */
-export async function obtenerGuiasAction() {
+type ObtenerGuiasActionParams = {
+  pagina?: number
+  limite?: number
+
+  numeroGuia?: string
+  numeroContenedor?: string
+  documentoCliente?: string
+
+  estado?: EstadoGuia
+
+  fechaDesde?: Date
+  fechaHasta?: Date
+}
+
+export async function obtenerGuiasAction({
+  pagina = 1,
+  limite = 10,
+
+  numeroGuia,
+  numeroContenedor,
+  documentoCliente,
+
+  estado,
+
+  fechaDesde,
+  fechaHasta,
+}: ObtenerGuiasActionParams = {}) {
   try {
-    const guias =
-      await obtenerGuiasService();
+    const resultado = await obtenerGuiasService({
+      pagina,
+      limite,
+
+      numeroGuia,
+      numeroContenedor,
+      documentoCliente,
+
+      estado,
+
+      fechaDesde,
+      fechaHasta,
+    })
 
     return {
       success: true,
-      data: guias,
+      data: resultado,
       message: null,
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al obtener guías:",
-      error,
-    );
+    console.error("Error al obtener guías:", error)
 
     return {
       success: false,
-      data: [],
+
+      data: {
+        guias: [],
+        total: 0,
+        pagina,
+        limite,
+        totalPaginas: 0,
+      },
+
       message:
         error instanceof Error
           ? error.message
           : "Ocurrió un error al obtener las guías",
-    };
+    }
   }
 }
 
@@ -217,24 +230,17 @@ export async function obtenerGuiasAction() {
  * ANULAR GUÍA
  * ============================================================
  */
-export async function anularGuiaAction(
-  id: number,
-) {
+export async function anularGuiaAction(id: number) {
   try {
-    const guia =
-      await anularGuiaService(id);
+    const guia = await anularGuiaService(id)
 
     return {
       success: true,
       data: guia,
-      message:
-        "La guía se anuló correctamente",
-    };
+      message: "La guía se anuló correctamente",
+    }
   } catch (error) {
-    console.error(
-      "Error al anular guía:",
-      error,
-    );
+    console.error("Error al anular guía:", error)
 
     return {
       success: false,
@@ -243,6 +249,6 @@ export async function anularGuiaAction(
         error instanceof Error
           ? error.message
           : "Ocurrió un error al anular la guía",
-    };
+    }
   }
 }

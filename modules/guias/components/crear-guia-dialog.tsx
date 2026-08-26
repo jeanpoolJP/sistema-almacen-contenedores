@@ -85,8 +85,6 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
       },
       transportistaIngreso: {
         empresaNombre: "",
-        empresaRuc: "",
-        empresaTelefono: "",
         placa: "",
         conductorNombre: "",
         numeroLicencia: "",

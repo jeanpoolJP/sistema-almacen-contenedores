@@ -7,6 +7,7 @@ import type {
   TipoPrecioGuia,
   TratamientoIGV,
 } from "@/lib/generated/prisma";
+import { GuiaConRelaciones } from "./components/guia-con-relaciones.type";
 
 /**
  * Resultado del cálculo de días de almacenamiento.
@@ -155,3 +156,18 @@ export type CrearGuiaRepositoryInput = {
 
   observaciones?: string | null;
 };
+
+export type FiltrosGuias = {
+  busqueda?: string
+  estado?: EstadoGuia | "TODOS"
+  pagina?: number
+  limite?: number
+}
+
+export type ResultadoGuiasPaginadas = {
+  guias: GuiaConRelaciones[]
+  total: number
+  pagina: number
+  limite: number
+  totalPaginas: number
+}

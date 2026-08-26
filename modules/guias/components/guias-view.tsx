@@ -1,37 +1,38 @@
 // modules/guias/components/guias-view.tsx
 
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
 
-import { CrearGuiaDialog } from "./crear-guia-dialog";
-import { GuiasTable } from "./guias-table";
-import type { GuiaConRelaciones } from "./guia-con-relaciones.type";
+import { CrearGuiaDialog } from "./crear-guia-dialog"
+import { GuiasTable } from "./guias-table"
+import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 type GuiasViewProps = {
-  guias: GuiaConRelaciones[];
-};
+  guias: GuiaConRelaciones[]
+  total: number
+  pagina: number
+  limite: number
+  totalPaginas: number
+}
 
-/**
- * Componente de nivel de página para el módulo de guías.
- *
- * Uso típico en `app/(dashboard)/guias/page.tsx`:
- *
- * ```tsx
- * const res = await obtenerGuiasAction();
- * return <GuiasView guias={res.data} />;
- * ```
- *
- * `router.refresh()` vuelve a ejecutar el server component padre
- * (la página) después de crear/anular/registrar una salida, para
- * que la tabla refleje los datos actualizados desde la base de datos.
- */
-export function GuiasView({ guias }: GuiasViewProps) {
-  const router = useRouter();
+export function GuiasView({
+  guias,
+  total,
+  pagina,
+  limite,
+  totalPaginas,
+}: GuiasViewProps) {
+  const router = useRouter()
 
   return (
     <div className="w-full px-4 py-6">
       <div className="mx-auto w-full max-w-6xl space-y-6">
+
+        {/* ======================================================
+            ENCABEZADO
+        ====================================================== */}
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -43,14 +44,24 @@ export function GuiasView({ guias }: GuiasViewProps) {
             </p>
           </div>
 
-          <CrearGuiaDialog onCreada={() => router.refresh()} />
+          <CrearGuiaDialog
+            onCreada={() => router.refresh()}
+          />
         </div>
+
+        {/* ======================================================
+            TABLA
+        ====================================================== */}
 
         <GuiasTable
           guias={guias}
+          total={total}
+          paginaInicial={pagina}
+          limiteInicial={limite}
+          totalPaginasInicial={totalPaginas}
           onCambio={() => router.refresh()}
         />
       </div>
     </div>
-  );
+  )
 }

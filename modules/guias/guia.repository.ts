@@ -1,10 +1,10 @@
 // modules/guias/guia.repository.ts
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 
-import type {
-  CrearGuiaRepositoryInput,
-} from "./guia.types";
+import type { CrearGuiaRepositoryInput } from "./guia.types"
+
+import { EstadoGuia, Prisma } from "@/lib/generated/prisma"
 
 /**
  * Crea una guía de internamiento.
@@ -14,55 +14,38 @@ import type {
  *
  * Esa responsabilidad pertenece al service.
  */
-export async function crearGuia(
-  data: CrearGuiaRepositoryInput,
-) {
+export async function crearGuia(data: CrearGuiaRepositoryInput) {
   return prisma.guiaInternamiento.create({
     data: {
-      numeroGuia:
-        data.numeroGuia,
+      numeroGuia: data.numeroGuia,
 
-      clienteId:
-        data.clienteId ?? null,
+      clienteId: data.clienteId ?? null,
 
-      contenedorId:
-        data.contenedorId,
+      contenedorId: data.contenedorId,
 
-      empresaTransporteIngresoId:
-        data.empresaTransporteIngresoId,
+      empresaTransporteIngresoId: data.empresaTransporteIngresoId,
 
-      vehiculoIngresoId:
-        data.vehiculoIngresoId,
+      vehiculoIngresoId: data.vehiculoIngresoId,
 
-      conductorIngresoId:
-        data.conductorIngresoId,
+      conductorIngresoId: data.conductorIngresoId,
 
-      fechaIngreso:
-        data.fechaIngreso,
+      fechaIngreso: data.fechaIngreso,
 
-      horaIngreso:
-        data.horaIngreso,
+      horaIngreso: data.horaIngreso,
 
-      tipoPrecio:
-        data.tipoPrecio,
+      tipoPrecio: data.tipoPrecio,
 
-      precioPrimerDia:
-        data.precioPrimerDia,
+      precioPrimerDia: data.precioPrimerDia,
 
-      precioDiaAdicional:
-        data.precioDiaAdicional,
+      precioDiaAdicional: data.precioDiaAdicional,
 
-      porcentajeIGV:
-        data.porcentajeIGV,
+      porcentajeIGV: data.porcentajeIGV,
 
-      tratamientoIGV:
-        data.tratamientoIGV,
+      tratamientoIGV: data.tratamientoIGV,
 
-      estado:
-        data.estado,
+      estado: data.estado,
 
-      observaciones:
-        data.observaciones ?? null,
+      observaciones: data.observaciones ?? null,
     },
 
     include: {
@@ -82,15 +65,13 @@ export async function crearGuia(
 
       conductorSalida: true,
     },
-  });
+  })
 }
 
 /**
  * Busca una guía por ID.
  */
-export async function obtenerGuiaPorId(
-  id: number,
-) {
+export async function obtenerGuiaPorId(id: number) {
   return prisma.guiaInternamiento.findUnique({
     where: {
       id,
@@ -108,15 +89,13 @@ export async function obtenerGuiaPorId(
       vehiculoSalida: true,
       conductorSalida: true,
     },
-  });
+  })
 }
 
 /**
  * Busca una guía por número.
  */
-export async function obtenerGuiaPorNumero(
-  numeroGuia: string,
-) {
+export async function obtenerGuiaPorNumero(numeroGuia: string) {
   return prisma.guiaInternamiento.findUnique({
     where: {
       numeroGuia,
@@ -134,31 +113,119 @@ export async function obtenerGuiaPorNumero(
       vehiculoSalida: true,
       conductorSalida: true,
     },
-  });
+  })
 }
 
 /**
- * Obtiene todas las guías.
+ * Obtiene las guías.
  */
-export async function obtenerGuias() {
-  return prisma.guiaInternamiento.findMany({
-    include: {
-      cliente: true,
-      contenedor: true,
 
-      empresaTransporteIngreso: true,
-      vehiculoIngreso: true,
-      conductorIngreso: true,
+type ObtenerGuiasParams = {
+  pagina: number
+  limite: number
 
-      empresaTransporteSalida: true,
-      vehiculoSalida: true,
-      conductorSalida: true,
-    },
+  numeroGuia?: string
+  numeroContenedor?: string
+  documentoCliente?: string
 
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  estado?: EstadoGuia
+
+  fechaDesde?: Date
+  fechaHasta?: Date
+}
+
+export async function obtenerGuias({
+  pagina,
+  limite,
+  numeroGuia,
+  numeroContenedor,
+  documentoCliente,
+  estado,
+  fechaDesde,
+  fechaHasta,
+}: ObtenerGuiasParams) {
+  const where: Prisma.GuiaInternamientoWhereInput = {
+    ...(numeroGuia && {
+      numeroGuia: {
+        contains: numeroGuia,
+        mode: "insensitive",
+      },
+    }),
+
+    ...(numeroContenedor && {
+      contenedor: {
+        numeroContenedor: {
+          contains: numeroContenedor,
+          mode: "insensitive",
+        },
+      },
+    }),
+
+    ...(documentoCliente && {
+      cliente: {
+        numeroDocumento: {
+          contains: documentoCliente,
+          mode: "insensitive",
+        },
+      },
+    }),
+
+    ...(estado && {
+      estado,
+    }),
+
+    ...(fechaDesde || fechaHasta
+      ? {
+          fechaIngreso: {
+            ...(fechaDesde && {
+              gte: fechaDesde,
+            }),
+
+            ...(fechaHasta && {
+              lte: fechaHasta,
+            }),
+          },
+        }
+      : {}),
+  }
+
+  const skip = (pagina - 1) * limite
+
+  const [guias, total] = await Promise.all([
+    prisma.guiaInternamiento.findMany({
+      where,
+
+      include: {
+        cliente: true,
+        contenedor: true,
+
+        empresaTransporteIngreso: true,
+        vehiculoIngreso: true,
+        conductorIngreso: true,
+
+        empresaTransporteSalida: true,
+        vehiculoSalida: true,
+        conductorSalida: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      skip,
+
+      take: limite,
+    }),
+
+    prisma.guiaInternamiento.count({
+      where,
+    }),
+  ])
+
+  return {
+    guias,
+    total,
+  }
 }
 
 /**
@@ -166,7 +233,7 @@ export async function obtenerGuias() {
  */
 export async function actualizarGuia(
   id: number,
-  data: Record<string, unknown>,
+  data: Record<string, unknown>
 ) {
   return prisma.guiaInternamiento.update({
     where: {
@@ -187,15 +254,13 @@ export async function actualizarGuia(
       vehiculoSalida: true,
       conductorSalida: true,
     },
-  });
+  })
 }
 
 /**
  * Anula una guía.
  */
-export async function anularGuia(
-  id: number,
-) {
+export async function anularGuia(id: number) {
   return prisma.guiaInternamiento.update({
     where: {
       id,
@@ -204,5 +269,5 @@ export async function anularGuia(
     data: {
       estado: "ANULADO",
     },
-  });
+  })
 }

@@ -1,8 +1,19 @@
-import { GuiasView } from "@/modules/guias/components/guias-view";
-import { obtenerGuiasAction } from "@/modules/guias/guia.actions";
+import { obtenerGuiasService } from "@/modules/guias/guia.service"
+import { GuiasView } from "@/modules/guias/components/guias-view"
 
 export default async function GuiasAdminPage() {
-  const res = await obtenerGuiasAction();
+  const resultado = await obtenerGuiasService({
+    pagina: 1,
+    limite: 10,
+  })
 
-  return <GuiasView guias={res.data} />;
+  return (
+    <GuiasView
+      guias={resultado.guias}
+      total={resultado.total}
+      pagina={resultado.pagina}
+      limite={resultado.limite}
+      totalPaginas={resultado.totalPaginas}
+    />
+  )
 }

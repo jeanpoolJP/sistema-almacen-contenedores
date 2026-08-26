@@ -52,8 +52,6 @@ export function RegistrarSalidaDialog({
       guiaId: guia.id,
       transportistaSalida: {
         empresaNombre: "",
-        empresaRuc: "",
-        empresaTelefono: "",
         placa: "",
         conductorNombre: "",
         numeroLicencia: "",
@@ -68,8 +66,6 @@ export function RegistrarSalidaDialog({
 
   function copiarDatosIngreso() {
     form.setValue("transportistaSalida.empresaNombre", guia.empresaTransporteIngreso.nombre);
-    form.setValue("transportistaSalida.empresaRuc", guia.empresaTransporteIngreso.ruc ?? "");
-    form.setValue("transportistaSalida.empresaTelefono", guia.empresaTransporteIngreso.telefono ?? "");
     form.setValue("transportistaSalida.placa", guia.vehiculoIngreso.placa);
     form.setValue("transportistaSalida.conductorNombre", guia.conductorIngreso.nombreCompleto);
     form.setValue("transportistaSalida.numeroLicencia", guia.conductorIngreso.numeroLicencia);

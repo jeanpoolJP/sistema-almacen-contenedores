@@ -31,6 +31,8 @@ import { obtenerOCrearVehiculo } from "@/modules/vehiculos/vehiculos.service"
 
 import { obtenerOCrearConductor } from "@/modules/conductores/conductores.service"
 
+import type { EstadoGuia } from "@/lib/generated/prisma"
+
 /**
  * Crea una guía de internamiento.
  *
@@ -344,21 +346,70 @@ export async function obtenerGuiaPorNumeroService(numeroGuia: string) {
 }
 
 /**
- * Obtiene todas las guías.
+ * Obtiene  las guías.
  */
-export async function obtenerGuiasService() {
-  const guias = await obtenerGuias()
 
-  return guias.map((guia) => ({
+type ObtenerGuiasServiceParams = {
+  pagina: number
+  limite: number
+
+  numeroGuia?: string
+  numeroContenedor?: string
+  documentoCliente?: string
+
+  estado?: EstadoGuia
+
+  fechaDesde?: Date
+  fechaHasta?: Date
+}
+
+export async function obtenerGuiasService({
+  pagina,
+  limite,
+  numeroGuia,
+  numeroContenedor,
+  documentoCliente,
+  estado,
+  fechaDesde,
+  fechaHasta,
+}: ObtenerGuiasServiceParams) {
+  const resultado = await obtenerGuias({
+    pagina,
+    limite,
+    numeroGuia,
+    numeroContenedor,
+    documentoCliente,
+    estado,
+    fechaDesde,
+    fechaHasta,
+  })
+
+  const guias = resultado.guias.map((guia) => ({
     ...guia,
+
     precioPrimerDia: Number(guia.precioPrimerDia),
+
     precioDiaAdicional: Number(guia.precioDiaAdicional),
+
     subtotal: guia.subtotal === null ? null : Number(guia.subtotal),
+
     porcentajeIGV:
       guia.porcentajeIGV === null ? null : Number(guia.porcentajeIGV),
+
     montoIGV: guia.montoIGV === null ? null : Number(guia.montoIGV),
+
     montoTotal: guia.montoTotal === null ? null : Number(guia.montoTotal),
   }))
+
+  return {
+    guias,
+    total: resultado.total,
+
+    pagina,
+    limite,
+
+    totalPaginas: Math.ceil(resultado.total / limite),
+  }
 }
 
 /**
