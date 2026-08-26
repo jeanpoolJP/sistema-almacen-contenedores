@@ -1,31 +1,31 @@
 // modules/guias/components/fields/contenedor-field.tsx
 
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { useFormContext } from "react-hook-form";
-import { CheckCircle2, Loader2, PackagePlus } from "lucide-react";
+import { useState, useTransition } from "react"
+import { useFormContext } from "react-hook-form"
+import { CheckCircle2, Loader2, PackagePlus } from "lucide-react"
 
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
 
-import { buscarContenedorPorNumeroAction } from "../../guia.lookup.actions";
+import { buscarContenedorPorNumeroAction } from "../../guia.lookup.actions"
 
-type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo";
+type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo"
 
 /**
  * Sección "Contenedor" del formulario de creación de guía.
@@ -34,40 +34,51 @@ type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo";
  * lectura), si no, permite registrarlo como contenedor nuevo.
  */
 export function ContenedorField() {
-  const { control, setValue } = useFormContext();
-  const [estado, setEstado] = useState<EstadoBusqueda>("idle");
-  const [isPending, startTransition] = useTransition();
+  const { control, setValue, watch } = useFormContext()
+  const [estado, setEstado] = useState<EstadoBusqueda>("idle")
+  const [isPending, startTransition] = useTransition()
 
-  const soloLectura = estado === "existente";
+  const soloLectura = estado === "existente"
+
+  const medidaActual = watch("contenedor.medida")
+
+  console.log("MEDIDA ACTUAL:", medidaActual)
 
   async function handleBlurNumero(numero: string) {
-    const limpio = numero.trim().toUpperCase();
+    const limpio = numero.trim().toUpperCase()
 
     if (!limpio) {
-      setEstado("idle");
-      return;
+      setEstado("idle")
+      return
     }
 
-    setEstado("buscando");
+    setEstado("buscando")
 
     startTransition(() => {
       buscarContenedorPorNumeroAction(limpio).then((res) => {
+        console.log("RESPUESTA CONTENEDOR:", res)
+
         if (res.encontrado && res.data) {
+          console.log("MEDIDA ENCONTRADA:", res.data.medida)
+
           setValue("contenedor.marca", res.data.marca, {
             shouldValidate: true,
-          });
+          })
+
           setValue("contenedor.medida", res.data.medida, {
             shouldValidate: true,
-          });
+          })
+
           setValue("contenedor.tipo", res.data.tipo, {
             shouldValidate: true,
-          });
-          setEstado("existente");
+          })
+
+          setEstado("existente")
         } else {
-          setEstado("nuevo");
+          setEstado("nuevo")
         }
-      });
-    });
+      })
+    })
   }
 
   return (
@@ -84,16 +95,14 @@ export function ContenedorField() {
                   {...field}
                   placeholder="Ej: MSCU1234567"
                   className="uppercase"
-                  onChange={(e) =>
-                    field.onChange(e.target.value.toUpperCase())
-                  }
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                   onBlur={(e) => {
-                    field.onBlur();
-                    handleBlurNumero(e.target.value);
+                    field.onBlur()
+                    handleBlurNumero(e.target.value)
                   }}
                 />
                 {isPending && (
-                  <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                 )}
               </div>
             </FormControl>
@@ -141,52 +150,38 @@ export function ContenedorField() {
           )}
         />
 
-<FormField
-  control={control}
-  name="contenedor.medida"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Medida</FormLabel>
+        <FormField
+          control={control}
+          name="contenedor.medida"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Medida</FormLabel>
 
-      <Select
-        onValueChange={(value) =>
-          field.onChange(Number(value))
-        }
-        value={
-          field.value !== undefined &&
-          field.value !== null
-            ? String(field.value)
-            : undefined
-        }
-        disabled={soloLectura}
-      >
-        <FormControl>
-          <SelectTrigger
-            className={
-              soloLectura
-                ? "bg-muted"
-                : undefined
-            }
-          >
-            <SelectValue placeholder="20 o 40" />
-          </SelectTrigger>
-        </FormControl>
+              <Select
+                value={field.value != null ? String(field.value) : ""}
+                onValueChange={(value) => {
+                  field.onChange(Number(value))
+                }}
+                disabled={soloLectura}
+              >
+                <FormControl>
+                  <SelectTrigger
+                    className={soloLectura ? "bg-muted" : undefined}
+                  >
+                    <SelectValue placeholder="20 o 40" />
+                  </SelectTrigger>
+                </FormControl>
 
-        <SelectContent>
-          <SelectItem value="20">
-            20 
-          </SelectItem>
+                <SelectContent>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="40">40</SelectItem>
+                </SelectContent>
+              </Select>
 
-          <SelectItem value="40">
-            40 
-          </SelectItem>
-        </SelectContent>
-      </Select>
-
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={control}
@@ -215,5 +210,5 @@ export function ContenedorField() {
         />
       </div>
     </div>
-  );
+  )
 }
