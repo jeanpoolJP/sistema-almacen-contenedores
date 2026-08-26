@@ -1,5 +1,3 @@
-// modules/clientes/components/clientes-page.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -43,18 +41,60 @@ export function ClientesPage() {
   const [loading, setLoading] =
     useState(true);
 
+  // ============================================================
+  // PAGINACIÓN
+  // ============================================================
+
+  const [page, setPage] = useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(10);
+
+  const [totalPages, setTotalPages] =
+    useState(1);
+
+  const [totalClientes, setTotalClientes] =
+    useState(0);
+
   /**
    * Obtiene los clientes desde el servidor.
+   *
+   * También obtiene la información necesaria
+   * para la paginación.
    */
-  async function cargarClientes() {
+  async function cargarClientes(
+    pagina: number = page,
+    cantidad: number = pageSize,
+  ) {
     setLoading(true);
 
     try {
       const result =
-        await listarClientes();
+        await listarClientes(
+          pagina,
+          cantidad,
+        );
 
       if (result.success) {
-        setClientes(result.data);
+        setClientes(
+          result.data.data,
+        );
+
+        setPage(
+          result.data.page,
+        );
+
+        setPageSize(
+          result.data.pageSize,
+        );
+
+        setTotalPages(
+          result.data.totalPages,
+        );
+
+        setTotalClientes(
+          result.data.total,
+        );
       }
     } finally {
       setLoading(false);
@@ -65,8 +105,37 @@ export function ClientesPage() {
    * Carga inicial.
    */
   useEffect(() => {
-    cargarClientes();
+    cargarClientes(1, 10);
   }, []);
+
+  /**
+   * Cambia de página.
+   */
+  function handlePageChange(
+    nuevaPagina: number,
+  ) {
+    cargarClientes(
+      nuevaPagina,
+      pageSize,
+    );
+  }
+
+  /**
+   * Cambia la cantidad de filas
+   * mostradas por página.
+   */
+  function handlePageSizeChange(
+    nuevaCantidad: number,
+  ) {
+    setPageSize(
+      nuevaCantidad,
+    );
+
+    cargarClientes(
+      1,
+      nuevaCantidad,
+    );
+  }
 
   /**
    * Filtra clientes por:
@@ -126,7 +195,10 @@ export function ClientesPage() {
     setOpenForm(false);
     setClienteSeleccionado(null);
 
-    await cargarClientes();
+    await cargarClientes(
+      page,
+      pageSize,
+    );
   }
 
   /**
@@ -164,6 +236,7 @@ export function ClientesPage() {
           onClick={handleNuevoCliente}
         >
           <Plus className="mr-2 size-4" />
+
           Nuevo cliente
         </Button>
       </div>
@@ -226,6 +299,7 @@ export function ClientesPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Buscador */}
+
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -242,9 +316,15 @@ export function ClientesPage() {
         </div>
 
         {/* Actualizar */}
+
         <Button
           variant="outline"
-          onClick={cargarClientes}
+          onClick={() =>
+            cargarClientes(
+              page,
+              pageSize,
+            )
+          }
           disabled={loading}
         >
           <RefreshCw
@@ -275,7 +355,22 @@ export function ClientesPage() {
         <ClienteTable
           clientes={clientesFiltrados}
           onEdit={handleEditarCliente}
-          onRefresh={cargarClientes}
+          onRefresh={() =>
+            cargarClientes(
+              page,
+              pageSize,
+            )
+          }
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          total={totalClientes}
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
+          }
         />
       )}
 
@@ -287,11 +382,13 @@ export function ClientesPage() {
         <div className="text-sm text-muted-foreground">
           Mostrando{" "}
           <span className="font-medium text-foreground">
-            {clientesFiltrados.length}
+            {
+              clientesFiltrados.length
+            }
           </span>{" "}
           de{" "}
           <span className="font-medium text-foreground">
-            {clientes.length}
+            {totalClientes}
           </span>{" "}
           clientes.
         </div>

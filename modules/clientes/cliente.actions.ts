@@ -12,6 +12,7 @@ import {
   obtenerClientePorId,
   obtenerClientes,
   registrarCliente,
+  contarClientes,
 } from "./cliente.service";
 
 import type { ClienteFormData } from "./cliente.types";
@@ -129,17 +130,46 @@ export async function buscarClientePorId(
  * LISTAR CLIENTES
  * ============================================================
  */
-export async function listarClientes(): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof obtenerClientes>>
-  >
+export async function listarClientes(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<
+  ActionResult<{
+    data: Awaited<
+      ReturnType<typeof obtenerClientes>
+    >;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>
 > {
   try {
-    const clientes = await obtenerClientes();
+    const [
+      clientes,
+      total,
+    ] = await Promise.all([
+      obtenerClientes(
+        page,
+        pageSize,
+      ),
+      contarClientes(),
+    ]);
+
+    const totalPages = Math.ceil(
+      total / pageSize,
+    );
 
     return {
       success: true,
-      data: clientes,
+
+      data: {
+        data: clientes,
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
     };
   } catch (error) {
     console.error(
@@ -149,7 +179,8 @@ export async function listarClientes(): Promise<
 
     return {
       success: false,
-      error: "No se pudieron obtener los clientes",
+      error:
+        "No se pudieron obtener los clientes",
     };
   }
 }

@@ -12,6 +12,7 @@ import {
   findClienteById,
   findClientes,
   updateCliente,
+  countClientes,
 } from "./cliente.repository";
 
 import type { ClienteFormData } from "./cliente.types";
@@ -82,12 +83,24 @@ export async function obtenerClientePorId(id: number) {
 }
 
 /**
- * Obtiene todos los clientes.
+ * Obtiene una página de clientes.
  */
-export async function obtenerClientes() {
-  return findClientes();
+export async function obtenerClientes(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  return findClientes(
+    page,
+    pageSize,
+  );
 }
 
+/**
+ * Obtiene la cantidad total de clientes.
+ */
+export async function contarClientes() {
+  return countClientes();
+}
 /**
  * Registra un nuevo cliente.
  *

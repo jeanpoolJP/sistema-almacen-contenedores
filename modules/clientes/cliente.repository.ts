@@ -31,16 +31,34 @@ export async function findClienteById(id: number) {
 }
 
 /**
- * Obtiene todos los clientes.
+ * Obtiene una página de clientes.
  *
  * Los más recientes aparecen primero.
  */
-export async function findClientes() {
+export async function findClientes(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const skip = (page - 1) * pageSize;
+
   return prisma.cliente.findMany({
+    skip,
+    take: pageSize,
+
     orderBy: {
       createdAt: "desc",
     },
   });
+}
+
+/**
+ * Obtiene la cantidad total de clientes.
+ *
+ * Se utiliza para calcular la cantidad
+ * de páginas disponibles.
+ */
+export async function countClientes() {
+  return prisma.cliente.count();
 }
 
 /**
