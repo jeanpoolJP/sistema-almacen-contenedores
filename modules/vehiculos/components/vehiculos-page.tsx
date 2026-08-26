@@ -1,3 +1,5 @@
+// modules\vehiculos\components\vehiculos-page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -25,8 +27,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function VehiculosPage() {
+  /**
+   * ============================================================
+   * ESTADO DE DATOS
+   * ============================================================
+   */
+
   const [vehiculos, setVehiculos] =
     useState<Vehiculo[]>([]);
+
+  const [total, setTotal] =
+    useState(0);
+
+  const [page, setPage] =
+    useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(10);
+
+  const [totalPages, setTotalPages] =
+    useState(0);
+
+  /**
+   * ============================================================
+   * ESTADO DEL FORMULARIO
+   * ============================================================
+   */
 
   const [
     vehiculoSeleccionado,
@@ -36,24 +62,63 @@ export function VehiculosPage() {
   const [openForm, setOpenForm] =
     useState(false);
 
+  /**
+   * ============================================================
+   * ESTADO DE BÚSQUEDA
+   * ============================================================
+   */
+
   const [busqueda, setBusqueda] =
     useState("");
+
+  /**
+   * ============================================================
+   * ESTADO DE CARGA
+   * ============================================================
+   */
 
   const [loading, setLoading] =
     useState(true);
 
   /**
-   * Obtiene los vehículos desde el servidor.
+   * ============================================================
+   * CARGAR VEHÍCULOS
+   * ============================================================
    */
-  async function cargarVehiculos() {
+
+  async function cargarVehiculos(
+    pagina: number = page,
+    cantidad: number = pageSize,
+  ) {
     setLoading(true);
 
     try {
       const result =
-        await listarVehiculos();
+        await listarVehiculos(
+          pagina,
+          cantidad,
+        );
 
       if (result.success) {
-        setVehiculos(result.data);
+        setVehiculos(
+          result.data.data,
+        );
+
+        setTotal(
+          result.data.total,
+        );
+
+        setPage(
+          result.data.page,
+        );
+
+        setPageSize(
+          result.data.pageSize,
+        );
+
+        setTotalPages(
+          result.data.totalPages,
+        );
       }
     } finally {
       setLoading(false);
@@ -61,61 +126,122 @@ export function VehiculosPage() {
   }
 
   /**
-   * Carga inicial.
+   * ============================================================
+   * CARGA INICIAL
+   * ============================================================
    */
+
   useEffect(() => {
-    cargarVehiculos();
+    cargarVehiculos(1, 10);
   }, []);
 
   /**
-   * Filtra los vehículos por placa.
+   * ============================================================
+   * BÚSQUEDA
+   * ============================================================
+   *
+   * Filtra los vehículos que están actualmente
+   * cargados en la página.
    */
+
   const vehiculosFiltrados =
-    vehiculos.filter((vehiculo) => {
-      const termino =
-        busqueda.trim().toLowerCase();
+    vehiculos.filter(
+      (vehiculo) => {
+        const termino =
+          busqueda
+            .trim()
+            .toLowerCase();
 
-      if (!termino) {
-        return true;
-      }
+        if (!termino) {
+          return true;
+        }
 
-      return vehiculo.placa
-        .toLowerCase()
-        .includes(termino);
-    });
+        return vehiculo.placa
+          .toLowerCase()
+          .includes(termino);
+      },
+    );
 
   /**
-   * Nuevo vehículo.
+   * ============================================================
+   * CAMBIAR PÁGINA
+   * ============================================================
    */
+
+  function handlePageChange(
+    nuevaPagina: number,
+  ) {
+    cargarVehiculos(
+      nuevaPagina,
+      pageSize,
+    );
+  }
+
+  /**
+   * ============================================================
+   * CAMBIAR CANTIDAD DE FILAS
+   * ============================================================
+   */
+
+  function handlePageSizeChange(
+    nuevaCantidad: number,
+  ) {
+    cargarVehiculos(
+      1,
+      nuevaCantidad,
+    );
+  }
+
+  /**
+   * ============================================================
+   * NUEVO VEHÍCULO
+   * ============================================================
+   */
+
   function handleNuevoVehiculo() {
     setVehiculoSeleccionado(null);
     setOpenForm(true);
   }
 
   /**
-   * Editar vehículo.
+   * ============================================================
+   * EDITAR VEHÍCULO
+   * ============================================================
    */
+
   function handleEditarVehiculo(
     vehiculo: Vehiculo,
   ) {
-    setVehiculoSeleccionado(vehiculo);
+    setVehiculoSeleccionado(
+      vehiculo,
+    );
+
     setOpenForm(true);
   }
 
   /**
-   * Se ejecuta después de crear o actualizar
-   * correctamente un vehículo.
+   * ============================================================
+   * DESPUÉS DE CREAR / ACTUALIZAR
+   * ============================================================
    */
+
   async function handleSuccess() {
     setOpenForm(false);
+
     setVehiculoSeleccionado(null);
 
-    await cargarVehiculos();
+    await cargarVehiculos(
+      page,
+      pageSize,
+    );
   }
 
   /**
-   * Controla el diálogo.
+   * ============================================================
+   * CONTROLAR DIÁLOGO
+   * ============================================================
    */
+
   function handleOpenChange(
     open: boolean,
   ) {
@@ -143,13 +269,15 @@ export function VehiculosPage() {
           </div>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Administra los vehículos registrados
-            en el sistema.
+            Administra los vehículos
+            registrados en el sistema.
           </p>
         </div>
 
         <Button
-          onClick={handleNuevoVehiculo}
+          onClick={
+            handleNuevoVehiculo
+          }
         >
           <Plus className="mr-2 size-4" />
 
@@ -163,7 +291,9 @@ export function VehiculosPage() {
 
       <Dialog
         open={openForm}
-        onOpenChange={handleOpenChange}
+        onOpenChange={
+          handleOpenChange
+        }
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -178,13 +308,17 @@ export function VehiculosPage() {
             vehiculo={
               vehiculoSeleccionado
                 ? {
-                    id: vehiculoSeleccionado.id,
+                    id:
+                      vehiculoSeleccionado.id,
+
                     placa:
                       vehiculoSeleccionado.placa,
                   }
                 : undefined
             }
-            onSuccess={handleSuccess}
+            onSuccess={
+              handleSuccess
+            }
           />
         </DialogContent>
       </Dialog>
@@ -194,26 +328,44 @@ export function VehiculosPage() {
       ====================================================== */}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Buscador */}
+        {/* BUSCADOR */}
+
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
           <Input
             value={busqueda}
-            onChange={(event) =>
+            onChange={(event) => {
               setBusqueda(
                 event.target.value,
-              )
-            }
+              );
+
+              /**
+               * Cuando el usuario empieza una
+               * nueva búsqueda volvemos a la
+               * primera página.
+               */
+              if (
+                page !== 1
+              ) {
+                setPage(1);
+              }
+            }}
             placeholder="Buscar por placa..."
             className="pl-9 uppercase"
           />
         </div>
 
-        {/* Actualizar */}
+        {/* ACTUALIZAR */}
+
         <Button
           variant="outline"
-          onClick={cargarVehiculos}
+          onClick={() =>
+            cargarVehiculos(
+              page,
+              pageSize,
+            )
+          }
           disabled={loading}
         >
           <RefreshCw
@@ -242,9 +394,29 @@ export function VehiculosPage() {
         </div>
       ) : (
         <VehiculoTable
-          vehiculos={vehiculosFiltrados}
-          onEdit={handleEditarVehiculo}
-          onRefresh={cargarVehiculos}
+          vehiculos={
+            vehiculosFiltrados
+          }
+          total={total}
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
+          }
+          onEdit={
+            handleEditarVehiculo
+          }
+          onRefresh={
+            () =>
+              cargarVehiculos(
+                page,
+                pageSize,
+              )
+          }
         />
       )}
 
@@ -260,7 +432,7 @@ export function VehiculosPage() {
           </span>{" "}
           de{" "}
           <span className="font-medium text-foreground">
-            {vehiculos.length}
+            {total}
           </span>{" "}
           vehículos.
         </div>

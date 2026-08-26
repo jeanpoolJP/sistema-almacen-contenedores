@@ -3,6 +3,7 @@
 import { vehiculoSchema } from "./vehiculos.schema";
 
 import {
+  countVehiculos,
   createVehiculo,
   deleteVehiculo,
   findVehiculoById,
@@ -77,10 +78,20 @@ export async function obtenerVehiculoPorId(
 }
 
 /**
- * Obtiene todos los vehículos registrados.
+ * Obtiene los vehículos paginados.
  */
-export async function obtenerVehiculos() {
-  return findVehiculos();
+export async function obtenerVehiculos(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  return findVehiculos(page, pageSize);
+}
+
+/**
+ * Obtiene la cantidad total de vehículos.
+ */
+export async function contarVehiculos() {
+  return countVehiculos();
 }
 
 /**

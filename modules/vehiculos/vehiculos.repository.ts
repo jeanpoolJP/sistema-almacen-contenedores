@@ -34,14 +34,32 @@ export async function findVehiculoById(
 }
 
 /**
- * Obtiene todos los vehículos.
+ * Obtiene los vehículos paginados.
+ *
+ * Los más recientemente registrados
+ * aparecen primero.
  */
-export async function findVehiculos() {
+export async function findVehiculos(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const skip = (page - 1) * pageSize;
+
   return prisma.vehiculo.findMany({
+    skip,
+    take: pageSize,
+
     orderBy: {
       createdAt: "desc",
     },
   });
+}
+
+/**
+ * Cuenta todos los vehículos registrados.
+ */
+export async function countVehiculos() {
+  return prisma.vehiculo.count();
 }
 
 /**

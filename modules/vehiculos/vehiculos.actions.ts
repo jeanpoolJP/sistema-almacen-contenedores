@@ -7,6 +7,7 @@ import { ZodError } from "zod";
 
 import {
   actualizarVehiculo as actualizarVehiculoService,
+  contarVehiculos,
   eliminarVehiculo as eliminarVehiculoService,
   obtenerVehiculoPorId,
   obtenerVehiculoPorPlaca,
@@ -15,6 +16,7 @@ import {
 } from "./vehiculos.service";
 
 import type { VehiculoFormData } from "./vehiculos.types";
+import { countVehiculos } from "./vehiculos.repository";
 
 /**
  * Resultado estándar de las Server Actions.
@@ -122,22 +124,48 @@ export async function buscarVehiculoPorId(
 }
 
 /**
- * Listar todos los vehículos.
+ * ============================================================
+ * LISTAR VEHÍCULOS
+ * ============================================================
  */
-export async function listarVehiculos(): Promise<
-  ActionResult<
-    Awaited<
+export async function listarVehiculos(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<
+  ActionResult<{
+    data: Awaited<
       ReturnType<typeof obtenerVehiculos>
-    >
-  >
+    >;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>
 > {
   try {
-    const vehiculos =
-      await obtenerVehiculos();
+    const [vehiculos, total] =
+      await Promise.all([
+        obtenerVehiculos(
+          page,
+          pageSize,
+        ),
+        contarVehiculos(),
+      ]);
+
+    const totalPages = Math.ceil(
+      total / pageSize,
+    );
 
     return {
       success: true,
-      data: vehiculos,
+
+      data: {
+        data: vehiculos,
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
     };
   } catch (error) {
     console.error(
