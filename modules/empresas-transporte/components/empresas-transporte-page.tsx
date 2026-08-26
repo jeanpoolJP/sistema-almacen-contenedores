@@ -1,3 +1,5 @@
+// modules\empresas-transporte\components\empresas-transporte-page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,7 +13,9 @@ import {
 
 import { toast } from "sonner";
 
-import type { EmpresaTransporte } from "../empresa-transporte.types";
+import type {
+  EmpresaTransporte,
+} from "../empresa-transporte.types";
 
 import {
   obtenerEmpresasTransporteAction,
@@ -32,13 +36,15 @@ import { Input } from "@/components/ui/input";
 
 export function EmpresasTransportePage() {
   const [empresas, setEmpresas] =
-    useState<EmpresaTransporte[]>([]);
+    useState<
+      EmpresaTransporte[]
+    >([]);
 
   const [
     empresaSeleccionada,
     setEmpresaSeleccionada,
   ] = useState<EmpresaTransporte | null>(
-    null
+    null,
   );
 
   const [openForm, setOpenForm] =
@@ -50,30 +56,74 @@ export function EmpresasTransportePage() {
   const [loading, setLoading] =
     useState(true);
 
+  // ============================================================
+  // PAGINACIÓN
+  // ============================================================
+
+  const [page, setPage] =
+    useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(10);
+
+  const [
+    totalPages,
+    setTotalPages,
+  ] = useState(1);
+
+  const [
+    totalEmpresas,
+    setTotalEmpresas,
+  ] = useState(0);
+
   /**
    * Obtiene las empresas de transporte
    * desde el servidor.
    */
-  async function cargarEmpresas() {
+  async function cargarEmpresas(
+    pagina: number = page,
+    cantidad: number = pageSize,
+  ) {
     setLoading(true);
 
     try {
       const result =
-        await obtenerEmpresasTransporteAction();
+        await obtenerEmpresasTransporteAction(
+          pagina,
+          cantidad,
+        );
 
       if (result.success) {
-        setEmpresas(result.data);
+        setEmpresas(
+          result.data.data,
+        );
+
+        setPage(
+          result.data.page,
+        );
+
+        setPageSize(
+          result.data.pageSize,
+        );
+
+        setTotalPages(
+          result.data.totalPages,
+        );
+
+        setTotalEmpresas(
+          result.data.total,
+        );
       } else {
         toast.error(
           result.message ??
-            "No se pudieron cargar las empresas de transporte"
+            "No se pudieron cargar las empresas de transporte",
         );
       }
     } catch (error) {
       console.error(error);
 
       toast.error(
-        "No se pudieron cargar las empresas de transporte"
+        "No se pudieron cargar las empresas de transporte",
       );
     } finally {
       setLoading(false);
@@ -84,43 +134,79 @@ export function EmpresasTransportePage() {
    * Carga inicial.
    */
   useEffect(() => {
-    cargarEmpresas();
+    cargarEmpresas(
+      1,
+      10,
+    );
   }, []);
 
   /**
-   * Filtra por:
+   * Cambia de página.
+   */
+  function handlePageChange(
+    nuevaPagina: number,
+  ) {
+    cargarEmpresas(
+      nuevaPagina,
+      pageSize,
+    );
+  }
+
+  /**
+   * Cambia la cantidad de filas
+   * por página.
+   */
+  function handlePageSizeChange(
+    nuevaCantidad: number,
+  ) {
+    cargarEmpresas(
+      1,
+      nuevaCantidad,
+    );
+  }
+
+  /**
+   * Filtra las empresas cargadas
+   * actualmente.
    *
    * - Nombre
    * - RUC
    * - Teléfono
    */
   const empresasFiltradas =
-    empresas.filter((empresa) => {
-      const termino =
-        busqueda.trim().toLowerCase();
+    empresas.filter(
+      (empresa) => {
+        const termino =
+          busqueda
+            .trim()
+            .toLowerCase();
 
-      if (!termino) {
-        return true;
-      }
+        if (!termino) {
+          return true;
+        }
 
-      return (
-        empresa.nombre
-          .toLowerCase()
-          .includes(termino) ||
-        empresa.ruc
-          ?.toLowerCase()
-          .includes(termino) ||
-        empresa.telefono
-          ?.toLowerCase()
-          .includes(termino)
-      );
-    });
+        return (
+          empresa.nombre
+            .toLowerCase()
+            .includes(termino) ||
+          empresa.ruc
+            ?.toLowerCase()
+            .includes(termino) ||
+          empresa.telefono
+            ?.toLowerCase()
+            .includes(termino)
+        );
+      },
+    );
 
   /**
    * Nueva empresa.
    */
   function handleNuevaEmpresa() {
-    setEmpresaSeleccionada(null);
+    setEmpresaSeleccionada(
+      null,
+    );
+
     setOpenForm(true);
   }
 
@@ -128,9 +214,12 @@ export function EmpresasTransportePage() {
    * Editar empresa.
    */
   function handleEditarEmpresa(
-    empresa: EmpresaTransporte
+    empresa: EmpresaTransporte,
   ) {
-    setEmpresaSeleccionada(empresa);
+    setEmpresaSeleccionada(
+      empresa,
+    );
+
     setOpenForm(true);
   }
 
@@ -140,21 +229,28 @@ export function EmpresasTransportePage() {
   async function handleSuccess() {
     setOpenForm(false);
 
-    setEmpresaSeleccionada(null);
+    setEmpresaSeleccionada(
+      null,
+    );
 
-    await cargarEmpresas();
+    await cargarEmpresas(
+      page,
+      pageSize,
+    );
   }
 
   /**
    * Controla el diálogo.
    */
   function handleOpenChange(
-    open: boolean
+    open: boolean,
   ) {
     setOpenForm(open);
 
     if (!open) {
-      setEmpresaSeleccionada(null);
+      setEmpresaSeleccionada(
+        null,
+      );
     }
   }
 
@@ -170,18 +266,23 @@ export function EmpresasTransportePage() {
             <Building2 className="size-6" />
 
             <h1 className="text-2xl font-semibold tracking-tight">
-              Empresas de transporte
+              Empresas de
+              transporte
             </h1>
           </div>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Administra las empresas de transporte
-            registradas en el sistema.
+            Administra las empresas
+            de transporte
+            registradas en el
+            sistema.
           </p>
         </div>
 
         <Button
-          onClick={handleNuevaEmpresa}
+          onClick={
+            handleNuevaEmpresa
+          }
         >
           <Plus className="mr-2 size-4" />
 
@@ -195,7 +296,9 @@ export function EmpresasTransportePage() {
 
       <Dialog
         open={openForm}
-        onOpenChange={handleOpenChange}
+        onOpenChange={
+          handleOpenChange
+        }
       >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -233,7 +336,9 @@ export function EmpresasTransportePage() {
                   }
                 : undefined
             }
-            onSuccess={handleSuccess}
+            onSuccess={
+              handleSuccess
+            }
           />
         </DialogContent>
       </Dialog>
@@ -252,7 +357,7 @@ export function EmpresasTransportePage() {
             value={busqueda}
             onChange={(event) =>
               setBusqueda(
-                event.target.value
+                event.target.value,
               )
             }
             placeholder="Buscar por nombre, RUC o teléfono..."
@@ -264,7 +369,12 @@ export function EmpresasTransportePage() {
 
         <Button
           variant="outline"
-          onClick={cargarEmpresas}
+          onClick={() =>
+            cargarEmpresas(
+              page,
+              pageSize,
+            )
+          }
           disabled={loading}
         >
           <RefreshCw
@@ -288,14 +398,38 @@ export function EmpresasTransportePage() {
           <RefreshCw className="mx-auto size-5 animate-spin text-muted-foreground" />
 
           <p className="mt-2 text-sm text-muted-foreground">
-            Cargando empresas de transporte...
+            Cargando empresas
+            de transporte...
           </p>
         </div>
       ) : (
         <EmpresaTransporteTable
-          empresas={empresasFiltradas}
-          onEdit={handleEditarEmpresa}
-          onRefresh={cargarEmpresas}
+          empresas={
+            empresasFiltradas
+          }
+          onEdit={
+            handleEditarEmpresa
+          }
+          onRefresh={() =>
+            cargarEmpresas(
+              page,
+              pageSize,
+            )
+          }
+          page={page}
+          pageSize={pageSize}
+          totalPages={
+            totalPages
+          }
+          total={
+            totalEmpresas
+          }
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
+          }
         />
       )}
 
@@ -307,11 +441,15 @@ export function EmpresasTransportePage() {
         <div className="text-sm text-muted-foreground">
           Mostrando{" "}
           <span className="font-medium text-foreground">
-            {empresasFiltradas.length}
+            {
+              empresasFiltradas.length
+            }
           </span>{" "}
           de{" "}
           <span className="font-medium text-foreground">
-            {empresas.length}
+            {
+              totalEmpresas
+            }
           </span>{" "}
           empresas.
         </div>

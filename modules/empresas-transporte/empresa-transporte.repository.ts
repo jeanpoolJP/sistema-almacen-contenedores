@@ -38,12 +38,34 @@ export async function crearEmpresaTransporte(
   });
 }
 
-export async function obtenerEmpresasTransporte() {
+/**
+ * Obtiene una página de empresas de transporte.
+ *
+ * Las empresas se ordenan alfabéticamente
+ * por nombre.
+ */
+export async function obtenerEmpresasTransporte(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const skip = (page - 1) * pageSize;
+
   return prisma.empresaTransporte.findMany({
+    skip,
+    take: pageSize,
+
     orderBy: {
       nombre: "asc",
     },
   });
+}
+
+/**
+ * Obtiene la cantidad total de empresas
+ * de transporte registradas.
+ */
+export async function countEmpresasTransporte() {
+  return prisma.empresaTransporte.count();
 }
 
 export async function obtenerEmpresaTransportePorId(id: number) {

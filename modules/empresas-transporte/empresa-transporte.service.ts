@@ -7,6 +7,7 @@ import {
   obtenerEmpresaTransportePorId,
   obtenerEmpresaTransportePorNombre,
   obtenerEmpresasTransporte,
+  countEmpresasTransporte,
 } from "./empresa-transporte.repository";
 
 import { empresaTransporteSchema } from "./empresa-transporte.schema";
@@ -109,8 +110,26 @@ export async function obtenerOCrearEmpresaTransporte(
   });
 }
 
-export async function obtenerEmpresasTransporteService() {
-  return obtenerEmpresasTransporte();
+/**
+ * Obtiene una página de empresas
+ * de transporte.
+ */
+export async function obtenerEmpresasTransporteService(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  return obtenerEmpresasTransporte(
+    page,
+    pageSize,
+  );
+}
+
+/**
+ * Obtiene la cantidad total de empresas
+ * de transporte.
+ */
+export async function contarEmpresasTransporteService() {
+  return countEmpresasTransporte();
 }
 
 export async function obtenerEmpresaTransportePorIdService(id: number) {

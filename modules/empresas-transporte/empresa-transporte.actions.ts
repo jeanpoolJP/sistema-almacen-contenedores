@@ -14,6 +14,7 @@ import {
   crearEmpresaTransporteService,
   obtenerEmpresaTransportePorIdService,
   obtenerEmpresasTransporteService,
+  contarEmpresasTransporteService,
 } from "./empresa-transporte.service";
 
 export async function crearEmpresaTransporteAction(
@@ -53,25 +54,61 @@ export async function crearEmpresaTransporteAction(
   }
 }
 
-export async function obtenerEmpresasTransporteAction() {
+/**
+ * ============================================================
+ * LISTAR EMPRESAS DE TRANSPORTE
+ * ============================================================
+ */
+export async function obtenerEmpresasTransporteAction(
+  page: number = 1,
+  pageSize: number = 10,
+) {
   try {
-    const empresas =
-      await obtenerEmpresasTransporteService();
+    const [
+      empresas,
+      total,
+    ] = await Promise.all([
+      obtenerEmpresasTransporteService(
+        page,
+        pageSize,
+      ),
+      contarEmpresasTransporteService(),
+    ]);
+
+    const totalPages = Math.ceil(
+      total / pageSize,
+    );
 
     return {
       success: true,
-      data: empresas,
+
+      data: {
+        data: empresas,
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
     };
   } catch (error) {
     console.error(
       "Error al obtener empresas de transporte:",
-      error
+      error,
     );
 
     return {
       success: false,
-      message: "No se pudieron obtener las empresas de transporte",
-      data: [],
+
+      message:
+        "No se pudieron obtener las empresas de transporte",
+
+      data: {
+        data: [],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0,
+      },
     };
   }
 }
