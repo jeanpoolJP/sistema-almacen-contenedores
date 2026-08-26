@@ -17,6 +17,8 @@ import { calcularDiasAlmacenamiento } from "./utils/calcular-almacenamiento"
 
 import { calcularMontoGuia } from "./utils/calcular-monto"
 
+import { serializarGuia } from "./utils/serializar-guia"
+
 import { obtenerConfiguracionPrecioService } from "@/modules/configuracion/configuracion.service"
 
 import { obtenerOCrearCliente } from "@/modules/clientes/cliente.service"
@@ -144,7 +146,7 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   // 11. CREAR GUÍA
   // ============================================================
 
-  return crearGuia({
+  const guia = await crearGuia({
     numeroGuia: datosValidados.numeroGuia,
 
     clienteId: cliente?.id ?? null,
@@ -175,6 +177,8 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
     observaciones: datosValidados.observaciones ?? null,
   })
+
+  return serializarGuia(guia)
 }
 
 /**
@@ -237,23 +241,6 @@ export async function registrarSalidaGuiaService(
   // 7. CALCULAR DÍAS
   // ============================================================
 
-  console.log("========== CÁLCULO ALMACENAMIENTO ==========")
-
-  console.log("Fecha ingreso:", guia.fechaIngreso)
-  console.log("Hora ingreso:", guia.horaIngreso)
-
-  console.log("Fecha salida:", datosValidados.fechaSalida)
-
-  console.log("Hora salida:", datosValidados.horaSalida)
-
-  console.log("Fecha ingreso ISO:", guia.fechaIngreso.toISOString())
-
-  console.log("Hora ingreso ISO:", guia.horaIngreso.toISOString())
-
-  console.log("Fecha salida ISO:", datosValidados.fechaSalida.toISOString())
-
-  console.log("Hora salida ISO:", datosValidados.horaSalida.toISOString())
-
   const diasAlmacenamiento = calcularDiasAlmacenamiento(
     guia.fechaIngreso,
     guia.horaIngreso,
@@ -303,7 +290,7 @@ export async function registrarSalidaGuiaService(
   // 11. ACTUALIZAR GUÍA
   // ============================================================
 
-  return actualizarGuia(guia.id, {
+  const guiaActualizada = await actualizarGuia(guia.id, {
     empresaTransporteSalidaId: empresaSalida.id,
 
     vehiculoSalidaId: vehiculoSalida.id,
@@ -328,6 +315,8 @@ export async function registrarSalidaGuiaService(
 
     estado: "RETIRADO",
   })
+
+  return serializarGuia(guiaActualizada)
 }
 
 /**

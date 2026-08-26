@@ -42,8 +42,6 @@ export function ContenedorField() {
 
   const medidaActual = watch("contenedor.medida")
 
-  console.log("MEDIDA ACTUAL:", medidaActual)
-
   async function handleBlurNumero(numero: string) {
     const limpio = numero.trim().toUpperCase()
 
