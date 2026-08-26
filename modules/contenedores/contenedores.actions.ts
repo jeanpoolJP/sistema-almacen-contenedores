@@ -12,6 +12,7 @@ import {
   obtenerContenedorPorNumero,
   obtenerContenedores,
   registrarContenedor,
+  contarContenedores,
 } from "./contenedores.service";
 
 import type { ContenedorFormData } from "./contenedores.types";
@@ -152,20 +153,46 @@ export async function buscarContenedorPorId(
  * LISTAR CONTENEDORES
  * ============================================================
  */
-export async function listarContenedores(): Promise<
-  ActionResult<
-    Awaited<
+export async function listarContenedores(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<
+  ActionResult<{
+    data: Awaited<
       ReturnType<typeof obtenerContenedores>
-    >
-  >
+    >;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>
 > {
   try {
-    const contenedores =
-      await obtenerContenedores();
+    const [
+      contenedores,
+      total,
+    ] = await Promise.all([
+      obtenerContenedores(
+        page,
+        pageSize,
+      ),
+      contarContenedores(),
+    ]);
+
+    const totalPages = Math.ceil(
+      total / pageSize,
+    );
 
     return {
       success: true,
-      data: contenedores,
+
+      data: {
+        data: contenedores,
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
     };
   } catch (error) {
     console.error(

@@ -34,14 +34,35 @@ export async function findContenedorById(
 }
 
 /**
- * Obtiene todos los contenedores.
+ * Obtiene una página de contenedores.
+ *
+ * Los más recientemente registrados
+ * aparecen primero.
  */
-export async function findContenedores() {
+export async function findContenedores(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const skip = (page - 1) * pageSize;
+
   return prisma.contenedor.findMany({
+    skip,
+    take: pageSize,
+
     orderBy: {
       createdAt: "desc",
     },
   });
+}
+
+/**
+ * Obtiene la cantidad total de contenedores.
+ *
+ * Se utiliza para calcular la cantidad
+ * de páginas disponibles.
+ */
+export async function countContenedores() {
+  return prisma.contenedor.count();
 }
 
 /**

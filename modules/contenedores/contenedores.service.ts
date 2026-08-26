@@ -12,6 +12,7 @@ import {
   findContenedorByNumero,
   findContenedores,
   updateContenedor,
+  countContenedores,
 } from "./contenedores.repository";
 
 import type {
@@ -87,10 +88,23 @@ export async function obtenerContenedorPorId(
 }
 
 /**
- * Obtiene todos los contenedores.
+ * Obtiene una página de contenedores.
  */
-export async function obtenerContenedores() {
-  return findContenedores();
+export async function obtenerContenedores(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  return findContenedores(
+    page,
+    pageSize,
+  );
+}
+
+/**
+ * Obtiene la cantidad total de contenedores.
+ */
+export async function contarContenedores() {
+  return countContenedores();
 }
 
 /**

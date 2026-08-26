@@ -47,19 +47,65 @@ export function ContenedoresPage() {
   const [loading, setLoading] =
     useState(true);
 
+  // ============================================================
+  // PAGINACIÓN
+  // ============================================================
+
+  const [page, setPage] =
+    useState(1);
+
+  const [pageSize, setPageSize] =
+    useState(10);
+
+  const [
+    totalPages,
+    setTotalPages,
+  ] = useState(1);
+
+  const [
+    totalContenedores,
+    setTotalContenedores,
+  ] = useState(0);
+
   /**
-   * Obtiene los contenedores desde el servidor.
+   * Obtiene los contenedores desde
+   * el servidor.
+   *
+   * También obtiene la información
+   * necesaria para la paginación.
    */
-  async function cargarContenedores() {
+  async function cargarContenedores(
+    pagina: number = page,
+    cantidad: number = pageSize,
+  ) {
     setLoading(true);
 
     try {
       const result =
-        await listarContenedores();
+        await listarContenedores(
+          pagina,
+          cantidad,
+        );
 
       if (result.success) {
         setContenedores(
-          result.data,
+          result.data.data,
+        );
+
+        setPage(
+          result.data.page,
+        );
+
+        setPageSize(
+          result.data.pageSize,
+        );
+
+        setTotalPages(
+          result.data.totalPages,
+        );
+
+        setTotalContenedores(
+          result.data.total,
         );
       }
     } finally {
@@ -71,8 +117,43 @@ export function ContenedoresPage() {
    * Carga inicial.
    */
   useEffect(() => {
-    cargarContenedores();
+    cargarContenedores(
+      1,
+      10,
+    );
   }, []);
+
+  /**
+   * Cambia de página.
+   */
+  function handlePageChange(
+    nuevaPagina: number,
+  ) {
+    cargarContenedores(
+      nuevaPagina,
+      pageSize,
+    );
+  }
+
+  /**
+   * Cambia la cantidad de filas
+   * mostradas por página.
+   *
+   * Al cambiar la cantidad,
+   * volvemos a la primera página.
+   */
+  function handlePageSizeChange(
+    nuevaCantidad: number,
+  ) {
+    setPageSize(
+      nuevaCantidad,
+    );
+
+    cargarContenedores(
+      1,
+      nuevaCantidad,
+    );
+  }
 
   /**
    * Filtra por:
@@ -145,7 +226,10 @@ export function ContenedoresPage() {
       null,
     );
 
-    await cargarContenedores();
+    await cargarContenedores(
+      page,
+      pageSize,
+    );
   }
 
   /**
@@ -191,6 +275,7 @@ export function ContenedoresPage() {
           }
         >
           <Plus className="mr-2 size-4" />
+
           Nuevo contenedor
         </Button>
       </div>
@@ -248,6 +333,7 @@ export function ContenedoresPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Buscador */}
+
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -264,10 +350,14 @@ export function ContenedoresPage() {
         </div>
 
         {/* Actualizar */}
+
         <Button
           variant="outline"
-          onClick={
-            cargarContenedores
+          onClick={() =>
+            cargarContenedores(
+              page,
+              pageSize,
+            )
           }
           disabled={loading}
         >
@@ -303,8 +393,25 @@ export function ContenedoresPage() {
           onEdit={
             handleEditarContenedor
           }
-          onRefresh={
-            cargarContenedores
+          onRefresh={() =>
+            cargarContenedores(
+              page,
+              pageSize,
+            )
+          }
+          page={page}
+          pageSize={pageSize}
+          totalPages={
+            totalPages
+          }
+          total={
+            totalContenedores
+          }
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
           }
         />
       )}
@@ -323,7 +430,9 @@ export function ContenedoresPage() {
           </span>{" "}
           de{" "}
           <span className="font-medium text-foreground">
-            {contenedores.length}
+            {
+              totalContenedores
+            }
           </span>{" "}
           contenedores.
         </div>
