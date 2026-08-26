@@ -3,16 +3,20 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
+
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
 import {
+  Ban,
+  ChevronLeft,
+  ChevronRight,
+  Download,
   Eye,
+  Loader2,
   LogOut,
   MoreHorizontal,
   Search,
-  Ban,
-  Loader2,
   X,
 } from "lucide-react"
 
@@ -58,14 +62,18 @@ import {
 } from "@/components/ui/select"
 
 import { EstadoBadge } from "./estado-badge"
-import { GuiaDetalleSheet } from "./guia-detalle-sheet"
-import { RegistrarSalidaDialog } from "./registrar-salida-dialog"
 
-import { anularGuiaAction, obtenerGuiasAction } from "../guia.actions"
+import { GuiaDetalleSheet } from "./guia-detalle-sheet"
+
+import { RegistrarSalidaDialog } from "./registrar-salida-dialog"
 
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 import type { EstadoGuia } from "@/lib/generated/prisma"
+
+import { anularGuiaAction, obtenerGuiasAction } from "../guia.actions"
+
+import { exportarExcel } from "@/lib/exportar-excel"
 
 /**
  * ============================================================
@@ -79,7 +87,9 @@ function formatFechaNegocio(fecha: Date | string | null | undefined) {
   const fechaDate = typeof fecha === "string" ? new Date(fecha) : fecha
 
   const año = fechaDate.getUTCFullYear()
+
   const mes = fechaDate.getUTCMonth()
+
   const dia = fechaDate.getUTCDate()
 
   const fechaLocal = new Date(año, mes, dia)
@@ -96,15 +106,17 @@ function formatFechaNegocio(fecha: Date | string | null | undefined) {
  */
 
 type GuiasTableProps = {
-  guias: GuiaConRelaciones[]
+  data: {
+    guias: GuiaConRelaciones[]
 
-  total: number
+    total: number
 
-  paginaInicial: number
+    pagina: number
 
-  limiteInicial: number
+    limite: number
 
-  totalPaginasInicial: number
+    totalPaginas: number
+  }
 
   onCambio?: () => void
 }
@@ -115,31 +127,28 @@ type GuiasTableProps = {
  * ============================================================
  */
 
-export function GuiasTable({
-  guias: guiasIniciales,
-  total: totalInicial,
-  paginaInicial,
-  limiteInicial,
-  totalPaginasInicial,
-  onCambio,
-}: GuiasTableProps) {
-  // ==========================================================
-  // DATOS
-  // ==========================================================
+export function GuiasTable({ data, onCambio }: GuiasTableProps) {
+  /**
+   * ==========================================================
+   * DATOS
+   * ==========================================================
+   */
 
-  const [guias, setGuias] = useState<GuiaConRelaciones[]>(guiasIniciales)
+  const [guias, setGuias] = useState<GuiaConRelaciones[]>(data.guias)
 
-  const [total, setTotal] = useState(totalInicial)
+  const [total, setTotal] = useState(data.total)
 
-  const [pagina, setPagina] = useState(paginaInicial)
+  const [pagina, setPagina] = useState(data.pagina)
 
-  const [limite, setLimite] = useState(limiteInicial)
+  const [limite, setLimite] = useState(data.limite)
 
-  const [totalPaginas, setTotalPaginas] = useState(totalPaginasInicial)
+  const [totalPaginas, setTotalPaginas] = useState(data.totalPaginas)
 
-  // ==========================================================
-  // FILTROS
-  // ==========================================================
+  /**
+   * ==========================================================
+   * FILTROS
+   * ==========================================================
+   */
 
   const [numeroGuia, setNumeroGuia] = useState("")
 
@@ -153,15 +162,27 @@ export function GuiasTable({
 
   const [fechaHasta, setFechaHasta] = useState("")
 
-  // ==========================================================
-  // TRANSITION
-  // ==========================================================
+  /**
+   * ==========================================================
+   * TRANSICIÓN
+   * ==========================================================
+   */
 
   const [isPending, startTransition] = useTransition()
 
-  // ==========================================================
-  // DIALOGS
-  // ==========================================================
+  /**
+   * ==========================================================
+   * ESTADO DE EXPORTACIÓN
+   * ==========================================================
+   */
+
+  const [exportando, setExportando] = useState(false)
+
+  /**
+   * ==========================================================
+   * DIALOGS
+   * ==========================================================
+   */
 
   const [guiaDetalle, setGuiaDetalle] = useState<GuiaConRelaciones | null>(null)
 
@@ -171,27 +192,51 @@ export function GuiasTable({
 
   const [anulando, setAnulando] = useState(false)
 
-  // ==========================================================
-  // SINCRONIZAR PROPS INICIALES
-  // ==========================================================
+  /**
+   * ==========================================================
+   * SINCRONIZAR DATOS
+   * ==========================================================
+   */
 
   useEffect(() => {
-    setGuias(guiasIniciales)
-    setTotal(totalInicial)
-    setPagina(paginaInicial)
-    setLimite(limiteInicial)
-    setTotalPaginas(totalPaginasInicial)
-  }, [
-    guiasIniciales,
-    totalInicial,
-    paginaInicial,
-    limiteInicial,
-    totalPaginasInicial,
-  ])
+    setGuias(data.guias)
 
-  // ==========================================================
-  // BUSCAR GUÍAS
-  // ==========================================================
+    setTotal(data.total)
+
+    setPagina(data.pagina)
+
+    setLimite(data.limite)
+
+    setTotalPaginas(data.totalPaginas)
+  }, [data])
+
+  /**
+   * ==========================================================
+   * OBTENER FILTROS ACTUALES
+   * ==========================================================
+   */
+
+  function obtenerFiltros() {
+    return {
+      numeroGuia: numeroGuia.trim() || undefined,
+
+      numeroContenedor: numeroContenedor.trim() || undefined,
+
+      documentoCliente: documentoCliente.trim() || undefined,
+
+      estado,
+
+      fechaDesde: fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : undefined,
+
+      fechaHasta: fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : undefined,
+    }
+  }
+
+  /**
+   * ==========================================================
+   * BUSCAR GUÍAS
+   * ==========================================================
+   */
 
   function buscarGuias(nuevaPagina = 1, nuevoLimite = limite) {
     startTransition(async () => {
@@ -200,74 +245,86 @@ export function GuiasTable({
 
         limite: nuevoLimite,
 
-        numeroGuia: numeroGuia.trim() || undefined,
-
-        numeroContenedor: numeroContenedor.trim() || undefined,
-
-        documentoCliente: documentoCliente.trim() || undefined,
-
-        estado,
-
-        fechaDesde: fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : undefined,
-
-        fechaHasta: fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : undefined,
+        ...obtenerFiltros(),
       })
 
       if (!resultado.success) {
         toast.error(resultado.message)
+
         return
       }
 
       setGuias(resultado.data.guias)
+
       setTotal(resultado.data.total)
+
       setPagina(resultado.data.pagina)
+
       setLimite(resultado.data.limite)
+
       setTotalPaginas(resultado.data.totalPaginas)
     })
   }
 
-  // ==========================================================
-  // APLICAR FILTROS
-  // ==========================================================
+  /**
+   * ==========================================================
+   * APLICAR FILTROS
+   * ==========================================================
+   */
 
   function aplicarFiltros() {
     buscarGuias(1, limite)
   }
 
-  // ==========================================================
-  // LIMPIAR FILTROS
-  // ==========================================================
+  /**
+   * ==========================================================
+   * LIMPIAR FILTROS
+   * ==========================================================
+   */
 
   function limpiarFiltros() {
     setNumeroGuia("")
+
     setNumeroContenedor("")
+
     setDocumentoCliente("")
+
     setEstado(undefined)
+
     setFechaDesde("")
+
     setFechaHasta("")
 
     startTransition(async () => {
       const resultado = await obtenerGuiasAction({
         pagina: 1,
+
         limite,
       })
 
       if (!resultado.success) {
         toast.error(resultado.message)
+
         return
       }
 
       setGuias(resultado.data.guias)
+
       setTotal(resultado.data.total)
+
       setPagina(resultado.data.pagina)
+
       setLimite(resultado.data.limite)
+
       setTotalPaginas(resultado.data.totalPaginas)
     })
   }
 
-  // ==========================================================
-  // CAMBIAR PÁGINA
-  // ==========================================================
+  /**
+   * ==========================================================
+   * CAMBIAR PÁGINA
+   * ==========================================================
+   */
 
   function cambiarPagina(nuevaPagina: number) {
     if (
@@ -281,23 +338,145 @@ export function GuiasTable({
     buscarGuias(nuevaPagina, limite)
   }
 
-  // ==========================================================
-  // CAMBIAR LÍMITE
-  // ==========================================================
+  /**
+   * ==========================================================
+   * CAMBIAR LÍMITE
+   * ==========================================================
+   */
 
   function cambiarLimite(nuevoLimite: string | null) {
     if (nuevoLimite === null) return
 
     const limiteNumero = Number(nuevoLimite)
 
-    setLimite(limiteNumero)
-
     buscarGuias(1, limiteNumero)
   }
 
-  // ==========================================================
-  // ANULAR GUÍA
-  // ==========================================================
+  /**
+   * ==========================================================
+   * EXPORTAR EXCEL
+   * ==========================================================
+   *
+   * Exporta todas las guías que coincidan con los filtros
+   * actuales, no solamente las que aparecen en la página.
+   */
+
+  async function manejarExportarExcel() {
+    try {
+      setExportando(true)
+
+      const filtros = obtenerFiltros()
+
+      const resultado = await obtenerGuiasAction({
+        pagina: 1,
+
+        limite: 10000,
+
+        ...filtros,
+      })
+
+      if (!resultado.success) {
+        toast.error(resultado.message ?? "No se pudieron obtener las guías")
+
+        return
+      }
+
+      if (resultado.data.guias.length === 0) {
+        toast.info("No hay guías para exportar.")
+
+        return
+      }
+
+      const datosExcel = resultado.data.guias.map((guia) => ({
+        "N° Guía": guia.numeroGuia,
+
+        Cliente: guia.cliente?.nombreCompleto ?? "Sin cliente",
+
+        "Tipo documento": guia.cliente?.tipoDocumento ?? "",
+
+        "Documento cliente": guia.cliente?.numeroDocumento ?? "",
+
+        Contenedor: guia.contenedor.numeroContenedor,
+
+        "Marca contenedor": guia.contenedor.marca,
+
+        Medida: guia.contenedor.medida,
+
+        "Tipo contenedor": guia.contenedor.tipo,
+
+        "Empresa transporte ingreso":
+          guia.empresaTransporteIngreso?.nombre ?? "",
+
+        "Vehículo ingreso": guia.vehiculoIngreso?.placa ?? "",
+
+        "Conductor ingreso": guia.conductorIngreso?.nombreCompleto ?? "",
+
+        "Licencia ingreso": guia.conductorIngreso?.numeroLicencia ?? "",
+
+        "Fecha ingreso": formatFechaNegocio(guia.fechaIngreso),
+
+        "Empresa transporte salida": guia.empresaTransporteSalida?.nombre ?? "",
+
+        "Vehículo salida": guia.vehiculoSalida?.placa ?? "",
+
+        "Conductor salida": guia.conductorSalida?.nombreCompleto ?? "",
+
+        "Licencia salida": guia.conductorSalida?.numeroLicencia ?? "",
+
+        "Fecha salida": formatFechaNegocio(guia.fechaSalida),
+
+        "Días almacenamiento": guia.diasAlmacenamiento ?? "",
+
+        "Tipo precio": guia.tipoPrecio,
+
+        "Precio primer día": guia.precioPrimerDia,
+
+        "Precio día adicional": guia.precioDiaAdicional,
+
+        Subtotal: guia.subtotal ?? "",
+
+        "IGV %": guia.porcentajeIGV ?? "",
+
+        "Monto IGV": guia.montoIGV ?? "",
+
+        "Monto total": guia.montoTotal ?? "",
+
+        "Tratamiento IGV": guia.tratamientoIGV,
+
+        Estado: guia.estado,
+
+        Observaciones: guia.observaciones ?? "",
+
+        "Fecha creación": formatFechaNegocio(guia.createdAt),
+      }))
+
+      exportarExcel({
+        datos: datosExcel,
+
+        nombreArchivo: `guias-${new Date().toISOString().slice(0, 10)}`,
+
+        nombreHoja: "Guías",
+      })
+
+      toast.success(
+        `${datosExcel.length} ${
+          datosExcel.length === 1 ? "guía exportada" : "guías exportadas"
+        } correctamente.`
+      )
+    } catch (error) {
+      console.error("Error al exportar guías:", error)
+
+      toast.error("Ocurrió un error al exportar las guías.")
+    } finally {
+      setExportando(false)
+    }
+  }
+
+  /**
+   * ==========================================================
+   * ANULAR GUÍA
+   * ==========================================================
+   */
 
   async function confirmarAnulacion() {
     if (!guiaAnular) return
@@ -307,20 +486,27 @@ export function GuiasTable({
     const res = await anularGuiaAction(guiaAnular.id)
 
     setAnulando(false)
+
     setGuiaAnular(null)
 
     if (!res.success) {
       toast.error(res.message)
+
       return
     }
 
     toast.success(res.message)
 
-    // Volvemos a consultar la página actual
     buscarGuias(pagina, limite)
 
     onCambio?.()
   }
+
+  /**
+   * ==========================================================
+   * RENDER
+   * ==========================================================
+   */
 
   return (
     <div className="space-y-4">
@@ -330,7 +516,7 @@ export function GuiasTable({
 
       <div className="rounded-lg border p-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* NÚMERO DE GUÍA */}
+          {/* NÚMERO GUÍA */}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">N° de guía</label>
@@ -359,7 +545,7 @@ export function GuiasTable({
             />
           </div>
 
-          {/* DOCUMENTO CLIENTE */}
+          {/* DOCUMENTO */}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Documento del cliente</label>
@@ -426,7 +612,7 @@ export function GuiasTable({
         {/* BOTONES */}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={aplicarFiltros} disabled={isPending}>
+          <Button onClick={aplicarFiltros} disabled={isPending || exportando}>
             {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
             Buscar
           </Button>
@@ -434,10 +620,24 @@ export function GuiasTable({
           <Button
             variant="outline"
             onClick={limpiarFiltros}
-            disabled={isPending}
+            disabled={isPending || exportando}
           >
             <X className="mr-2 size-4" />
             Limpiar filtros
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={manejarExportarExcel}
+            disabled={isPending || exportando || total === 0}
+          >
+            {exportando ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 size-4" />
+            )}
+
+            {exportando ? "Exportando..." : "Exportar Excel"}
           </Button>
         </div>
       </div>
@@ -617,7 +817,7 @@ export function GuiasTable({
             <Select
               value={String(limite)}
               onValueChange={cambiarLimite}
-              disabled={isPending}
+              disabled={isPending || exportando}
             >
               <SelectTrigger className="w-[80px]">
                 <SelectValue />
@@ -643,9 +843,10 @@ export function GuiasTable({
             <Button
               variant="outline"
               size="sm"
-              disabled={pagina === 1 || isPending}
+              disabled={pagina === 1 || isPending || exportando}
               onClick={() => cambiarPagina(pagina - 1)}
             >
+              <ChevronLeft className="mr-1 size-4" />
               Anterior
             </Button>
 
@@ -656,10 +857,11 @@ export function GuiasTable({
             <Button
               variant="outline"
               size="sm"
-              disabled={pagina === totalPaginas || isPending}
+              disabled={pagina === totalPaginas || isPending || exportando}
               onClick={() => cambiarPagina(pagina + 1)}
             >
               Siguiente
+              <ChevronRight className="ml-1 size-4" />
             </Button>
           </div>
         </div>

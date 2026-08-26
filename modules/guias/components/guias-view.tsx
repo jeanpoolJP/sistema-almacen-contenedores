@@ -9,30 +9,23 @@ import { GuiasTable } from "./guias-table"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 type GuiasViewProps = {
-  guias: GuiaConRelaciones[]
-  total: number
-  pagina: number
-  limite: number
-  totalPaginas: number
+  data: {
+    guias: GuiaConRelaciones[]
+    total: number
+    pagina: number
+    limite: number
+    totalPaginas: number
+  }
 }
 
 export function GuiasView({
-  guias,
-  total,
-  pagina,
-  limite,
-  totalPaginas,
+  data,
 }: GuiasViewProps) {
   const router = useRouter()
 
   return (
     <div className="w-full px-4 py-6">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-
-        {/* ======================================================
-            ENCABEZADO
-        ====================================================== */}
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -49,16 +42,8 @@ export function GuiasView({
           />
         </div>
 
-        {/* ======================================================
-            TABLA
-        ====================================================== */}
-
         <GuiasTable
-          guias={guias}
-          total={total}
-          paginaInicial={pagina}
-          limiteInicial={limite}
-          totalPaginasInicial={totalPaginas}
+          data={data}
           onCambio={() => router.refresh()}
         />
       </div>

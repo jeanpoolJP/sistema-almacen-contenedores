@@ -1,5 +1,9 @@
-import type { NextConfig } from "next"
+// next.config.ts
 
-const nextConfig: NextConfig = {}
+import type { NextConfig } from "next";
 
-export default nextConfig
+const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.1.34", "localhost:3000"],
+};
+
+export default nextConfig;

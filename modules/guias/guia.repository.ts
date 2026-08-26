@@ -117,7 +117,7 @@ export async function obtenerGuiaPorNumero(numeroGuia: string) {
 }
 
 /**
- * Obtiene las guías.
+ * Parámetros para obtener las guías.
  */
 
 type ObtenerGuiasParams = {
@@ -134,6 +134,9 @@ type ObtenerGuiasParams = {
   fechaHasta?: Date
 }
 
+/**
+ * Obtiene las guías con paginación y filtros.
+ */
 export async function obtenerGuias({
   pagina,
   limite,
@@ -189,9 +192,7 @@ export async function obtenerGuias({
       : {}),
   }
 
-  const skip = (pagina - 1) * limite
-
-  const [guias, total] = await Promise.all([
+  const [guias, total] = await prisma.$transaction([
     prisma.guiaInternamiento.findMany({
       where,
 
@@ -212,7 +213,7 @@ export async function obtenerGuias({
         createdAt: "desc",
       },
 
-      skip,
+      skip: (pagina - 1) * limite,
 
       take: limite,
     }),
