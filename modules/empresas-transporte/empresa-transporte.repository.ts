@@ -1,41 +1,40 @@
-// modules\empresas-transporte\empresa-transporte.repository.ts
+// modules/empresas-transporte/empresa-transporte.repository.ts
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 
 import type {
   ActualizarEmpresaTransporteInput,
   CrearEmpresaTransporteInput,
-} from "./empresa-transporte.types";
+} from "./empresa-transporte.types"
 
 /**
- * Busca una empresa de transporte por su nombre.
+ * Busca una empresa de transporte por su RUC.
  *
- * El nombre debe estar previamente normalizado
- * a mayúsculas.
+ * El RUC es el identificador único de la empresa.
  */
-export async function obtenerEmpresaTransportePorNombre(
-  nombre: string,
-) {
+export async function obtenerEmpresaTransportePorRuc(ruc: string) {
   return prisma.empresaTransporte.findUnique({
     where: {
-      nombre,
+      ruc,
     },
-  });
+  })
 }
 
 /**
  * Crea una empresa de transporte.
  */
 export async function crearEmpresaTransporte(
-  data: CrearEmpresaTransporteInput,
+  data: CrearEmpresaTransporteInput
 ) {
   return prisma.empresaTransporte.create({
     data: {
       nombre: data.nombre,
-      ruc: data.ruc || null,
+      ruc: data.ruc,
       telefono: data.telefono || null,
+      contactoLogistico: data.contactoLogistico || null,
+      nombreEncargado: data.nombreEncargado || null,
     },
-  });
+  })
 }
 
 /**
@@ -46,9 +45,9 @@ export async function crearEmpresaTransporte(
  */
 export async function obtenerEmpresasTransporte(
   page: number = 1,
-  pageSize: number = 10,
+  pageSize: number = 10
 ) {
-  const skip = (page - 1) * pageSize;
+  const skip = (page - 1) * pageSize
 
   return prisma.empresaTransporte.findMany({
     skip,
@@ -57,7 +56,7 @@ export async function obtenerEmpresasTransporte(
     orderBy: {
       nombre: "asc",
     },
-  });
+  })
 }
 
 /**
@@ -65,17 +64,23 @@ export async function obtenerEmpresasTransporte(
  * de transporte registradas.
  */
 export async function countEmpresasTransporte() {
-  return prisma.empresaTransporte.count();
+  return prisma.empresaTransporte.count()
 }
 
+/**
+ * Obtiene una empresa de transporte por su ID.
+ */
 export async function obtenerEmpresaTransportePorId(id: number) {
   return prisma.empresaTransporte.findUnique({
     where: {
       id,
     },
-  });
+  })
 }
 
+/**
+ * Actualiza una empresa de transporte.
+ */
 export async function actualizarEmpresaTransporte(
   data: ActualizarEmpresaTransporteInput
 ) {
@@ -83,14 +88,20 @@ export async function actualizarEmpresaTransporte(
     where: {
       id: data.id,
     },
+
     data: {
       nombre: data.nombre,
-      ruc: data.ruc || null,
+      ruc: data.ruc,
       telefono: data.telefono || null,
+      contactoLogistico: data.contactoLogistico || null,
+      nombreEncargado: data.nombreEncargado || null,
     },
-  });
+  })
 }
 
+/**
+ * Activa o desactiva una empresa de transporte.
+ */
 export async function cambiarEstadoEmpresaTransporte(
   id: number,
   activo: boolean
@@ -99,8 +110,9 @@ export async function cambiarEstadoEmpresaTransporte(
     where: {
       id,
     },
+
     data: {
       activo,
     },
-  });
+  })
 }

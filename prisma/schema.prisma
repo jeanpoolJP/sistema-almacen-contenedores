@@ -70,11 +70,18 @@ model Cliente {
 }
 
 model EmpresaTransporte {
-  id        Int      @id @default(autoincrement())
-  nombre String @unique @db.VarChar(150)
-  ruc       String?  @unique @db.VarChar(11)
-  telefono  String?  @db.VarChar(20)
-  activo    Boolean  @default(true)
+  id       Int    @id @default(autoincrement())
+
+  nombre   String @db.VarChar(150)
+  ruc      String @unique @db.VarChar(11)
+
+  telefono String? @db.VarChar(20)
+
+  contactoLogistico String? @map("contacto_logistico") @db.VarChar(150)
+  nombreEncargado   String? @map("nombre_encargado") @db.VarChar(150)
+
+  activo Boolean @default(true)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 

@@ -5,17 +5,17 @@ import {
   cambiarEstadoEmpresaTransporte,
   crearEmpresaTransporte,
   obtenerEmpresaTransportePorId,
-  obtenerEmpresaTransportePorNombre,
+  obtenerEmpresaTransportePorRuc,
   obtenerEmpresasTransporte,
   countEmpresasTransporte,
-} from "./empresa-transporte.repository";
+} from "./empresa-transporte.repository"
 
-import { empresaTransporteSchema } from "./empresa-transporte.schema";
+import { empresaTransporteSchema } from "./empresa-transporte.schema"
 
 import type {
   ActualizarEmpresaTransporteInput,
   CrearEmpresaTransporteInput,
-} from "./empresa-transporte.types";
+} from "./empresa-transporte.types"
 
 /**
  * Normaliza el nombre de una empresa de transporte.
@@ -24,57 +24,66 @@ import type {
  * - Convierte el nombre a mayúsculas.
  */
 function normalizarNombreEmpresa(nombre: string) {
-  return nombre.trim().toUpperCase();
+  return nombre.trim().toUpperCase()
+}
+
+/**
+ * Normaliza el RUC.
+ *
+ * - Elimina espacios al inicio y al final.
+ */
+function normalizarRuc(ruc: string) {
+  return ruc.trim()
 }
 
 /**
  * Crea una empresa de transporte.
+ *
+ * El RUC es el identificador único de la empresa.
  */
 export async function crearEmpresaTransporteService(
-  data: CrearEmpresaTransporteInput,
+  data: CrearEmpresaTransporteInput
 ) {
-  const datosValidados = empresaTransporteSchema.parse(data);
+  const datosValidados = empresaTransporteSchema.parse(data)
 
-  const nombre = normalizarNombreEmpresa(datosValidados.nombre);
+  const nombre = normalizarNombreEmpresa(datosValidados.nombre)
 
-  const empresaExistente = await obtenerEmpresaTransportePorNombre(nombre);
+  const ruc = normalizarRuc(datosValidados.ruc)
+
+  const empresaExistente = await obtenerEmpresaTransportePorRuc(ruc)
 
   if (empresaExistente) {
-    throw new Error(
-      "Ya existe una empresa de transporte con ese nombre",
-    );
+    throw new Error("Ya existe una empresa de transporte con ese RUC")
   }
 
   return crearEmpresaTransporte({
     nombre,
-    ruc: datosValidados.ruc?.trim() || null,
+    ruc,
     telefono: datosValidados.telefono?.trim() || null,
-  });
+
+    contactoLogistico: datosValidados.contactoLogistico?.trim() || null,
+
+    nombreEncargado: datosValidados.nombreEncargado?.trim() || null,
+  })
 }
 
 /**
- * Busca una empresa de transporte por nombre.
+ * Busca una empresa de transporte por su RUC.
  *
- * El nombre se normaliza antes de realizar la búsqueda.
+ * El RUC es el identificador de la empresa.
  */
-export async function obtenerEmpresaTransportePorNombreService(
-  nombre: string,
-) {
-  const nombreNormalizado = normalizarNombreEmpresa(nombre);
+export async function obtenerEmpresaTransportePorRucService(ruc: string) {
+  const rucNormalizado = normalizarRuc(ruc)
 
-  if (!nombreNormalizado) {
-    throw new Error(
-      "El nombre de la empresa es obligatorio",
-    );
+  if (!rucNormalizado) {
+    throw new Error("El RUC es obligatorio")
   }
 
-  return obtenerEmpresaTransportePorNombre(
-    nombreNormalizado,
-  );
+  return obtenerEmpresaTransportePorRuc(rucNormalizado)
 }
 
 /**
- * Busca una empresa de transporte por su nombre.
+ * Busca una empresa de transporte por su RUC.
  *
  * Si existe, la devuelve.
  * Si no existe, la crea y la devuelve.
@@ -83,31 +92,32 @@ export async function obtenerEmpresaTransportePorNombreService(
  * de Guías al registrar una nueva guía.
  */
 export async function obtenerOCrearEmpresaTransporte(
-  data: CrearEmpresaTransporteInput,
+  data: CrearEmpresaTransporteInput
 ) {
-  const datosValidados = empresaTransporteSchema.parse(data);
+  const datosValidados = empresaTransporteSchema.parse(data)
 
-  const nombre = normalizarNombreEmpresa(
-    datosValidados.nombre,
-  );
+  const nombre = normalizarNombreEmpresa(datosValidados.nombre)
 
-  // Buscar si ya existe
-  const empresaExistente =
-    await obtenerEmpresaTransportePorNombre(
-      nombre,
-    );
+  const ruc = normalizarRuc(datosValidados.ruc)
+
+  // Buscar por RUC
+  const empresaExistente = await obtenerEmpresaTransportePorRuc(ruc)
 
   // Si existe, devolverla
   if (empresaExistente) {
-    return empresaExistente;
+    return empresaExistente
   }
 
   // Si no existe, crearla
   return crearEmpresaTransporte({
     nombre,
-    ruc: datosValidados.ruc?.trim() || null,
+    ruc,
     telefono: datosValidados.telefono?.trim() || null,
-  });
+
+    contactoLogistico: datosValidados.contactoLogistico?.trim() || null,
+
+    nombreEncargado: datosValidados.nombreEncargado?.trim() || null,
+  })
 }
 
 /**
@@ -116,12 +126,9 @@ export async function obtenerOCrearEmpresaTransporte(
  */
 export async function obtenerEmpresasTransporteService(
   page: number = 1,
-  pageSize: number = 10,
+  pageSize: number = 10
 ) {
-  return obtenerEmpresasTransporte(
-    page,
-    pageSize,
-  );
+  return obtenerEmpresasTransporte(page, pageSize)
 }
 
 /**
@@ -129,51 +136,83 @@ export async function obtenerEmpresasTransporteService(
  * de transporte.
  */
 export async function contarEmpresasTransporteService() {
-  return countEmpresasTransporte();
+  return countEmpresasTransporte()
 }
 
+/**
+ * Obtiene una empresa de transporte por su ID.
+ */
 export async function obtenerEmpresaTransportePorIdService(id: number) {
-  const empresa = await obtenerEmpresaTransportePorId(id);
+  const empresa = await obtenerEmpresaTransportePorId(id)
 
   if (!empresa) {
-    throw new Error("La empresa de transporte no existe");
+    throw new Error("La empresa de transporte no existe")
   }
 
-  return empresa;
+  return empresa
 }
 
+/**
+ * Actualiza una empresa de transporte.
+ *
+ * El RUC continúa siendo el identificador único.
+ */
 export async function actualizarEmpresaTransporteService(
   data: ActualizarEmpresaTransporteInput
 ) {
-  const empresa = await obtenerEmpresaTransportePorId(data.id);
+  const empresa = await obtenerEmpresaTransportePorId(data.id)
 
   if (!empresa) {
-    throw new Error("La empresa de transporte no existe");
+    throw new Error("La empresa de transporte no existe")
   }
 
-  const nombre = data.nombre.trim();
+  const datosValidados = empresaTransporteSchema.parse({
+    nombre: data.nombre,
+    ruc: data.ruc,
+    telefono: data.telefono,
+    contactoLogistico: data.contactoLogistico,
+    nombreEncargado: data.nombreEncargado,
+  })
 
-  if (!nombre) {
-    throw new Error("El nombre de la empresa es obligatorio");
+  const nombre = normalizarNombreEmpresa(datosValidados.nombre)
+
+  const ruc = normalizarRuc(datosValidados.ruc)
+
+  // Verificar que el RUC no pertenezca
+  // a otra empresa.
+  const empresaConMismoRuc = await obtenerEmpresaTransportePorRuc(ruc)
+
+  if (empresaConMismoRuc && empresaConMismoRuc.id !== data.id) {
+    throw new Error("Ya existe otra empresa de transporte con ese RUC")
   }
 
   return actualizarEmpresaTransporte({
     id: data.id,
+
     nombre,
-    ruc: data.ruc?.trim() || null,
-    telefono: data.telefono?.trim() || null,
-  });
+
+    ruc,
+
+    telefono: datosValidados.telefono?.trim() || null,
+
+    contactoLogistico: datosValidados.contactoLogistico?.trim() || null,
+
+    nombreEncargado: datosValidados.nombreEncargado?.trim() || null,
+  })
 }
 
+/**
+ * Activa o desactiva una empresa de transporte.
+ */
 export async function cambiarEstadoEmpresaTransporteService(
   id: number,
   activo: boolean
 ) {
-  const empresa = await obtenerEmpresaTransportePorId(id);
+  const empresa = await obtenerEmpresaTransportePorId(id)
 
   if (!empresa) {
-    throw new Error("La empresa de transporte no existe");
+    throw new Error("La empresa de transporte no existe")
   }
 
-  return cambiarEstadoEmpresaTransporte(id, activo);
+  return cambiarEstadoEmpresaTransporte(id, activo)
 }

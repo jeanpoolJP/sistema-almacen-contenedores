@@ -1,37 +1,28 @@
-// modules\empresas-transporte\components\empresa-transporte-table.tsx
-
-"use client";
+"use client"
 
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Download,
   Edit,
   MoreHorizontal,
   Power,
-  XCircle,
-} from "lucide-react";
+} from "lucide-react"
 
-import { toast } from "sonner";
+import { toast } from "sonner"
 
-import {
-  cambiarEstadoEmpresaTransporteAction,
-} from "../empresa-transporte.actions";
+import { cambiarEstadoEmpresaTransporteAction } from "../empresa-transporte.actions"
 
-import type {
-  EmpresaTransporte,
-} from "../empresa-transporte.types";
+import type { EmpresaTransporte } from "../empresa-transporte.types"
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
 import {
   Select,
@@ -39,7 +30,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 import {
   Table,
@@ -48,39 +39,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 
-import { exportarExcel } from "@/lib/exportar-excel";
+import { exportarExcel } from "@/lib/exportar-excel"
 
 type EmpresaTransporteTableProps = {
-  empresas: EmpresaTransporte[];
+  empresas: EmpresaTransporte[]
 
-  onEdit: (
-    empresa: EmpresaTransporte,
-  ) => void;
+  onEdit: (empresa: EmpresaTransporte) => void
 
-  onRefresh: () => void;
+  onRefresh: () => void
 
-  // ============================================================
-  // PAGINACIÓN
-  // ============================================================
+  page: number
 
-  page: number;
+  pageSize: number
 
-  pageSize: number;
+  totalPages: number
 
-  totalPages: number;
+  total: number
 
-  total: number;
+  onPageChange: (page: number) => void
 
-  onPageChange: (
-    page: number,
-  ) => void;
-
-  onPageSizeChange: (
-    pageSize: number,
-  ) => void;
-};
+  onPageSizeChange: (pageSize: number) => void
+}
 
 export function EmpresaTransporteTable({
   empresas,
@@ -96,51 +77,37 @@ export function EmpresaTransporteTable({
   /**
    * Cambia el estado de una empresa.
    */
-  async function handleCambiarEstado(
-    empresa: EmpresaTransporte,
-  ) {
-    const nuevoEstado =
-      !empresa.activo;
+  async function handleCambiarEstado(empresa: EmpresaTransporte) {
+    const nuevoEstado = !empresa.activo
 
     const mensaje = nuevoEstado
       ? "¿Activar esta empresa de transporte?"
-      : "¿Desactivar esta empresa de transporte?";
+      : "¿Desactivar esta empresa de transporte?"
 
-    const confirmado =
-      window.confirm(mensaje);
+    const confirmado = window.confirm(mensaje)
 
     if (!confirmado) {
-      return;
+      return
     }
 
     try {
-      const resultado =
-        await cambiarEstadoEmpresaTransporteAction(
-          {
-            id: empresa.id,
-            activo: nuevoEstado,
-          },
-        );
+      const resultado = await cambiarEstadoEmpresaTransporteAction({
+        id: empresa.id,
+        activo: nuevoEstado,
+      })
 
       if (!resultado.success) {
-        toast.error(
-          resultado.message,
-        );
-
-        return;
+        toast.error(resultado.message)
+        return
       }
 
-      toast.success(
-        resultado.message,
-      );
+      toast.success(resultado.message)
 
-      onRefresh();
+      onRefresh()
     } catch (error) {
-      console.error(error);
+      console.error(error)
 
-      toast.error(
-        "No se pudo cambiar el estado de la empresa",
-      );
+      toast.error("No se pudo cambiar el estado de la empresa")
     }
   }
 
@@ -150,105 +117,69 @@ export function EmpresaTransporteTable({
    */
   function handleExportarExcel() {
     if (empresas.length === 0) {
-      return;
+      return
     }
 
-    const datos = empresas.map(
-      (empresa) => ({
-        Empresa: empresa.nombre,
-
-        RUC: empresa.ruc ?? "",
-
-        Teléfono:
-          empresa.telefono ?? "",
-
-        Estado: empresa.activo
-          ? "Activo"
-          : "Inactivo",
-      }),
-    );
+    const datos = empresas.map((empresa) => ({
+      Empresa: empresa.nombre,
+      RUC: empresa.ruc,
+      Teléfono: empresa.telefono ?? "",
+      "Contacto logístico / compras": empresa.contactoLogistico ?? "",
+      "Nombre del encargado": empresa.nombreEncargado ?? "",
+    }))
 
     exportarExcel({
       datos,
-      nombreArchivo:
-        "empresas-transporte",
-      nombreHoja:
-        "Empresas de transporte",
-    });
+      nombreArchivo: "empresas-transporte",
+      nombreHoja: "Empresas de transporte",
+    })
   }
 
   /**
    * Genera los números de página.
    */
   function obtenerPaginas() {
-    const paginas: (
-      | number
-      | "ellipsis"
-    )[] = [];
+    const paginas: (number | "ellipsis")[] = []
 
     if (totalPages <= 7) {
-      for (
-        let i = 1;
-        i <= totalPages;
-        i++
-      ) {
-        paginas.push(i);
+      for (let i = 1; i <= totalPages; i++) {
+        paginas.push(i)
       }
 
-      return paginas;
+      return paginas
     }
 
-    paginas.push(1);
+    paginas.push(1)
 
     if (page > 3) {
-      paginas.push("ellipsis");
+      paginas.push("ellipsis")
     }
 
-    const inicio = Math.max(
-      2,
-      page - 1,
-    );
+    const inicio = Math.max(2, page - 1)
 
-    const fin = Math.min(
-      totalPages - 1,
-      page + 1,
-    );
+    const fin = Math.min(totalPages - 1, page + 1)
 
-    for (
-      let i = inicio;
-      i <= fin;
-      i++
-    ) {
-      paginas.push(i);
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i)
     }
 
-    if (
-      page <
-      totalPages - 2
-    ) {
-      paginas.push("ellipsis");
+    if (page < totalPages - 2) {
+      paginas.push("ellipsis")
     }
 
-    paginas.push(totalPages);
+    paginas.push(totalPages)
 
-    return paginas;
+    return paginas
   }
 
-  const paginas =
-    obtenerPaginas();
+  const paginas = obtenerPaginas()
 
   /**
    * Rango de registros mostrado.
    */
-  const desde =
-    total === 0
-      ? 0
-      : (page - 1) * pageSize + 1;
+  const desde = total === 0 ? 0 : (page - 1) * pageSize + 1
 
-  const hasta = Math.min(
-    page * pageSize,
-    total,
-  );
+  const hasta = Math.min(page * pageSize, total)
 
   return (
     <>
@@ -256,31 +187,21 @@ export function EmpresaTransporteTable({
           ENCABEZADO
       ====================================================== */}
 
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-sm font-medium">
-            Empresas de transporte
-          </h2>
+          <h2 className="text-sm font-medium">Empresas de transporte</h2>
 
           <p className="text-sm text-muted-foreground">
-            {total}{" "}
-            {total === 1
-              ? "empresa"
-              : "empresas"}
+            {total} {total === 1 ? "empresa" : "empresas"}
           </p>
         </div>
 
         <Button
           variant="outline"
-          onClick={
-            handleExportarExcel
-          }
-          disabled={
-            empresas.length === 0
-          }
+          onClick={handleExportarExcel}
+          disabled={empresas.length === 0}
         >
           <Download className="mr-2 size-4" />
-
           Exportar Excel
         </Button>
       </div>
@@ -289,28 +210,38 @@ export function EmpresaTransporteTable({
           TABLA
       ====================================================== */}
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
+      <div className="w-full overflow-x-auto rounded-lg border">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>
-                Empresa
+              {/* EMPRESA */}
+
+              <TableHead className="w-[28%]">Empresa</TableHead>
+
+              {/* RUC */}
+
+              <TableHead className="w-[16%]">RUC</TableHead>
+
+              {/* TELÉFONO */}
+
+              <TableHead className="w-[16%]">Teléfono</TableHead>
+
+              {/* CONTACTO */}
+
+              <TableHead className="hidden w-[20%] lg:table-cell">
+                Contacto logístico
               </TableHead>
 
-              <TableHead>
-                RUC
+              {/* ENCARGADO */}
+
+              <TableHead className="hidden w-[16%] lg:table-cell">
+                Encargado
               </TableHead>
 
-              <TableHead>
-                Teléfono
-              </TableHead>
+              {/* ACCIONES */}
 
-              <TableHead>
-                Estado
-              </TableHead>
-
-              <TableHead className="w-[70px] text-right">
-                Acciones
+              <TableHead className="w-[60px] text-right">
+                <span className="sr-only">Acciones</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -319,106 +250,88 @@ export function EmpresaTransporteTable({
             {empresas.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No se encontraron
-                  empresas de
-                  transporte.
+                  No se encontraron empresas de transporte.
                 </TableCell>
               </TableRow>
             ) : (
-              empresas.map(
-                (empresa) => (
-                  <TableRow
-                    key={
-                      empresa.id
-                    }
-                  >
-                    {/* EMPRESA */}
+              empresas.map((empresa) => (
+                <TableRow key={empresa.id}>
+                  {/* EMPRESA */}
 
-                    <TableCell className="font-medium">
-                      {
-                        empresa.nombre
-                      }
-                    </TableCell>
+                  <TableCell className="max-w-0">
+                    <div
+                      className="truncate font-medium"
+                      title={empresa.nombre}
+                    >
+                      {empresa.nombre}
+                    </div>
+                  </TableCell>
 
-                    {/* RUC */}
+                  {/* RUC */}
 
-                    <TableCell>
-                      {empresa.ruc ||
-                        "-"}
-                    </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {empresa.ruc}
+                  </TableCell>
 
-                    {/* TELÉFONO */}
+                  {/* TELÉFONO */}
 
-                    <TableCell>
-                      {empresa.telefono ||
-                        "-"}
-                    </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {empresa.telefono || "-"}
+                  </TableCell>
 
-                    {/* ESTADO */}
+                  {/* CONTACTO */}
 
-                    <TableCell>
-                      {empresa.activo ? (
-                        <Badge variant="default">
-                          <CheckCircle2 className="mr-1 size-3.5" />
+                  <TableCell className="hidden max-w-0 lg:table-cell">
+                    <div
+                      className="truncate"
+                      title={empresa.contactoLogistico || undefined}
+                    >
+                      {empresa.contactoLogistico || "-"}
+                    </div>
+                  </TableCell>
 
-                          Activo
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          <XCircle className="mr-1 size-3.5" />
+                  {/* ENCARGADO */}
 
-                          Inactivo
-                        </Badge>
-                      )}
-                    </TableCell>
+                  <TableCell className="hidden max-w-0 lg:table-cell">
+                    <div
+                      className="truncate"
+                      title={empresa.nombreEncargado || undefined}
+                    >
+                      {empresa.nombreEncargado || "-"}
+                    </div>
+                  </TableCell>
 
-                    {/* ACCIONES */}
+                  {/* ACCIONES */}
 
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
-                          <MoreHorizontal className="size-4" />
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
+                        <MoreHorizontal className="size-4" />
 
-                          <span className="sr-only">
-                            Abrir acciones
-                          </span>
-                        </DropdownMenuTrigger>
+                        <span className="sr-only">Abrir acciones</span>
+                      </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              onEdit(
-                                empresa,
-                              )
-                            }
-                          >
-                            <Edit className="mr-2 size-4" />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(empresa)}>
+                          <Edit className="mr-2 size-4" />
+                          Editar
+                        </DropdownMenuItem>
 
-                            Editar
-                          </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleCambiarEstado(empresa)}
+                        >
+                          <Power className="mr-2 size-4" />
 
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleCambiarEstado(
-                                empresa,
-                              )
-                            }
-                          >
-                            <Power className="mr-2 size-4" />
-
-                            {empresa.activo
-                              ? "Desactivar"
-                              : "Activar"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ),
-              )
+                          {empresa.activo ? "Desactivar" : "Activar"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -430,81 +343,45 @@ export function EmpresaTransporteTable({
 
       {total > 0 && (
         <div className="flex flex-col gap-4 pt-4 md:flex-row md:items-center md:justify-between">
-          {/* =================================================
-              CANTIDAD DE FILAS
-          ================================================== */}
+          {/* CANTIDAD DE FILAS */}
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Mostrar
-            </span>
+            <span className="text-sm text-muted-foreground">Mostrar</span>
 
             <Select
-              value={String(
-                pageSize,
-              )}
-              onValueChange={(
-                value,
-              ) =>
-                onPageSizeChange(
-                  Number(value),
-                )
-              }
+              value={String(pageSize)}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
             >
               <SelectTrigger className="w-[75px]">
                 <SelectValue />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="10">
-                  10
-                </SelectItem>
+                <SelectItem value="10">10</SelectItem>
 
-                <SelectItem value="20">
-                  20
-                </SelectItem>
+                <SelectItem value="20">20</SelectItem>
 
-                <SelectItem value="30">
-                  30
-                </SelectItem>
+                <SelectItem value="30">30</SelectItem>
 
-                <SelectItem value="50">
-                  50
-                </SelectItem>
+                <SelectItem value="50">50</SelectItem>
 
-                <SelectItem value="100">
-                  100
-                </SelectItem>
+                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
 
-            <span className="text-sm text-muted-foreground">
-              filas
-            </span>
+            <span className="text-sm text-muted-foreground">filas</span>
           </div>
 
-          {/* =================================================
-              INFORMACIÓN
-          ================================================== */}
+          {/* INFORMACIÓN */}
 
           <div className="text-sm text-muted-foreground">
             Mostrando{" "}
-            <span className="font-medium text-foreground">
-              {desde}
-            </span>
-            –
-            <span className="font-medium text-foreground">
-              {hasta}
-            </span>{" "}
-            de{" "}
-            <span className="font-medium text-foreground">
-              {total}
-            </span>
+            <span className="font-medium text-foreground">{desde}</span>–
+            <span className="font-medium text-foreground">{hasta}</span> de{" "}
+            <span className="font-medium text-foreground">{total}</span>
           </div>
 
-          {/* =================================================
-              NAVEGACIÓN
-          ================================================== */}
+          {/* NAVEGACIÓN */}
 
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
@@ -514,14 +391,8 @@ export function EmpresaTransporteTable({
                 variant="outline"
                 size="icon"
                 className="size-8"
-                disabled={
-                  page === 1
-                }
-                onClick={() =>
-                  onPageChange(
-                    page - 1,
-                  )
-                }
+                disabled={page === 1}
+                onClick={() => onPageChange(page - 1)}
                 title="Página anterior"
               >
                 <ChevronLeft className="size-4" />
@@ -529,50 +400,33 @@ export function EmpresaTransporteTable({
 
               {/* PÁGINAS */}
 
-              {paginas.map(
-                (
-                  pagina,
-                  index,
-                ) => {
-                  if (
-                    pagina ===
-                    "ellipsis"
-                  ) {
-                    return (
-                      <Button
-                        key={`ellipsis-${index}`}
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        disabled
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    );
-                  }
-
+              {paginas.map((pagina, index) => {
+                if (pagina === "ellipsis") {
                   return (
                     <Button
-                      key={pagina}
-                      variant={
-                        pagina ===
-                        page
-                          ? "default"
-                          : "outline"
-                      }
+                      key={`ellipsis-${index}`}
+                      variant="ghost"
                       size="icon"
                       className="size-8"
-                      onClick={() =>
-                        onPageChange(
-                          pagina,
-                        )
-                      }
+                      disabled
                     >
-                      {pagina}
+                      <MoreHorizontal className="size-4" />
                     </Button>
-                  );
-                },
-              )}
+                  )
+                }
+
+                return (
+                  <Button
+                    key={pagina}
+                    variant={pagina === page ? "default" : "outline"}
+                    size="icon"
+                    className="size-8"
+                    onClick={() => onPageChange(pagina)}
+                  >
+                    {pagina}
+                  </Button>
+                )
+              })}
 
               {/* SIGUIENTE */}
 
@@ -580,15 +434,8 @@ export function EmpresaTransporteTable({
                 variant="outline"
                 size="icon"
                 className="size-8"
-                disabled={
-                  page ===
-                  totalPages
-                }
-                onClick={() =>
-                  onPageChange(
-                    page + 1,
-                  )
-                }
+                disabled={page === totalPages}
+                onClick={() => onPageChange(page + 1)}
                 title="Página siguiente"
               >
                 <ChevronRight className="size-4" />
@@ -598,5 +445,5 @@ export function EmpresaTransporteTable({
         </div>
       )}
     </>
-  );
+  )
 }
