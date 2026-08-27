@@ -63,6 +63,7 @@ import {
 } from "@/components/ui/select"
 
 import { EstadoBadge } from "./estado-badge"
+import { EstadoPagoBadge } from "./estado-pago-badge"
 
 import { GuiaDetalleSheet } from "./guia-detalle-sheet"
 
@@ -71,7 +72,7 @@ import { RegistrarPagoDialog } from "./registrar-pago-dialog"
 
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
-import type { EstadoGuia } from "@/lib/generated/prisma"
+import type { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
 
 import { anularGuiaAction, obtenerGuiasAction } from "../guia.actions"
 
@@ -160,6 +161,10 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
   const [estado, setEstado] = useState<EstadoGuia | undefined>(undefined)
 
+  const [estadoPago, setEstadoPago] = useState<EstadoPago | undefined>(
+    undefined
+  )
+
   const [fechaDesde, setFechaDesde] = useState("")
 
   const [fechaHasta, setFechaHasta] = useState("")
@@ -231,6 +236,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
       estado,
 
+      estadoPago,
+
       fechaDesde: fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : undefined,
 
       fechaHasta: fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : undefined,
@@ -299,6 +306,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     setFechaDesde("")
 
     setFechaHasta("")
+
+    setEstadoPago(undefined)
 
     startTransition(async () => {
       const resultado = await obtenerGuiasAction({
@@ -450,6 +459,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
         Estado: guia.estado,
 
+        "Estado de pago": guia.estadoPago,
+
         Observaciones: guia.observaciones ?? "",
 
         "Fecha creación": formatFechaNegocio(guia.createdAt),
@@ -589,6 +600,33 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
             </Select>
           </div>
 
+          {/* ESTADO DE PAGO */}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Estado de pago</label>
+
+            <Select
+              value={estadoPago ?? "TODOS"}
+              onValueChange={(value) => {
+                setEstadoPago(
+                  value === "TODOS" ? undefined : (value as EstadoPago)
+                )
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Todos los estados de pago" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="TODOS">Todos los estados</SelectItem>
+
+                <SelectItem value="PENDIENTE">Pendiente</SelectItem>
+
+                <SelectItem value="PAGADO">Pagado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* FECHA DESDE */}
 
           <div className="space-y-2">
@@ -686,6 +724,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
               <TableHead>Estado</TableHead>
 
+              <TableHead>Estado de pago</TableHead>
+
               <TableHead className="text-right">Monto total</TableHead>
 
               <TableHead className="w-10" />
@@ -696,7 +736,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
             {guias.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="h-24 text-center text-sm text-muted-foreground"
                 >
                   No se encontraron guías.
@@ -751,6 +791,12 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
                 <TableCell>
                   <EstadoBadge estado={guia.estado} />
+                </TableCell>
+
+                {/* ESTADO DE PAGO */}
+
+                <TableCell>
+                  <EstadoPagoBadge estado={guia.estadoPago} />
                 </TableCell>
 
                 {/* MONTO */}

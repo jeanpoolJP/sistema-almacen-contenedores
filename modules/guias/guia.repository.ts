@@ -134,6 +134,7 @@ type ObtenerGuiasParams = {
   documentoCliente?: string
 
   estado?: EstadoGuia
+  estadoPago?: EstadoPago
 
   fechaDesde?: Date
   fechaHasta?: Date
@@ -149,6 +150,7 @@ export async function obtenerGuias({
   numeroContenedor,
   documentoCliente,
   estado,
+  estadoPago,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasParams) {
@@ -180,6 +182,10 @@ export async function obtenerGuias({
 
     ...(estado && {
       estado,
+    }),
+
+    ...(estadoPago && {
+      estadoPago,
     }),
 
     ...(fechaDesde || fechaHasta

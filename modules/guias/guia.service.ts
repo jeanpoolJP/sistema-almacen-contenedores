@@ -10,9 +10,17 @@ import {
   registrarPagoGuia,
 } from "./guia.repository"
 
-import { crearGuiaSchema, registrarPagoGuiaSchema, registrarSalidaGuiaSchema } from "./guia.schema"
+import {
+  crearGuiaSchema,
+  registrarPagoGuiaSchema,
+  registrarSalidaGuiaSchema,
+} from "./guia.schema"
 
-import type { CrearGuiaInput, RegistrarSalidaGuiaInput, RegistrarPagoGuiaInput } from "./guia.types"
+import type {
+  CrearGuiaInput,
+  RegistrarSalidaGuiaInput,
+  RegistrarPagoGuiaInput,
+} from "./guia.types"
 
 import { calcularDiasAlmacenamiento } from "./utils/calcular-almacenamiento"
 
@@ -32,7 +40,7 @@ import { obtenerOCrearVehiculo } from "@/modules/vehiculos/vehiculos.service"
 
 import { obtenerOCrearConductor } from "@/modules/conductores/conductores.service"
 
-import type { EstadoGuia } from "@/lib/generated/prisma"
+import type { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
 
 /**
  * Crea una guía de internamiento.
@@ -390,6 +398,7 @@ type ObtenerGuiasServiceParams = {
   documentoCliente?: string
 
   estado?: EstadoGuia
+  estadoPago?: EstadoPago,
 
   fechaDesde?: Date
   fechaHasta?: Date
@@ -402,6 +411,7 @@ export async function obtenerGuiasService({
   numeroContenedor,
   documentoCliente,
   estado,
+  estadoPago,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasServiceParams) {
@@ -412,6 +422,7 @@ export async function obtenerGuiasService({
     numeroContenedor,
     documentoCliente,
     estado,
+    estadoPago,
     fechaDesde,
     fechaHasta,
   })

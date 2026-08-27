@@ -187,6 +187,7 @@ export type FiltrosGuias = {
   busqueda?: string
   estado?: EstadoGuia | "TODOS"
   pagina?: number
+  estadoPago?: EstadoPago | "TODOS"
   limite?: number
 }
 

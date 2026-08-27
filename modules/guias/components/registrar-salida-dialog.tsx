@@ -48,6 +48,8 @@ import { TransportistaFields } from "./fields/transportista-fields"
 import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
+import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions"
+
 type RegistrarSalidaDialogProps = {
   guia: GuiaConRelaciones
   open: boolean
@@ -63,6 +65,16 @@ export function RegistrarSalidaDialog({
 }: RegistrarSalidaDialogProps) {
   const [submitting, setSubmitting] = useState(false)
   const [diasEditados, setDiasEditados] = useState(false)
+
+  const [precioBase, setPrecioBase] = useState<{
+    precioPrimerDia: number
+    precioDiaAdicional: number
+  } | null>(null)
+
+  const precioPersonalizadoGuia = {
+    precioPrimerDia: Number(guia.precioPrimerDia),
+    precioDiaAdicional: Number(guia.precioDiaAdicional),
+  }
 
   const form = useForm<RegistrarSalidaGuiaSchema>({
     resolver: zodResolver(registrarSalidaGuiaSchema),
@@ -91,6 +103,29 @@ export function RegistrarSalidaDialog({
       tratamientoIGV: guia.tratamientoIGV,
     },
   })
+
+  useEffect(() => {
+    if (!open) return
+
+    obtenerConfiguracionPrecioAction().then((res) => {
+      if (res?.success && res.data) {
+        const base = {
+          precioPrimerDia: Number(res.data.precioPrimerDia),
+          precioDiaAdicional: Number(res.data.precioDiaAdicional),
+        }
+
+        setPrecioBase(base)
+
+        // Si la guía ya está configurada como estándar,
+        // mostramos inmediatamente el precio estándar actual.
+        if (guia.tipoPrecio === "ESTANDAR") {
+          form.setValue("precioPrimerDia", base.precioPrimerDia)
+          form.setValue("precioDiaAdicional", base.precioDiaAdicional)
+        }
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, guia.id])
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const tratamientoIGV = form.watch("tratamientoIGV")
@@ -188,6 +223,25 @@ export function RegistrarSalidaDialog({
     onOpenChange(false)
 
     onRegistrada?.()
+  }
+
+  function handleTipoPrecioChange(value: "ESTANDAR" | "PERSONALIZADO" | null) {
+    if (!value) return
+
+    form.setValue("tipoPrecio", value)
+
+    if (value === "ESTANDAR" && precioBase) {
+      form.setValue("precioPrimerDia", precioBase.precioPrimerDia)
+      form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional)
+
+      return
+    }
+
+    if (value === "PERSONALIZADO") {
+      form.setValue("precioPrimerDia", Number(guia.precioPrimerDia))
+
+      form.setValue("precioDiaAdicional", Number(guia.precioDiaAdicional))
+    }
   }
 
   return (
@@ -309,7 +363,7 @@ export function RegistrarSalidaDialog({
                       <FormLabel>Tipo de precio</FormLabel>
 
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={handleTipoPrecioChange}
                         value={field.value}
                       >
                         <FormControl>
