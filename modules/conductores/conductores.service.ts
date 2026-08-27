@@ -1,5 +1,3 @@
-// modules\conductores\conductores.service.ts
-
 import { conductorLicenciaSchema, conductorSchema } from "./conductores.schema"
 
 import {
@@ -14,6 +12,16 @@ import {
 import type { ConductorFormData } from "./conductores.types"
 
 /**
+ * Normaliza el número de licencia.
+ *
+ * Todas las licencias se almacenan en mayúsculas
+ * y sin espacios al inicio o al final.
+ */
+function normalizarLicencia(numeroLicencia: string) {
+  return numeroLicencia.trim().toUpperCase()
+}
+
+/**
  * Busca un conductor por su número de licencia.
  *
  * Si existe, lo devuelve.
@@ -25,9 +33,9 @@ import type { ConductorFormData } from "./conductores.types"
 export async function obtenerOCrearConductor(data: ConductorFormData) {
   const datosValidados = conductorSchema.parse(data)
 
-  const conductorExistente = await findConductorByLicencia(
-    datosValidados.numeroLicencia
-  )
+  const licenciaNormalizada = normalizarLicencia(datosValidados.numeroLicencia)
+
+  const conductorExistente = await findConductorByLicencia(licenciaNormalizada)
 
   if (conductorExistente) {
     return conductorExistente
@@ -36,11 +44,12 @@ export async function obtenerOCrearConductor(data: ConductorFormData) {
   return createConductor({
     nombreCompleto: datosValidados.nombreCompleto.trim(),
 
-    numeroLicencia: datosValidados.numeroLicencia.trim(),
+    numeroLicencia: licenciaNormalizada,
 
     telefono: datosValidados.telefono?.trim() || null,
   })
 }
+
 /**
  * Obtiene un conductor mediante su número de licencia.
  *
@@ -48,11 +57,13 @@ export async function obtenerOCrearConductor(data: ConductorFormData) {
  * de crear una guía.
  */
 export async function obtenerConductorPorLicencia(numeroLicencia: string) {
-  const { numeroLicencia: licenciaValida } = conductorLicenciaSchema.parse({
+  const datosValidados = conductorLicenciaSchema.parse({
     numeroLicencia,
   })
 
-  return findConductorByLicencia(licenciaValida)
+  const licenciaNormalizada = normalizarLicencia(datosValidados.numeroLicencia)
+
+  return findConductorByLicencia(licenciaNormalizada)
 }
 
 /**
@@ -71,19 +82,20 @@ export async function obtenerConductores(
 ) {
   return findConductores(page, pageSize)
 }
+
 /**
  * Registra un nuevo conductor.
  */
 export async function registrarConductor(data: ConductorFormData) {
   const datosValidados = conductorSchema.parse(data)
 
+  const licenciaNormalizada = normalizarLicencia(datosValidados.numeroLicencia)
+
   /**
    * Verificamos que no exista otro conductor
    * con la misma licencia.
    */
-  const conductorExistente = await findConductorByLicencia(
-    datosValidados.numeroLicencia
-  )
+  const conductorExistente = await findConductorByLicencia(licenciaNormalizada)
 
   if (conductorExistente) {
     throw new Error(
@@ -94,7 +106,7 @@ export async function registrarConductor(data: ConductorFormData) {
   return createConductor({
     nombreCompleto: datosValidados.nombreCompleto.trim(),
 
-    numeroLicencia: datosValidados.numeroLicencia.trim(),
+    numeroLicencia: licenciaNormalizada,
 
     telefono: datosValidados.telefono?.trim() || null,
   })
@@ -106,18 +118,16 @@ export async function registrarConductor(data: ConductorFormData) {
 export async function actualizarConductor(id: number, data: ConductorFormData) {
   const datosValidados = conductorSchema.parse(data)
 
+  const licenciaNormalizada = normalizarLicencia(datosValidados.numeroLicencia)
+
   /**
    * Verificamos si la licencia pertenece
    * a otro conductor.
    */
-  const conductorExistente = await findConductorByLicencia(
-    datosValidados.numeroLicencia
-  )
+  const conductorExistente = await findConductorByLicencia(licenciaNormalizada)
 
   if (conductorExistente && conductorExistente.id !== id) {
-    throw new Error(
-      "Ya existe otro conductor registrado con este número de licencia"
-    )
+    throw new Error("Ya existe otro conductor registrado con esta licencia")
   }
 
   /**
@@ -132,7 +142,9 @@ export async function actualizarConductor(id: number, data: ConductorFormData) {
 
   return updateConductor(id, {
     nombreCompleto: datosValidados.nombreCompleto.trim(),
-    numeroLicencia: datosValidados.numeroLicencia.trim(),
+
+    numeroLicencia: licenciaNormalizada,
+
     telefono: datosValidados.telefono?.trim() || null,
   })
 }
