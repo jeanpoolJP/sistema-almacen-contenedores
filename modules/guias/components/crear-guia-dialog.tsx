@@ -166,7 +166,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
         Registrar guía
       </DialogTrigger>
 
-      <DialogContent className="w-[calc(100%-1rem)] max-w-4xl p-0 sm:w-[calc(100%-2rem)] lg:max-w-5xl">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-4xl overflow-hidden p-0 sm:w-[calc(100%-2rem)] lg:max-w-5xl">
         <DialogHeader className="border-b px-4 py-4 sm:px-6">
           <DialogTitle>Registrar ingreso de contenedor</DialogTitle>
 

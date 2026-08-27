@@ -100,7 +100,8 @@ export function RegistrarSalidaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1rem)] max-w-4xl p-0 sm:w-[calc(100%-2rem)] lg:max-w-5xl">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-4xl overflow-hidden p-0 sm:w-[calc(100%-2rem)] lg:max-w-5xl">
+        {" "}
         <DialogHeader className="border-b px-4 py-4 sm:px-6">
           <DialogTitle>Registrar salida — Guía {guia.numeroGuia}</DialogTitle>
 
@@ -111,7 +112,6 @@ export function RegistrarSalidaDialog({
               "Sin cliente"}
           </DialogDescription>
         </DialogHeader>
-
         <ScrollArea className="max-h-[70vh] px-4 sm:px-6">
           <FormProvider {...form}>
             <form
@@ -172,7 +172,6 @@ export function RegistrarSalidaDialog({
             </form>
           </FormProvider>
         </ScrollArea>
-
         <DialogFooter className="border-t px-4 py-4 sm:px-6">
           <Button
             type="button"
