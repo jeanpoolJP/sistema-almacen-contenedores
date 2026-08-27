@@ -126,8 +126,6 @@ export function DashboardPage() {
       ====================================================== */}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ActividadReciente actividades={data.actividades} />
-
         <EstadoAlmacen estado={data.estadoAlmacen} />
       </div>
     </div>

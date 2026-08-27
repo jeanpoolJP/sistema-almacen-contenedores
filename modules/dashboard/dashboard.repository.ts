@@ -139,7 +139,7 @@ export async function findActividadesRecientes() {
     take: 8,
 
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
 
     select: {
@@ -148,7 +148,7 @@ export async function findActividadesRecientes() {
       estado: true,
       fechaIngreso: true,
       fechaSalida: true,
-      createdAt: true,
+      updatedAt: true,
 
       cliente: {
         select: {

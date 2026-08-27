@@ -67,7 +67,7 @@ export async function obtenerDashboard(): Promise<DashboardData> {
         fecha: (
           actividad.fechaSalida ??
           actividad.fechaIngreso ??
-          actividad.createdAt
+          actividad.updatedAt 
         ).toISOString(),
 
         estado: actividad.estado,
