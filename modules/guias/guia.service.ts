@@ -195,9 +195,6 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 /**
  * Registra la salida de un contenedor.
  */
-/**
- * Registra la salida de un contenedor.
- */
 export async function registrarSalidaGuiaService(
   data: RegistrarSalidaGuiaInput
 ) {
@@ -361,6 +358,7 @@ export async function registrarSalidaGuiaService(
 
   return serializarGuia(guiaActualizada)
 }
+
 /**
  * Obtiene una guía por ID.
  */

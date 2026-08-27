@@ -5,8 +5,10 @@
 import { useEffect, useState } from "react"
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CopyPlus, LogOut } from "lucide-react"
+import { CalendarIcon, Clock, CopyPlus, LogOut } from "lucide-react"
 import { toast } from "sonner"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -49,6 +51,69 @@ import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions"
+
+function formatearFechaIngreso(fecha: Date | string) {
+  const fechaDate = typeof fecha === "string" ? new Date(fecha) : fecha
+
+  const dia = String(fechaDate.getUTCDate()).padStart(2, "0")
+
+  const meses = [
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic",
+  ]
+
+  const mes = meses[fechaDate.getUTCMonth()]
+  const año = fechaDate.getUTCFullYear()
+
+  return `${dia} ${mes} ${año}`
+}
+
+function formatearHoraIngreso(hora: Date | string) {
+  const horaDate = typeof hora === "string" ? new Date(hora) : hora
+
+  const horas = String(horaDate.getUTCHours()).padStart(2, "0")
+  const minutos = String(horaDate.getUTCMinutes()).padStart(2, "0")
+
+  return `${horas}:${minutos}`
+}
+
+function combinarFechaHoraIngreso(fecha: Date, hora: Date) {
+  return new Date(
+    Date.UTC(
+      fecha.getUTCFullYear(),
+      fecha.getUTCMonth(),
+      fecha.getUTCDate(),
+      hora.getUTCHours(),
+      hora.getUTCMinutes(),
+      hora.getUTCSeconds(),
+      0
+    )
+  )
+}
+
+function combinarFechaHoraSalida(fecha: Date, hora: Date) {
+  return new Date(
+    Date.UTC(
+      fecha.getFullYear(),
+      fecha.getMonth(),
+      fecha.getDate(),
+      hora.getUTCHours(),
+      hora.getUTCMinutes(),
+      hora.getUTCSeconds(),
+      0
+    )
+  )
+}
 
 type RegistrarSalidaDialogProps = {
   guia: GuiaConRelaciones
@@ -104,69 +169,29 @@ export function RegistrarSalidaDialog({
     },
   })
 
-  useEffect(() => {
-    if (!open) return
-
-    obtenerConfiguracionPrecioAction().then((res) => {
-      if (res?.success && res.data) {
-        const base = {
-          precioPrimerDia: Number(res.data.precioPrimerDia),
-          precioDiaAdicional: Number(res.data.precioDiaAdicional),
-        }
-
-        setPrecioBase(base)
-
-        // Si la guía ya está configurada como estándar,
-        // mostramos inmediatamente el precio estándar actual.
-        if (guia.tipoPrecio === "ESTANDAR") {
-          form.setValue("precioPrimerDia", base.precioPrimerDia)
-          form.setValue("precioDiaAdicional", base.precioDiaAdicional)
-        }
-      }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, guia.id])
-
   // eslint-disable-next-line react-hooks/incompatible-library
   const tratamientoIGV = form.watch("tratamientoIGV")
   const tipoPrecio = form.watch("tipoPrecio")
-
-  // Observamos fecha y hora de salida
   const fechaSalida = form.watch("fechaSalida")
   const horaSalida = form.watch("horaSalida")
 
-  /**
-   * Calcula automáticamente los días de almacenamiento
-   * cuando cambia la fecha/hora de salida.
-   */
   useEffect(() => {
     if (!fechaSalida || !horaSalida || diasEditados) {
       return
     }
 
-    const fechaHoraSalida = new Date(fechaSalida)
+    const fechaHoraSalida = combinarFechaHoraSalida(fechaSalida, horaSalida)
 
-    fechaHoraSalida.setHours(
-      horaSalida.getHours(),
-      horaSalida.getMinutes(),
-      0,
-      0
-    )
-
-    const fechaHoraIngreso = new Date(guia.fechaIngreso)
-
-    fechaHoraIngreso.setHours(
-      guia.horaIngreso.getHours(),
-      guia.horaIngreso.getMinutes(),
-      0,
-      0
+    const fechaHoraIngreso = combinarFechaHoraIngreso(
+      guia.fechaIngreso,
+      guia.horaIngreso
     )
 
     const diferenciaMs = fechaHoraSalida.getTime() - fechaHoraIngreso.getTime()
 
-    const diferenciaDias = Math.ceil(diferenciaMs / (1000 * 60 * 60 * 24))
+    const horas = diferenciaMs / (1000 * 60 * 60)
 
-    const diasCalculados = Math.max(1, diferenciaDias)
+    const diasCalculados = Math.max(1, Math.ceil(horas / 24))
 
     form.setValue("diasAlmacenamiento", diasCalculados, {
       shouldValidate: true,
@@ -296,11 +321,46 @@ export function RegistrarSalidaDialog({
                 FECHA Y HORA DE SALIDA
             ============================================================ */}
 
-              <FechaHoraField
-                fechaName="fechaSalida"
-                horaName="horaSalida"
-                label="Fecha y hora de salida"
-              />
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Fecha y hora</h3>
+
+                  <p className="text-xs text-muted-foreground">
+                    Consulta la fecha de ingreso y registra la fecha y hora de
+                    salida.
+                  </p>
+                </div>
+
+                {/* FECHA Y HORA DE INGRESO */}
+                <div className="space-y-2">
+                  <span className="text-sm font-medium">
+                    Fecha y hora de ingreso
+                  </span>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* FECHA INGRESO */}
+                    <div className="flex h-10 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
+                      <CalendarIcon className="mr-2 size-4 shrink-0" />
+
+                      {formatearFechaIngreso(guia.fechaIngreso)}
+                    </div>
+
+                    {/* HORA INGRESO */}
+                    <div className="flex h-10 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
+                      <Clock className="mr-2 size-4 shrink-0" />
+
+                      {formatearHoraIngreso(guia.horaIngreso)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* FECHA Y HORA DE SALIDA */}
+                <FechaHoraField
+                  fechaName="fechaSalida"
+                  horaName="horaSalida"
+                  label="Fecha y hora de salida"
+                />
+              </div>
 
               <Separator />
 
