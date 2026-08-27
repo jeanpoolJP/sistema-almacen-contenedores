@@ -69,11 +69,11 @@ const menuItems = [
     href: "/admin/conductores",
     icon: UsersRound,
   },
-  {
+/*   {
     title: "Pagos",
     href: "/admin/pagos",
     icon: CreditCard,
-  },
+  }, */
 ];
 
 const reportItems = [
