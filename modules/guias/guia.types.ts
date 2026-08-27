@@ -66,6 +66,11 @@ export type ContenedorGuiaInput = {
  */
 export type TransportistaGuiaInput = {
   empresaNombre: string
+  ruc: string
+
+  telefono?: string | null
+  contactoLogistico?: string | null
+  nombreEncargado?: string | null
 
   placa: string
 

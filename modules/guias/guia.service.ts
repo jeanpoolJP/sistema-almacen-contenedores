@@ -103,6 +103,10 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
   const empresaIngreso = await obtenerOCrearEmpresaTransporte({
     nombre: datosValidados.transportistaIngreso.empresaNombre,
+    ruc: datosValidados.transportistaIngreso.ruc,
+    telefono: datosValidados.transportistaIngreso.telefono,
+    contactoLogistico: datosValidados.transportistaIngreso.contactoLogistico,
+    nombreEncargado: datosValidados.transportistaIngreso.nombreEncargado,
   })
 
   // ============================================================
@@ -228,6 +232,10 @@ export async function registrarSalidaGuiaService(
 
   const empresaSalida = await obtenerOCrearEmpresaTransporte({
     nombre: datosValidados.transportistaSalida.empresaNombre,
+    ruc: datosValidados.transportistaSalida.ruc,
+    telefono: datosValidados.transportistaSalida.telefono,
+    contactoLogistico: datosValidados.transportistaSalida.contactoLogistico,
+    nombreEncargado: datosValidados.transportistaSalida.nombreEncargado,
   })
 
   // ============================================================
@@ -396,7 +404,7 @@ type ObtenerGuiasServiceParams = {
   documentoCliente?: string
 
   estado?: EstadoGuia
-  estadoPago?: EstadoPago,
+  estadoPago?: EstadoPago
 
   fechaDesde?: Date
   fechaHasta?: Date
@@ -456,9 +464,7 @@ export async function obtenerGuiasService({
 /**
  * Registra el pago de una guía.
  */
-export async function registrarPagoGuiaService(
-  data: RegistrarPagoGuiaInput
-) {
+export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   // ============================================================
   // 1. VALIDAR DATOS
   // ============================================================
@@ -505,8 +511,7 @@ export async function registrarPagoGuiaService(
 
       numeroDocumento: datosValidados.cliente.numeroDocumento,
 
-      nombreCompleto:
-        datosValidados.cliente.nombreCompleto || null,
+      nombreCompleto: datosValidados.cliente.nombreCompleto || null,
 
       telefono: "",
 
@@ -529,8 +534,7 @@ export async function registrarPagoGuiaService(
 
     metodoPago: datosValidados.metodoPago,
 
-    numeroOperacion:
-      datosValidados.numeroOperacion ?? null,
+    numeroOperacion: datosValidados.numeroOperacion ?? null,
 
     fechaPago: datosValidados.fechaPago,
 

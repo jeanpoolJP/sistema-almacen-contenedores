@@ -7,6 +7,7 @@
  * en el proyecto (p. ej. "@/lib/prisma" o "@/lib/db").
  */
 import { prisma } from "@/lib/prisma"
+import { obtenerEmpresaTransportePorRuc } from "../empresas-transporte/empresa-transporte.repository"
 
 /**
  * ============================================================
@@ -153,13 +154,36 @@ export async function buscarEmpresaTransportePorNombreAction(nombre: string) {
   }
 }
 
+export async function buscarEmpresaTransportePorRucAction(ruc: string) {
+  try {
+    const empresa = await obtenerEmpresaTransportePorRuc(ruc)
+
+    if (!empresa) {
+      return {
+        encontrado: false,
+        data: null,
+      }
+    }
+
+    return {
+      encontrado: true,
+      data: empresa,
+    }
+  } catch (error) {
+    console.error("Error al buscar empresa de transporte por RUC:", error)
+
+    return {
+      encontrado: false,
+      data: null,
+    }
+  }
+}
+
 // ============================================================
 // BUSCAR VEHÍCULO POR PLACA
 // ============================================================
 
-export async function buscarVehiculoPorPlacaAction(
-  placa: string,
-) {
+export async function buscarVehiculoPorPlacaAction(placa: string) {
   try {
     const placaLimpia = placa.trim().toUpperCase()
 
@@ -171,16 +195,15 @@ export async function buscarVehiculoPorPlacaAction(
       }
     }
 
-    const vehiculo =
-      await prisma.vehiculo.findUnique({
-        where: {
-          placa: placaLimpia,
-        },
-        select: {
-          id: true,
-          placa: true,
-        },
-      })
+    const vehiculo = await prisma.vehiculo.findUnique({
+      where: {
+        placa: placaLimpia,
+      },
+      select: {
+        id: true,
+        placa: true,
+      },
+    })
 
     return {
       success: true,
@@ -188,32 +211,24 @@ export async function buscarVehiculoPorPlacaAction(
       data: vehiculo,
     }
   } catch (error) {
-    console.error(
-      "Error al buscar vehículo:",
-      error,
-    )
+    console.error("Error al buscar vehículo:", error)
 
     return {
       success: false,
       encontrado: false,
       data: null,
-      message:
-        "No se pudo buscar el vehículo",
+      message: "No se pudo buscar el vehículo",
     }
   }
 }
-
 
 // ============================================================
 // BUSCAR CONDUCTOR POR LICENCIA
 // ============================================================
 
-export async function buscarConductorPorLicenciaAction(
-  numeroLicencia: string,
-) {
+export async function buscarConductorPorLicenciaAction(numeroLicencia: string) {
   try {
-    const licencia =
-      numeroLicencia.trim()
+    const licencia = numeroLicencia.trim()
 
     if (!licencia) {
       return {
@@ -223,17 +238,16 @@ export async function buscarConductorPorLicenciaAction(
       }
     }
 
-    const conductor =
-      await prisma.conductor.findUnique({
-        where: {
-          numeroLicencia: licencia,
-        },
-        select: {
-          id: true,
-          numeroLicencia: true,
-          nombreCompleto: true,
-        },
-      })
+    const conductor = await prisma.conductor.findUnique({
+      where: {
+        numeroLicencia: licencia,
+      },
+      select: {
+        id: true,
+        numeroLicencia: true,
+        nombreCompleto: true,
+      },
+    })
 
     return {
       success: true,
@@ -241,17 +255,13 @@ export async function buscarConductorPorLicenciaAction(
       data: conductor,
     }
   } catch (error) {
-    console.error(
-      "Error al buscar conductor:",
-      error,
-    )
+    console.error("Error al buscar conductor:", error)
 
     return {
       success: false,
       encontrado: false,
       data: null,
-      message:
-        "No se pudo buscar el conductor",
+      message: "No se pudo buscar el conductor",
     }
   }
 }

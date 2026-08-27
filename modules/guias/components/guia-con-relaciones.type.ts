@@ -79,6 +79,8 @@ export type GuiaConRelaciones = {
     nombre: string
     ruc: string | null
     telefono: string | null
+    contactoLogistico: string | null
+    nombreEncargado: string | null
   }
   vehiculoIngreso: { id: number; placa: string }
   conductorIngreso: {
@@ -92,7 +94,10 @@ export type GuiaConRelaciones = {
     nombre: string
     ruc: string | null
     telefono: string | null
+    contactoLogistico: string | null
+    nombreEncargado: string | null
   } | null
+
   vehiculoSalida: { id: number; placa: string } | null
   conductorSalida: {
     id: number

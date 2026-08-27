@@ -1,33 +1,33 @@
 // modules/guias/components/fields/fecha-hora-field.tsx
 
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
-import { CalendarIcon, Clock } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { useFormContext } from "react-hook-form"
+import { CalendarIcon, Clock } from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Input } from "@/components/ui/input"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 import {
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
 
 type FechaHoraFieldProps = {
-  fechaName: string;
-  horaName: string;
-  label: string;
-};
+  fechaName: string
+  horaName: string
+  label: string
+}
 
 /**
  * ============================================================
@@ -42,20 +42,14 @@ type FechaHoraFieldProps = {
  *
  * Por eso usamos UTC para leerlas.
  */
-function horaAString(
-  fecha: Date | undefined | null,
-) {
-  if (!fecha) return "";
+function horaAString(fecha: Date | undefined | null) {
+  if (!fecha) return ""
 
-  const horas = String(
-    fecha.getUTCHours(),
-  ).padStart(2, "0");
+  const horas = String(fecha.getUTCHours()).padStart(2, "0")
 
-  const minutos = String(
-    fecha.getUTCMinutes(),
-  ).padStart(2, "0");
+  const minutos = String(fecha.getUTCMinutes()).padStart(2, "0")
 
-  return `${horas}:${minutos}`;
+  return `${horas}:${minutos}`
 }
 
 /**
@@ -63,24 +57,12 @@ function horaAString(
  */
 function stringAHora(valor: string) {
   if (!valor) {
-    return undefined;
+    return undefined
   }
 
-  const [horas, minutos] = valor
-    .split(":")
-    .map(Number);
+  const [horas, minutos] = valor.split(":").map(Number)
 
-  return new Date(
-    Date.UTC(
-      1970,
-      0,
-      1,
-      horas || 0,
-      minutos || 0,
-      0,
-      0,
-    ),
-  );
+  return new Date(Date.UTC(1970, 0, 1, horas || 0, minutos || 0, 0, 0))
 }
 
 /**
@@ -101,9 +83,7 @@ function stringAHora(valor: string) {
  *
  * Creamos el Date utilizando los componentes locales.
  */
-function crearFechaLocal(
-  fecha: Date,
-) {
+function crearFechaLocal(fecha: Date) {
   return new Date(
     fecha.getFullYear(),
     fecha.getMonth(),
@@ -111,8 +91,8 @@ function crearFechaLocal(
     0,
     0,
     0,
-    0,
-  );
+    0
+  )
 }
 
 /**
@@ -126,10 +106,8 @@ function crearFechaLocal(
  * → Date local:
  * 25/08/2026 00:00
  */
-function crearFechaDesdeCalendar(
-  fecha: Date,
-) {
-  return crearFechaLocal(fecha);
+function crearFechaDesdeCalendar(fecha: Date) {
+  return crearFechaLocal(fecha)
 }
 
 /**
@@ -144,9 +122,9 @@ function crearFechaDesdeCalendar(
  * 25/08/2026 00:00 hora local
  */
 function obtenerFechaActual() {
-  const ahora = new Date();
+  const ahora = new Date()
 
-  return crearFechaLocal(ahora);
+  return crearFechaLocal(ahora)
 }
 
 /**
@@ -154,7 +132,7 @@ function obtenerFechaActual() {
  * como hora neutra UTC.
  */
 function obtenerHoraActual() {
-  const ahora = new Date();
+  const ahora = new Date()
 
   return new Date(
     Date.UTC(
@@ -164,9 +142,9 @@ function obtenerHoraActual() {
       ahora.getHours(),
       ahora.getMinutes(),
       ahora.getSeconds(),
-      0,
-    ),
-  );
+      0
+    )
+  )
 }
 
 export function FechaHoraField({
@@ -174,10 +152,7 @@ export function FechaHoraField({
   horaName,
   label,
 }: FechaHoraFieldProps) {
-  const {
-    control,
-    setValue,
-  } = useFormContext();
+  const { control, setValue } = useFormContext()
 
   /**
    * ==========================================================
@@ -185,36 +160,25 @@ export function FechaHoraField({
    * ==========================================================
    */
   function usarFechaHoraActual() {
-    setValue(
-      fechaName,
-      obtenerFechaActual(),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      },
-    );
+    setValue(fechaName, obtenerFechaActual(), {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
 
-    setValue(
-      horaName,
-      obtenerHoraActual(),
-      {
-        shouldValidate: true,
-        shouldDirty: true,
-      },
-    );
+    setValue(horaName, obtenerHoraActual(), {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
   }
 
   return (
     <div className="space-y-2">
-
       {/* ======================================================
           TÍTULO
       ====================================================== */}
 
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">
-          {label}
-        </span>
+        <span className="text-sm font-medium">{label}</span>
 
         <Button
           type="button"
@@ -233,7 +197,6 @@ export function FechaHoraField({
       ====================================================== */}
 
       <div className="grid grid-cols-2 gap-3">
-
         {/* ====================================================
             FECHA
         ==================================================== */}
@@ -243,9 +206,7 @@ export function FechaHoraField({
           name={fechaName}
           render={({ field }) => (
             <FormItem className="flex flex-col">
-
               <Popover>
-
                 <PopoverTrigger
                   render={
                     <Button
@@ -253,8 +214,7 @@ export function FechaHoraField({
                       variant="outline"
                       className={cn(
                         "justify-start text-left font-normal",
-                        !field.value &&
-                          "text-muted-foreground",
+                        !field.value && "text-muted-foreground"
                       )}
                     />
                   }
@@ -262,20 +222,13 @@ export function FechaHoraField({
                   <CalendarIcon className="mr-2 size-4" />
 
                   {field.value
-                    ? format(
-                        field.value,
-                        "dd MMM yyyy",
-                        {
-                          locale: es,
-                        },
-                      )
+                    ? format(field.value, "dd MMM yyyy", {
+                        locale: es,
+                      })
                     : "Seleccionar fecha"}
                 </PopoverTrigger>
 
-                <PopoverContent
-                  className="w-auto p-0"
-                  align="start"
-                >
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
 
@@ -286,40 +239,28 @@ export function FechaHoraField({
                      * Calendar no retroceda un día.
                      */
                     selected={
-                      field.value
-                        ? crearFechaLocal(
-                            field.value,
-                          )
-                        : undefined
+                      field.value ? crearFechaLocal(field.value) : undefined
                     }
 
                     onSelect={(fecha) => {
                       if (!fecha) {
-                        field.onChange(
-                          undefined,
-                        );
-                        return;
+                        field.onChange(undefined)
+                        return
                       }
 
                       /*
                        * Guardamos exactamente el día
                        * que el usuario seleccionó.
                        */
-                      field.onChange(
-                        crearFechaDesdeCalendar(
-                          fecha,
-                        ),
-                      );
+                      field.onChange(crearFechaDesdeCalendar(fecha))
                     }}
 
                     locale={es}
                   />
                 </PopoverContent>
-
               </Popover>
 
               <FormMessage />
-
             </FormItem>
           )}
         />
@@ -333,32 +274,21 @@ export function FechaHoraField({
           name={horaName}
           render={({ field }) => (
             <FormItem>
-
               <FormControl>
-
                 <Input
                   type="time"
-                  value={horaAString(
-                    field.value,
-                  )}
+                  value={horaAString(field.value)}
                   onChange={(e) => {
-                    field.onChange(
-                      stringAHora(
-                        e.target.value,
-                      ),
-                    );
+                    field.onChange(stringAHora(e.target.value))
                   }}
                 />
-
               </FormControl>
 
               <FormMessage />
-
             </FormItem>
           )}
         />
-
       </div>
     </div>
-  );
+  )
 }

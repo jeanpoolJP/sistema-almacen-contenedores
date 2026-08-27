@@ -1,31 +1,31 @@
 // modules/guias/components/fields/cliente-field.tsx
 
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { useFormContext } from "react-hook-form";
-import { CheckCircle2, Loader2, UserPlus } from "lucide-react";
+import { useState, useTransition } from "react"
+import { useFormContext } from "react-hook-form"
+import { CheckCircle2, Loader2, UserPlus } from "lucide-react"
 
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
 
-import { buscarClientePorDocumentoAction } from "../../guia.lookup.actions";
+import { buscarClientePorDocumentoAction } from "../../guia.lookup.actions"
 
-type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo";
+type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo"
 
 /**
  * Sección "Cliente" del formulario de creación de guía.
@@ -34,41 +34,39 @@ type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo";
  * no, permite registrar el nombre como cliente nuevo.
  */
 export function ClienteField() {
-  const { control, watch, setValue } = useFormContext();
-  const [estado, setEstado] = useState<EstadoBusqueda>("idle");
-  const [isPending, startTransition] = useTransition();
+  const { control, watch, setValue } = useFormContext()
+  const [estado, setEstado] = useState<EstadoBusqueda>("idle")
+  const [isPending, startTransition] = useTransition()
 
-  const tipoDocumento = watch("cliente.tipoDocumento");
-  const maxLength = tipoDocumento === "RUC" ? 11 : 8;
+  const tipoDocumento = watch("cliente.tipoDocumento")
+  const maxLength = tipoDocumento === "RUC" ? 11 : 8
 
   async function handleBlurDocumento(numero: string) {
-    const limpio = numero.trim();
+    const limpio = numero.trim()
 
     const largoValido =
       (tipoDocumento === "DNI" && limpio.length === 8) ||
-      (tipoDocumento === "RUC" && limpio.length === 11);
+      (tipoDocumento === "RUC" && limpio.length === 11)
 
     if (!largoValido) {
-      setEstado("idle");
-      return;
+      setEstado("idle")
+      return
     }
 
-    setEstado("buscando");
+    setEstado("buscando")
 
     startTransition(() => {
       buscarClientePorDocumentoAction(limpio).then((res) => {
         if (res.encontrado && res.data) {
-          setValue(
-            "cliente.nombreCompleto",
-            res.data.nombreCompleto ?? "",
-            { shouldValidate: true },
-          );
-          setEstado("existente");
+          setValue("cliente.nombreCompleto", res.data.nombreCompleto ?? "", {
+            shouldValidate: true,
+          })
+          setEstado("existente")
         } else {
-          setEstado("nuevo");
+          setEstado("nuevo")
         }
-      });
-    });
+      })
+    })
   }
 
   return (
@@ -82,10 +80,10 @@ export function ClienteField() {
               <FormLabel>Tipo</FormLabel>
               <Select
                 onValueChange={(value) => {
-                  field.onChange(value);
-                  setValue("cliente.numeroDocumento", "");
-                  setValue("cliente.nombreCompleto", "");
-                  setEstado("idle");
+                  field.onChange(value)
+                  setValue("cliente.numeroDocumento", "")
+                  setValue("cliente.nombreCompleto", "")
+                  setEstado("idle")
                 }}
                 value={field.value}
               >
@@ -115,17 +113,15 @@ export function ClienteField() {
                     {...field}
                     maxLength={maxLength}
                     placeholder={
-                      tipoDocumento === "RUC"
-                        ? "11 dígitos"
-                        : "8 dígitos"
+                      tipoDocumento === "RUC" ? "11 dígitos" : "8 dígitos"
                     }
                     onBlur={(e) => {
-                      field.onBlur();
-                      handleBlurDocumento(e.target.value);
+                      field.onBlur()
+                      handleBlurDocumento(e.target.value)
                     }}
                   />
                   {isPending && (
-                    <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                    <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                   )}
                 </div>
               </FormControl>
@@ -169,9 +165,7 @@ export function ClienteField() {
               <Input
                 {...field}
                 readOnly={estado === "existente"}
-                className={
-                  estado === "existente" ? "bg-muted" : undefined
-                }
+                className={estado === "existente" ? "bg-muted" : undefined}
                 placeholder="Nombre o razón social del cliente"
               />
             </FormControl>
@@ -180,5 +174,5 @@ export function ClienteField() {
         )}
       />
     </div>
-  );
+  )
 }

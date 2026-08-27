@@ -20,6 +20,8 @@ export async function obtenerEmpresaTransportePorRuc(ruc: string) {
   })
 }
 
+
+
 /**
  * Crea una empresa de transporte.
  */

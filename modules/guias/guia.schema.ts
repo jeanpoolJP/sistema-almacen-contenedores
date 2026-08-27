@@ -48,12 +48,46 @@ const contenedorGuiaSchema = z.object({
 /**
  * Schema para los datos del transportista.
  */
+/**
+ * Schema para los datos del transportista.
+ *
+ * La empresa se identifica mediante su RUC.
+ * Los datos adicionales de la empresa son opcionales
+ * porque pueden ser completados únicamente cuando
+ * se registra por primera vez.
+ */
 const transportistaGuiaSchema = z.object({
+  ruc: z
+    .string()
+    .trim()
+    .regex(/^\d{11}$/, "El RUC debe tener 11 dígitos"),
+
   empresaNombre: z
     .string()
     .trim()
     .min(1, "El nombre de la empresa es obligatorio")
     .max(150, "El nombre de la empresa no puede superar los 150 caracteres"),
+
+  telefono: z
+    .string()
+    .trim()
+    .max(20, "El teléfono no puede superar los 20 caracteres")
+    .optional()
+    .or(z.literal("")),
+
+  contactoLogistico: z
+    .string()
+    .trim()
+    .max(150, "El contacto logístico no puede superar los 150 caracteres")
+    .optional()
+    .or(z.literal("")),
+
+  nombreEncargado: z
+    .string()
+    .trim()
+    .max(150, "El nombre del encargado no puede superar los 150 caracteres")
+    .optional()
+    .or(z.literal("")),
 
   placa: z
     .string()
@@ -191,6 +225,7 @@ export const registrarSalidaGuiaSchema = z.object({
 
   tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
 })
+
 export type CrearGuiaSchema = z.infer<typeof crearGuiaSchema>
 
 export type RegistrarSalidaGuiaSchema = z.infer<

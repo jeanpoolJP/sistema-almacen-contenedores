@@ -149,6 +149,10 @@ export function RegistrarSalidaDialog({
 
       transportistaSalida: {
         empresaNombre: "",
+        ruc: "",
+        telefono: "",
+        contactoLogistico: "",
+        nombreEncargado: "",
         placa: "",
         conductorNombre: "",
         numeroLicencia: "",
@@ -210,6 +214,26 @@ export function RegistrarSalidaDialog({
     form.setValue(
       "transportistaSalida.empresaNombre",
       guia.empresaTransporteIngreso.nombre
+    )
+
+    form.setValue(
+      "transportistaSalida.ruc",
+      guia.empresaTransporteIngreso.ruc ?? ""
+    )
+
+    form.setValue(
+      "transportistaSalida.telefono",
+      guia.empresaTransporteIngreso.telefono ?? ""
+    )
+
+    form.setValue(
+      "transportistaSalida.contactoLogistico",
+      guia.empresaTransporteIngreso.contactoLogistico ?? ""
+    )
+
+    form.setValue(
+      "transportistaSalida.nombreEncargado",
+      guia.empresaTransporteIngreso.nombreEncargado ?? ""
     )
 
     form.setValue("transportistaSalida.placa", guia.vehiculoIngreso.placa)
