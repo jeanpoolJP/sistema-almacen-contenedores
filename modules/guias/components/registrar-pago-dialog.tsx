@@ -1,3 +1,5 @@
+// modules\guias\components\registrar-pago-dialog.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -6,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { CreditCard, WalletCards } from "lucide-react"
 import { toast } from "sonner"
 
+import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,6 +42,7 @@ import {
 } from "../guia.schema"
 import { registrarPagoGuiaAction } from "../guia.actions"
 
+import { ClienteField } from "./fields/cliente-field"
 import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
@@ -64,12 +68,14 @@ export function RegistrarPagoDialog({
   onRegistrado,
 }: RegistrarPagoDialogProps) {
   const [submitting, setSubmitting] = useState(false)
+  const [registrarCliente, setRegistrarCliente] = useState(false)
 
   const form = useForm<RegistrarPagoGuiaSchema>({
     resolver: zodResolver(registrarPagoGuiaSchema),
 
     defaultValues: {
       guiaId: guia.id,
+      cliente: null,
       metodoPago: "YAPE",
       numeroOperacion: "",
       fechaPago: undefined,
@@ -80,7 +86,19 @@ export function RegistrarPagoDialog({
   async function onSubmit(data: RegistrarPagoGuiaSchema) {
     setSubmitting(true)
 
-    const res = await registrarPagoGuiaAction(data)
+    const payload = {
+      ...data,
+
+      cliente:
+        data.cliente && data.cliente.numeroDocumento
+          ? {
+              ...data.cliente,
+              nombreCompleto: data.cliente.nombreCompleto || undefined,
+            }
+          : null,
+    }
+
+    const res = await registrarPagoGuiaAction(payload)
 
     setSubmitting(false)
 
@@ -93,11 +111,14 @@ export function RegistrarPagoDialog({
 
     form.reset({
       guiaId: guia.id,
-      metodoPago: undefined,
+      cliente: null,
+      metodoPago: "YAPE",
       numeroOperacion: "",
       fechaPago: undefined,
       horaPago: undefined,
     })
+
+    setRegistrarCliente(false)
 
     onOpenChange(false)
     onRegistrado?.()
@@ -219,6 +240,54 @@ export function RegistrarPagoDialog({
                   </FormItem>
                 )}
               />
+
+              <Separator />
+
+              {/* ============================================================
+                    CLIENTE
+                ============================================================ */}
+
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">Datos del cliente</p>
+
+                    <p className="text-xs text-muted-foreground">
+                      Opcional. Solo registra los datos si el cliente desea
+                      identificarse.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">
+                      Registrar cliente
+                    </span>
+
+                    <Switch
+                      checked={registrarCliente}
+                      onCheckedChange={(checked) => {
+                        setRegistrarCliente(checked)
+
+                        if (!checked) {
+                          form.setValue("cliente", null)
+                        } else {
+                          form.setValue("cliente", {
+                            tipoDocumento: "DNI",
+                            numeroDocumento: "",
+                            nombreCompleto: "",
+                          })
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {registrarCliente && (
+                  <div className="rounded-lg border p-4">
+                    <ClienteField />
+                  </div>
+                )}
+              </div>
 
               {/* ============================================================
                   FECHA Y HORA

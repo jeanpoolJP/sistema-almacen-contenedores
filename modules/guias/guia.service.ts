@@ -456,7 +456,9 @@ export async function obtenerGuiasService({
 /**
  * Registra el pago de una guía.
  */
-export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
+export async function registrarPagoGuiaService(
+  data: RegistrarPagoGuiaInput
+) {
   // ============================================================
   // 1. VALIDAR DATOS
   // ============================================================
@@ -492,15 +494,43 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   }
 
   // ============================================================
-  // 5. REGISTRAR PAGO
+  // 5. BUSCAR O CREAR CLIENTE
+  // ============================================================
+
+  let clienteId: number | null = null
+
+  if (datosValidados.cliente) {
+    const cliente = await obtenerOCrearCliente({
+      tipoDocumento: datosValidados.cliente.tipoDocumento,
+
+      numeroDocumento: datosValidados.cliente.numeroDocumento,
+
+      nombreCompleto:
+        datosValidados.cliente.nombreCompleto || null,
+
+      telefono: "",
+
+      observaciones: "",
+
+      activo: true,
+    })
+
+    clienteId = cliente.id
+  }
+
+  // ============================================================
+  // 6. REGISTRAR PAGO Y ASOCIAR CLIENTE
   // ============================================================
 
   const guiaActualizada = await registrarPagoGuia(guia.id, {
+    clienteId,
+
     estadoPago: "PAGADO",
 
     metodoPago: datosValidados.metodoPago,
 
-    numeroOperacion: datosValidados.numeroOperacion ?? null,
+    numeroOperacion:
+      datosValidados.numeroOperacion ?? null,
 
     fechaPago: datosValidados.fechaPago,
 
@@ -508,12 +538,11 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   })
 
   // ============================================================
-  // 6. SERIALIZAR
+  // 7. SERIALIZAR
   // ============================================================
 
   return serializarGuia(guiaActualizada)
 }
-
 /**
  * Anula una guía.
  *

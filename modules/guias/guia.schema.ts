@@ -209,6 +209,8 @@ export const registrarPagoGuiaSchema = z.object({
     "OTRO",
   ]),
 
+  cliente: clienteGuiaSchema.nullable().optional(),
+
   numeroOperacion: z
     .string()
     .trim()

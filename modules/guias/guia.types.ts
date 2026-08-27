@@ -142,6 +142,8 @@ export type RegistrarSalidaGuiaInput = {
 export type RegistrarPagoGuiaInput = {
   guiaId: number
 
+  cliente?: ClienteGuiaInput | null
+
   metodoPago: MetodoPago
 
   numeroOperacion?: string | null
@@ -150,7 +152,6 @@ export type RegistrarPagoGuiaInput = {
 
   horaPago: Date
 }
-
 /**
  * Datos internos que utiliza el repository
  * después de que el service haya resuelto
