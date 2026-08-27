@@ -1,6 +1,8 @@
-"use client";
+// modules\conductores\components\conductor-table.tsx
 
-import { useState } from "react";
+"use client"
+
+import { useState } from "react"
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,14 +10,14 @@ import {
   MoreHorizontal,
   Pencil,
   UserRound,
-} from "lucide-react";
+} from "lucide-react"
 
-import type { Conductor } from "../conductores.types";
+import type { Conductor } from "../conductores.types"
 
-import { exportarExcel } from "@/lib/exportar-excel";
+import { exportarExcel } from "@/lib/exportar-excel"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 import {
   Select,
@@ -23,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 
 import {
   Table,
@@ -32,28 +34,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 
 type ConductorTableProps = {
-  conductores: Conductor[];
-  onEdit: (conductor: Conductor) => void;
-  onRefresh: () => void;
+  conductores: Conductor[]
+  onEdit: (conductor: Conductor) => void
+  onRefresh: () => void
 
-  // ============================================================
-  // PAGINACIÓN
-  // ============================================================
+  page: number
+  pageSize: number
+  totalPages: number
+  total: number
 
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  total: number;
+  onPageChange: (page: number) => void
 
-  onPageChange: (page: number) => void;
-
-  onPageSizeChange: (
-    pageSize: number,
-  ) => void;
-};
+  onPageSizeChange: (pageSize: number) => void
+}
 
 export function ConductorTable({
   conductores,
@@ -66,10 +62,8 @@ export function ConductorTable({
   onPageChange,
   onPageSizeChange,
 }: ConductorTableProps) {
-  const [
-    conductorAEliminar,
-    setConductorAEliminar,
-  ] = useState<Conductor | null>(null);
+  const [conductorAEliminar, setConductorAEliminar] =
+    useState<Conductor | null>(null)
 
   /**
    * Exporta los conductores actualmente mostrados
@@ -77,89 +71,65 @@ export function ConductorTable({
    */
   function handleExportarExcel() {
     if (conductores.length === 0) {
-      return;
+      return
     }
 
-    const datos = conductores.map(
-      (conductor) => ({
-        "Nombre completo":
-          conductor.nombreCompleto,
+    const datos = conductores.map((conductor) => ({
+      "Nombre completo": conductor.nombreCompleto,
 
-        "N.º de licencia":
-          conductor.numeroLicencia,
+      "N.º de licencia": conductor.numeroLicencia,
 
-        Estado: "Activo",
-      }),
-    );
+      Teléfono: conductor.telefono ?? "—",
+
+      Estado: "Activo",
+    }))
 
     exportarExcel({
       datos,
       nombreArchivo: "conductores",
       nombreHoja: "Conductores",
-    });
+    })
   }
 
   /**
    * Genera los números de página.
-   *
-   * Cuando existen muchas páginas,
-   * muestra puntos suspensivos para
-   * mantener la interfaz limpia.
    */
   function obtenerPaginas() {
-    const paginas: (
-      | number
-      | "ellipsis"
-    )[] = [];
+    const paginas: (number | "ellipsis")[] = []
 
     if (totalPages <= 7) {
-      for (
-        let i = 1;
-        i <= totalPages;
-        i++
-      ) {
-        paginas.push(i);
+      for (let i = 1; i <= totalPages; i++) {
+        paginas.push(i)
       }
 
-      return paginas;
+      return paginas
     }
 
-    paginas.push(1);
+    paginas.push(1)
 
     if (page > 3) {
-      paginas.push("ellipsis");
+      paginas.push("ellipsis")
     }
 
-    const inicio = Math.max(
-      2,
-      page - 1,
-    );
+    const inicio = Math.max(2, page - 1)
 
-    const fin = Math.min(
-      totalPages - 1,
-      page + 1,
-    );
+    const fin = Math.min(totalPages - 1, page + 1)
 
-    for (
-      let i = inicio;
-      i <= fin;
-      i++
-    ) {
-      paginas.push(i);
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i)
     }
 
     if (page < totalPages - 2) {
-      paginas.push("ellipsis");
+      paginas.push("ellipsis")
     }
 
-    paginas.push(totalPages);
+    paginas.push(totalPages)
 
-    return paginas;
+    return paginas
   }
 
   /**
-   * Si no existen registros, muestra
-   * el estado vacío.
+   * Estado vacío.
    */
   if (conductores.length === 0) {
     return (
@@ -174,49 +144,32 @@ export function ConductorTable({
           Los conductores registrados aparecerán aquí.
         </p>
       </div>
-    );
+    )
   }
 
-  const paginas = obtenerPaginas();
+  const paginas = obtenerPaginas()
 
-  /**
-   * Calcula el rango de registros
-   * que se están mostrando.
-   */
-  const desde =
-    (page - 1) * pageSize + 1;
+  const desde = (page - 1) * pageSize + 1
 
-  const hasta = Math.min(
-    page * pageSize,
-    total,
-  );
+  const hasta = Math.min(page * pageSize, total)
 
   return (
     <>
       {/* =====================================================
-          ENCABEZADO DE LA TABLA
+          ENCABEZADO
       ====================================================== */}
 
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-medium">
-            Conductores registrados
-          </h2>
+          <h2 className="text-sm font-medium">Conductores registrados</h2>
 
           <p className="text-sm text-muted-foreground">
-            {total}{" "}
-            {total === 1
-              ? "conductor"
-              : "conductores"}
+            {total} {total === 1 ? "conductor" : "conductores"}
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={handleExportarExcel}
-        >
+        <Button variant="outline" onClick={handleExportarExcel}>
           <Download className="mr-2 size-4" />
-
           Exportar Excel
         </Button>
       </div>
@@ -225,103 +178,89 @@ export function ConductorTable({
           TABLA
       ====================================================== */}
 
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                Conductor
-              </TableHead>
+              <TableHead>Conductor</TableHead>
 
-              <TableHead>
-                N.º de licencia
-              </TableHead>
+              <TableHead>N.º de licencia</TableHead>
 
-              <TableHead>
-                Estado
-              </TableHead>
+              <TableHead>Teléfono</TableHead>
 
-              <TableHead className="text-right">
-                Acciones
-              </TableHead>
+              <TableHead>Estado</TableHead>
+
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {conductores.map(
-              (conductor) => (
-                <TableRow
-                  key={conductor.id}
-                >
-                  {/* =================================================
+            {conductores.map((conductor) => (
+              <TableRow key={conductor.id}>
+                {/* =================================================
                       CONDUCTOR
                   ================================================== */}
 
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-9 items-center justify-center rounded-full bg-muted">
-                        <UserRound className="size-4 text-muted-foreground" />
-                      </div>
-
-                      <div>
-                        <p className="font-medium">
-                          {
-                            conductor.nombreCompleto
-                          }
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          ID #{conductor.id}
-                        </p>
-                      </div>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 items-center justify-center rounded-full bg-muted">
+                      <UserRound className="size-4 text-muted-foreground" />
                     </div>
-                  </TableCell>
 
-                  {/* =================================================
+                    <div>
+                      <p className="font-medium">{conductor.nombreCompleto}</p>
+
+                      <p className="text-xs text-muted-foreground">
+                        ID #{conductor.id}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* =================================================
                       LICENCIA
                   ================================================== */}
 
-                  <TableCell>
-                    <span className="font-medium">
-                      {
-                        conductor.numeroLicencia
-                      }
-                    </span>
-                  </TableCell>
+                <TableCell>
+                  <span className="font-medium">
+                    {conductor.numeroLicencia}
+                  </span>
+                </TableCell>
 
-                  {/* =================================================
+                {/* =================================================
+                      TELÉFONO
+                  ================================================== */}
+
+                <TableCell>
+                  <span className="text-sm">{conductor.telefono ?? "—"}</span>
+                </TableCell>
+
+                {/* =================================================
                       ESTADO
                   ================================================== */}
 
-                  <TableCell>
-                    <Badge>
-                      Activo
-                    </Badge>
-                  </TableCell>
+                <TableCell>
+                  <Badge>Activo</Badge>
+                </TableCell>
 
-                  {/* =================================================
+                {/* =================================================
                       ACCIONES
                   ================================================== */}
 
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Editar conductor"
-                        onClick={() =>
-                          onEdit(
-                            conductor,
-                          )
-                        }
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ),
-            )}
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Editar conductor"
+                      onClick={() => onEdit(conductor)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -331,150 +270,93 @@ export function ConductorTable({
       ====================================================== */}
 
       <div className="flex flex-col gap-4 pt-4 md:flex-row md:items-center md:justify-between">
-        {/* ===================================================
-            CANTIDAD DE FILAS
-        ==================================================== */}
+        {/* CANTIDAD */}
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Mostrar
-          </span>
+          <span className="text-sm text-muted-foreground">Mostrar</span>
 
           <Select
             value={String(pageSize)}
-            onValueChange={(value) =>
-              onPageSizeChange(
-                Number(value),
-              )
-            }
+            onValueChange={(value) => onPageSizeChange(Number(value))}
           >
             <SelectTrigger className="w-[75px]">
               <SelectValue />
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="10">
-                10
-              </SelectItem>
+              <SelectItem value="10">10</SelectItem>
 
-              <SelectItem value="20">
-                20
-              </SelectItem>
+              <SelectItem value="20">20</SelectItem>
 
-              <SelectItem value="30">
-                30
-              </SelectItem>
+              <SelectItem value="30">30</SelectItem>
 
-              <SelectItem value="50">
-                50
-              </SelectItem>
+              <SelectItem value="50">50</SelectItem>
 
-              <SelectItem value="100">
-                100
-              </SelectItem>
+              <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
 
-          <span className="text-sm text-muted-foreground">
-            filas
-          </span>
+          <span className="text-sm text-muted-foreground">filas</span>
         </div>
 
-        {/* ===================================================
-            INFORMACIÓN
-        ==================================================== */}
+        {/* INFORMACIÓN */}
 
         <div className="text-sm text-muted-foreground">
-          Mostrando{" "}
-          <span className="font-medium text-foreground">
-            {desde}
-          </span>
+          Mostrando <span className="font-medium text-foreground">{desde}</span>
           {"–"}
-          <span className="font-medium text-foreground">
-            {hasta}
-          </span>{" "}
-          de{" "}
-          <span className="font-medium text-foreground">
-            {total}
-          </span>
+          <span className="font-medium text-foreground">{hasta}</span> de{" "}
+          <span className="font-medium text-foreground">{total}</span>
         </div>
 
-        {/* ===================================================
-            NAVEGACIÓN
-        ==================================================== */}
+        {/* NAVEGACIÓN */}
 
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
-            {/* ANTERIOR */}
-
             <Button
               variant="outline"
               size="icon"
               className="size-8"
               disabled={page === 1}
-              onClick={() =>
-                onPageChange(page - 1)
-              }
+              onClick={() => onPageChange(page - 1)}
               title="Página anterior"
             >
               <ChevronLeft className="size-4" />
             </Button>
 
-            {/* NÚMEROS */}
-
-            {paginas.map(
-              (pagina, index) => {
-                if (
-                  pagina ===
-                  "ellipsis"
-                ) {
-                  return (
-                    <Button
-                      key={`ellipsis-${index}`}
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      disabled
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  );
-                }
-
+            {paginas.map((pagina, index) => {
+              if (pagina === "ellipsis") {
                 return (
                   <Button
-                    key={pagina}
-                    variant={
-                      pagina === page
-                        ? "default"
-                        : "outline"
-                    }
+                    key={`ellipsis-${index}`}
+                    variant="ghost"
                     size="icon"
                     className="size-8"
-                    onClick={() =>
-                      onPageChange(
-                        pagina,
-                      )
-                    }
+                    disabled
                   >
-                    {pagina}
+                    <MoreHorizontal className="size-4" />
                   </Button>
-                );
-              },
-            )}
+                )
+              }
 
-            {/* SIGUIENTE */}
+              return (
+                <Button
+                  key={pagina}
+                  variant={pagina === page ? "default" : "outline"}
+                  size="icon"
+                  className="size-8"
+                  onClick={() => onPageChange(pagina)}
+                >
+                  {pagina}
+                </Button>
+              )
+            })}
 
             <Button
               variant="outline"
               size="icon"
               className="size-8"
-              disabled={
-                page === totalPages
-              }
-              onClick={() =>
-                onPageChange(page + 1)
-              }
+              disabled={page === totalPages}
+              onClick={() => onPageChange(page + 1)}
               title="Página siguiente"
             >
               <ChevronRight className="size-4" />
@@ -483,5 +365,5 @@ export function ConductorTable({
         )}
       </div>
     </>
-  );
+  )
 }

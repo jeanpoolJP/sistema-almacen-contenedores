@@ -1,9 +1,9 @@
 // modules\conductores\conductores.actions.ts
 
-"use server";
+"use server"
 
-import { Prisma } from "@/lib/generated/prisma/client";
-import { ZodError } from "zod";
+import { Prisma } from "@/lib/generated/prisma/client"
+import { ZodError } from "zod"
 
 import {
   actualizarConductor as actualizarConductorService,
@@ -12,24 +12,24 @@ import {
   obtenerConductorPorId,
   obtenerConductores,
   registrarConductor,
-} from "./conductores.service";
+} from "./conductores.service"
 
-import { countConductores} from "./conductores.repository";
+import { countConductores } from "./conductores.repository"
 
-import type { ConductorFormData } from "./conductores.types";
+import type { ConductorFormData } from "./conductores.types"
 
 /**
  * Resultado estándar de las Server Actions.
  */
 type ActionResult<T> =
   | {
-      success: true;
-      data: T;
+      success: true
+      data: T
     }
   | {
-      success: false;
-      error: string;
-    };
+      success: false
+      error: string
+    }
 
 /**
  * ============================================================
@@ -43,24 +43,17 @@ type ActionResult<T> =
  * Si no existe, devuelve data: null.
  */
 export async function buscarConductorPorLicencia(
-  numeroLicencia: string,
+  numeroLicencia: string
 ): Promise<
-  ActionResult<
-    Awaited<
-      ReturnType<typeof obtenerConductorPorLicencia>
-    >
-  >
+  ActionResult<Awaited<ReturnType<typeof obtenerConductorPorLicencia>>>
 > {
   try {
-    const conductor =
-      await obtenerConductorPorLicencia(
-        numeroLicencia,
-      );
+    const conductor = await obtenerConductorPorLicencia(numeroLicencia)
 
     return {
       success: true,
       data: conductor,
-    };
+    }
   } catch (error) {
     /**
      * Errores de validación de Zod.
@@ -68,21 +61,16 @@ export async function buscarConductorPorLicencia(
     if (error instanceof ZodError) {
       return {
         success: false,
-        error:
-          error.issues[0]?.message ??
-          "El número de licencia no es válido",
-      };
+        error: error.issues[0]?.message ?? "El número de licencia no es válido",
+      }
     }
 
-    console.error(
-      "Error al buscar conductor por licencia:",
-      error,
-    );
+    console.error("Error al buscar conductor por licencia:", error)
 
     return {
       success: false,
       error: "No se pudo buscar el conductor",
-    };
+    }
   }
 }
 
@@ -92,49 +80,36 @@ export async function buscarConductorPorLicencia(
  * ============================================================
  */
 export async function buscarConductorPorId(
-  id: number,
-): Promise<
-  ActionResult<
-    Awaited<
-      ReturnType<typeof obtenerConductorPorId>
-    >
-  >
-> {
+  id: number
+): Promise<ActionResult<Awaited<ReturnType<typeof obtenerConductorPorId>>>> {
   try {
-    if (
-      !Number.isInteger(id) ||
-      id <= 0
-    ) {
+    if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del conductor no es válido",
-      };
+      }
     }
 
-    const conductor =
-      await obtenerConductorPorId(id);
+    const conductor = await obtenerConductorPorId(id)
 
     if (!conductor) {
       return {
         success: false,
         error: "Conductor no encontrado",
-      };
+      }
     }
 
     return {
       success: true,
       data: conductor,
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al buscar conductor:",
-      error,
-    );
+    console.error("Error al buscar conductor:", error)
 
     return {
       success: false,
       error: "No se pudo obtener el conductor",
-    };
+    }
   }
 }
 /**
@@ -144,28 +119,23 @@ export async function buscarConductorPorId(
  */
 export async function listarConductores(
   page: number = 1,
-  pageSize: number = 10,
+  pageSize: number = 10
 ): Promise<
   ActionResult<{
-    data: Awaited<
-      ReturnType<typeof obtenerConductores>
-    >;
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
+    data: Awaited<ReturnType<typeof obtenerConductores>>
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
   }>
 > {
   try {
-    const [conductores, total] =
-      await Promise.all([
-        obtenerConductores(page, pageSize),
-        countConductores(),
-      ]);
+    const [conductores, total] = await Promise.all([
+      obtenerConductores(page, pageSize),
+      countConductores(),
+    ])
 
-    const totalPages = Math.ceil(
-      total / pageSize,
-    );
+    const totalPages = Math.ceil(total / pageSize)
 
     return {
       success: true,
@@ -176,18 +146,14 @@ export async function listarConductores(
         pageSize,
         totalPages,
       },
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al listar conductores:",
-      error,
-    );
+    console.error("Error al listar conductores:", error)
 
     return {
       success: false,
-      error:
-        "No se pudieron obtener los conductores",
-    };
+      error: "No se pudieron obtener los conductores",
+    }
   }
 }
 
@@ -197,22 +163,15 @@ export async function listarConductores(
  * ============================================================
  */
 export async function crearConductor(
-  data: ConductorFormData,
-): Promise<
-  ActionResult<
-    Awaited<
-      ReturnType<typeof registrarConductor>
-    >
-  >
-> {
+  data: ConductorFormData
+): Promise<ActionResult<Awaited<ReturnType<typeof registrarConductor>>>> {
   try {
-    const conductor =
-      await registrarConductor(data);
+    const conductor = await registrarConductor(data)
 
     return {
       success: true,
       data: conductor,
-    };
+    }
   } catch (error) {
     /**
      * Errores de validación.
@@ -221,24 +180,21 @@ export async function crearConductor(
       return {
         success: false,
         error:
-          error.issues[0]?.message ??
-          "Los datos proporcionados no son válidos",
-      };
+          error.issues[0]?.message ?? "Los datos proporcionados no son válidos",
+      }
     }
 
     /**
      * Restricción @unique de Prisma.
      */
     if (
-      error instanceof
-        Prisma.PrismaClientKnownRequestError &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
       return {
         success: false,
-        error:
-          "Ya existe un conductor registrado con este número de licencia",
-      };
+        error: "Ya existe un conductor registrado con este número de licencia",
+      }
     }
 
     /**
@@ -248,18 +204,15 @@ export async function crearConductor(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al crear conductor:",
-      error,
-    );
+    console.error("Error al crear conductor:", error)
 
     return {
       success: false,
       error: "No se pudo crear el conductor",
-    };
+    }
   }
 }
 
@@ -270,37 +223,24 @@ export async function crearConductor(
  */
 export async function editarConductor(
   id: number,
-  data: ConductorFormData,
+  data: ConductorFormData
 ): Promise<
-  ActionResult<
-    Awaited<
-      ReturnType<
-        typeof actualizarConductorService
-      >
-    >
-  >
+  ActionResult<Awaited<ReturnType<typeof actualizarConductorService>>>
 > {
   try {
-    if (
-      !Number.isInteger(id) ||
-      id <= 0
-    ) {
+    if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del conductor no es válido",
-      };
+      }
     }
 
-    const conductor =
-      await actualizarConductorService(
-        id,
-        data,
-      );
+    const conductor = await actualizarConductorService(id, data)
 
     return {
       success: true,
       data: conductor,
-    };
+    }
   } catch (error) {
     /**
      * Errores de validación.
@@ -309,31 +249,27 @@ export async function editarConductor(
       return {
         success: false,
         error:
-          error.issues[0]?.message ??
-          "Los datos proporcionados no son válidos",
-      };
+          error.issues[0]?.message ?? "Los datos proporcionados no son válidos",
+      }
     }
 
     /**
      * Errores conocidos de Prisma.
      */
-    if (
-      error instanceof
-      Prisma.PrismaClientKnownRequestError
-    ) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         return {
           success: false,
           error:
             "Ya existe otro conductor registrado con este número de licencia",
-        };
+        }
       }
 
       if (error.code === "P2025") {
         return {
           success: false,
           error: "El conductor no existe",
-        };
+        }
       }
     }
 
@@ -344,19 +280,15 @@ export async function editarConductor(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al actualizar conductor:",
-      error,
-    );
+    console.error("Error al actualizar conductor:", error)
 
     return {
       success: false,
-      error:
-        "No se pudo actualizar el conductor",
-    };
+      error: "No se pudo actualizar el conductor",
+    }
   }
 }
 
@@ -371,47 +303,34 @@ export async function editarConductor(
  * dependiendo de la configuración de las relaciones.
  */
 export async function eliminarConductor(
-  id: number,
-): Promise<
-  ActionResult<
-    Awaited<
-      ReturnType<
-        typeof eliminarConductorService
-      >
-    >
-  >
-> {
+  id: number
+): Promise<ActionResult<Awaited<ReturnType<typeof eliminarConductorService>>>> {
   try {
-    if (
-      !Number.isInteger(id) ||
-      id <= 0
-    ) {
+    if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del conductor no es válido",
-      };
+      }
     }
 
-    const conductor =
-      await eliminarConductorService(id);
+    const conductor = await eliminarConductorService(id)
 
     return {
       success: true,
       data: conductor,
-    };
+    }
   } catch (error) {
     /**
      * Registro inexistente.
      */
     if (
-      error instanceof
-        Prisma.PrismaClientKnownRequestError &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2025"
     ) {
       return {
         success: false,
         error: "El conductor no existe",
-      };
+      }
     }
 
     /**
@@ -421,15 +340,14 @@ export async function eliminarConductor(
      * registros relacionados que impiden eliminarlo.
      */
     if (
-      error instanceof
-        Prisma.PrismaClientKnownRequestError &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2003"
     ) {
       return {
         success: false,
         error:
           "No se puede eliminar este conductor porque tiene guías relacionadas",
-      };
+      }
     }
 
     /**
@@ -439,18 +357,14 @@ export async function eliminarConductor(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al eliminar conductor:",
-      error,
-    );
+    console.error("Error al eliminar conductor:", error)
 
     return {
       success: false,
-      error:
-        "No se pudo eliminar el conductor",
-    };
+      error: "No se pudo eliminar el conductor",
+    }
   }
 }

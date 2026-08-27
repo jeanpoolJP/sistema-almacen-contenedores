@@ -96,6 +96,7 @@ model Conductor {
   id             Int      @id @default(autoincrement())
   nombreCompleto String   @map("nombre_completo") @db.VarChar(100)
   numeroLicencia String   @unique @map("numero_licencia") @db.VarChar(30)
+  telefono       String?  @db.VarChar(20)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
