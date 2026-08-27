@@ -70,7 +70,7 @@ export function RegistrarPagoDialog({
 
     defaultValues: {
       guiaId: guia.id,
-      metodoPago: undefined,
+      metodoPago: "YAPE",
       numeroOperacion: "",
       fechaPago: undefined,
       horaPago: undefined,
