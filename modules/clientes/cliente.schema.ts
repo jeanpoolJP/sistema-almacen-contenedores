@@ -1,13 +1,13 @@
 // modules/clientes/cliente.schema.ts
 
-import { z } from "zod";
+import { z } from "zod"
 
 /**
  * Tipos de documento permitidos para identificar a un cliente.
  */
 export const tipoDocumentoSchema = z.enum(["DNI", "RUC"], {
   message: "Selecciona un tipo de documento válido",
-});
+})
 
 /**
  * Valida un DNI.
@@ -16,7 +16,7 @@ const dniSchema = z
   .string()
   .trim()
   .length(8, "El DNI debe tener 8 dígitos")
-  .regex(/^\d{8}$/, "El DNI debe contener únicamente números");
+  .regex(/^\d{8}$/, "El DNI debe contener únicamente números")
 
 /**
  * Valida un RUC.
@@ -25,7 +25,7 @@ const rucSchema = z
   .string()
   .trim()
   .length(11, "El RUC debe tener 11 dígitos")
-  .regex(/^\d{11}$/, "El RUC debe contener únicamente números");
+  .regex(/^\d{11}$/, "El RUC debe contener únicamente números")
 
 /**
  * Schema principal para crear y actualizar un cliente.
@@ -39,20 +39,14 @@ export const clienteSchema = z
       .trim()
       .min(1, "El número de documento es obligatorio"),
 
-nombreCompleto: z
-  .string()
-  .trim()
-  .min(
-    3,
-    "El nombre o razón social debe tener al menos 3 caracteres"
-  )
-  .max(
-    150,
-    "El nombre o razón social no puede superar los 150 caracteres"
-  )
-  .optional()
-  .or(z.literal(""))
-  .nullable(),
+    nombreCompleto: z
+      .string()
+      .trim()
+      .min(3, "El nombre o razón social debe tener al menos 3 caracteres")
+      .max(150, "El nombre o razón social no puede superar los 150 caracteres")
+      .optional()
+      .or(z.literal(""))
+      .nullable(),
 
     telefono: z
       .string()
@@ -64,10 +58,7 @@ nombreCompleto: z
     observaciones: z
       .string()
       .trim()
-      .max(
-        1000,
-        "Las observaciones no pueden superar los 1000 caracteres",
-      )
+      .max(1000, "Las observaciones no pueden superar los 1000 caracteres")
       .optional()
       .or(z.literal("")),
 
@@ -75,29 +66,29 @@ nombreCompleto: z
   })
   .superRefine((data, ctx) => {
     if (data.tipoDocumento === "DNI") {
-      const result = dniSchema.safeParse(data.numeroDocumento);
+      const result = dniSchema.safeParse(data.numeroDocumento)
 
       if (!result.success) {
         ctx.addIssue({
           code: "custom",
           path: ["numeroDocumento"],
           message: result.error.issues[0]?.message ?? "DNI inválido",
-        });
+        })
       }
     }
 
     if (data.tipoDocumento === "RUC") {
-      const result = rucSchema.safeParse(data.numeroDocumento);
+      const result = rucSchema.safeParse(data.numeroDocumento)
 
       if (!result.success) {
         ctx.addIssue({
           code: "custom",
           path: ["numeroDocumento"],
           message: result.error.issues[0]?.message ?? "RUC inválido",
-        });
+        })
       }
     }
-  });
+  })
 
 /**
  * Schema para buscar un cliente por su documento.
@@ -111,7 +102,7 @@ export const clienteDocumentoSchema = z.object({
     .string()
     .trim()
     .min(1, "El número de documento es obligatorio"),
-});
+})
 
 /**
  * Schema para buscar un cliente únicamente por número de documento.
@@ -125,6 +116,6 @@ export const clienteBuscarDocumentoSchema = z.object({
     .trim()
     .refine(
       (value) => /^\d{8}$/.test(value) || /^\d{11}$/.test(value),
-      "Ingresa un DNI de 8 dígitos o un RUC de 11 dígitos",
+      "Ingresa un DNI de 8 dígitos o un RUC de 11 dígitos"
     ),
-});
+})

@@ -41,7 +41,7 @@ import {
 
 import { crearGuiaSchema, type CrearGuiaSchema } from "../guia.schema"
 import { crearGuiaAction } from "../guia.actions"
-import { ClienteField } from "./fields/cliente-field"
+
 import { ContenedorField } from "./fields/contenedor-field"
 import { TransportistaFields } from "./fields/transportista-fields"
 import { FechaHoraField } from "./fields/fecha-hora-field"
@@ -71,11 +71,6 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
     resolver: zodResolver(crearGuiaSchema),
     defaultValues: {
       numeroGuia: "",
-      cliente: {
-        tipoDocumento: "DNI",
-        numeroDocumento: "",
-        nombreCompleto: "",
-      },
       contenedor: {
         numeroContenedor: "",
         marca: "",
@@ -134,18 +129,8 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
   async function onSubmit(data: CrearGuiaSchema) {
     setSubmitting(true)
 
-    const payload = {
-      ...data,
-      cliente:
-        data.cliente && data.cliente.numeroDocumento
-          ? {
-              ...data.cliente,
-              nombreCompleto: data.cliente.nombreCompleto || undefined,
-            }
-          : null,
-    }
+    const res = await crearGuiaAction(data)
 
-    const res = await crearGuiaAction(payload)
     setSubmitting(false)
 
     if (!res.success) {
@@ -198,11 +183,6 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                   </FormItem>
                 )}
               />
-
-              <div className="space-y-3">
-                <p className={SECTION_TITLE}>Cliente</p>
-                <ClienteField />
-              </div>
 
               <Separator />
 
