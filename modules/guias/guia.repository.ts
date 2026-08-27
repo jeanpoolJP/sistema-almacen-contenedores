@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma"
 
 import type { CrearGuiaRepositoryInput } from "./guia.types"
 
-import { EstadoGuia, Prisma } from "@/lib/generated/prisma"
+import {
+  EstadoGuia,
+  EstadoPago,
+  MetodoPago,
+  Prisma,
+} from "@/lib/generated/prisma"
 
 /**
  * Crea una guía de internamiento.
@@ -242,6 +247,47 @@ export async function actualizarGuia(
     },
 
     data,
+
+    include: {
+      cliente: true,
+      contenedor: true,
+
+      empresaTransporteIngreso: true,
+      vehiculoIngreso: true,
+      conductorIngreso: true,
+
+      empresaTransporteSalida: true,
+      vehiculoSalida: true,
+      conductorSalida: true,
+    },
+  })
+}
+
+/**
+ * Registra el pago de una guía.
+ */
+export async function registrarPagoGuia(
+  id: number,
+  data: {
+    estadoPago: EstadoPago
+    metodoPago: MetodoPago
+    numeroOperacion?: string | null
+    fechaPago: Date
+    horaPago: Date
+  }
+) {
+  return prisma.guiaInternamiento.update({
+    where: {
+      id,
+    },
+
+    data: {
+      estadoPago: data.estadoPago,
+      metodoPago: data.metodoPago,
+      numeroOperacion: data.numeroOperacion ?? null,
+      fechaPago: data.fechaPago,
+      horaPago: data.horaPago,
+    },
 
     include: {
       cliente: true,

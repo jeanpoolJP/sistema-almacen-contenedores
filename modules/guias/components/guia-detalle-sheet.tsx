@@ -204,6 +204,47 @@ export function GuiaDetalleSheet({
               </div>
             </div>
 
+            <Separator />
+
+            <div className="space-y-2">
+              <SectionTitle>Pago</SectionTitle>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Dato
+                  label="Estado"
+                  value={guia.estadoPago === "PAGADO" ? "Pagado" : "Pendiente"}
+                />
+
+                <Dato
+                  label="Método de pago"
+                  value={
+                    guia.metodoPago
+                      ? {
+                          EFECTIVO: "Efectivo",
+                          YAPE: "Yape",
+                          PLIN: "Plin",
+                          TRANSFERENCIA: "Transferencia",
+                          TARJETA: "Tarjeta",
+                          OTRO: "Otro",
+                        }[guia.metodoPago]
+                      : null
+                  }
+                />
+
+                <Dato label="N.º de operación" value={guia.numeroOperacion} />
+
+                <Dato
+                  label="Fecha de pago"
+                  value={guia.fechaPago ? formatearFecha(guia.fechaPago) : null}
+                />
+
+                <Dato
+                  label="Hora de pago"
+                  value={guia.horaPago ? formatearHora(guia.horaPago) : null}
+                />
+              </div>
+            </div>
+
             {guia.observaciones && (
               <>
                 <Separator />

@@ -2,6 +2,8 @@
 
 import type {
   EstadoGuia,
+  EstadoPago,
+  MetodoPago,
   TipoContenedor,
   TipoDocumento,
   TipoPrecioGuia,
@@ -42,6 +44,12 @@ export type GuiaConRelaciones = {
   porcentajeIGV: number | null
   montoIGV: number | null
   montoTotal: number | null
+
+  estadoPago: EstadoPago
+  metodoPago: MetodoPago | null
+  numeroOperacion: string | null
+  fechaPago: Date | null
+  horaPago: Date | null
 
   tratamientoIGV: TratamientoIGV
   estado: EstadoGuia

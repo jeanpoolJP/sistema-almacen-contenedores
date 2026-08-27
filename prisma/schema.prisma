@@ -149,6 +149,11 @@ model ConfiguracionPrecio {
   @@map("configuracion_precios")
 }
 
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+}
+
 model GuiaInternamiento {
   id Int @id @default(autoincrement())
 
@@ -201,6 +206,20 @@ model GuiaInternamiento {
   montoIGV Decimal? @map("monto_igv") @db.Decimal(10, 2)
 
   montoTotal Decimal? @map("monto_total") @db.Decimal(10, 2)
+
+  // ============================================================
+  // PAGO
+  // ============================================================
+
+  estadoPago EstadoPago @default(PENDIENTE) @map("estado_pago")
+
+  metodoPago MetodoPago? @map("metodo_pago")
+
+  numeroOperacion String? @map("numero_operacion") @db.VarChar(100)
+
+  fechaPago DateTime? @map("fecha_pago") @db.Date
+
+  horaPago DateTime? @map("hora_pago") @db.Time(0)
 
   // ============================================================
   // TRATAMIENTO TRIBUTARIO

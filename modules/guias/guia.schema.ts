@@ -196,3 +196,33 @@ export type CrearGuiaSchema = z.infer<typeof crearGuiaSchema>
 export type RegistrarSalidaGuiaSchema = z.infer<
   typeof registrarSalidaGuiaSchema
 >
+
+export const registrarPagoGuiaSchema = z.object({
+  guiaId: z.number().int().positive(),
+
+  metodoPago: z.enum([
+    "EFECTIVO",
+    "YAPE",
+    "PLIN",
+    "TRANSFERENCIA",
+    "TARJETA",
+    "OTRO",
+  ]),
+
+  numeroOperacion: z
+    .string()
+    .trim()
+    .max(100, "El número de operación es demasiado largo")
+    .optional()
+    .nullable(),
+
+  fechaPago: z.date({
+    message: "La fecha de pago es obligatoria",
+  }),
+
+  horaPago: z.date({
+    message: "La hora de pago es obligatoria",
+  }),
+})
+
+export type RegistrarPagoGuiaSchema = z.infer<typeof registrarPagoGuiaSchema>

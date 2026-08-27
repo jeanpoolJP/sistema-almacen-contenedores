@@ -2,6 +2,8 @@
 
 import type {
   EstadoGuia,
+  EstadoPago,
+  MetodoPago,
   TipoContenedor,
   TipoDocumento,
   TipoPrecioGuia,
@@ -131,6 +133,22 @@ export type RegistrarSalidaGuiaInput = {
   precioDiaAdicional: number
 
   tratamientoIGV: TratamientoIGV
+}
+
+/**
+ * Datos necesarios para registrar
+ * el pago de una guía.
+ */
+export type RegistrarPagoGuiaInput = {
+  guiaId: number
+
+  metodoPago: MetodoPago
+
+  numeroOperacion?: string | null
+
+  fechaPago: Date
+
+  horaPago: Date
 }
 
 /**

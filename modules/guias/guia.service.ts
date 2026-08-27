@@ -7,11 +7,12 @@ import {
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
   obtenerGuias,
+  registrarPagoGuia,
 } from "./guia.repository"
 
-import { crearGuiaSchema, registrarSalidaGuiaSchema } from "./guia.schema"
+import { crearGuiaSchema, registrarPagoGuiaSchema, registrarSalidaGuiaSchema } from "./guia.schema"
 
-import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
+import type { CrearGuiaInput, RegistrarSalidaGuiaInput, RegistrarPagoGuiaInput } from "./guia.types"
 
 import { calcularDiasAlmacenamiento } from "./utils/calcular-almacenamiento"
 
@@ -441,6 +442,67 @@ export async function obtenerGuiasService({
 
     totalPaginas: Math.ceil(resultado.total / limite),
   }
+}
+
+/**
+ * Registra el pago de una guía.
+ */
+export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
+  // ============================================================
+  // 1. VALIDAR DATOS
+  // ============================================================
+
+  const datosValidados = registrarPagoGuiaSchema.parse(data)
+
+  // ============================================================
+  // 2. BUSCAR GUÍA
+  // ============================================================
+
+  const guia = await obtenerGuiaPorId(datosValidados.guiaId)
+
+  if (!guia) {
+    throw new Error("La guía no existe")
+  }
+
+  // ============================================================
+  // 3. VALIDAR QUE TENGA UN MONTO TOTAL
+  // ============================================================
+
+  if (guia.montoTotal === null) {
+    throw new Error(
+      "No se puede registrar el pago porque la guía todavía no tiene un monto total calculado"
+    )
+  }
+
+  // ============================================================
+  // 4. VALIDAR ESTADO DE PAGO
+  // ============================================================
+
+  if (guia.estadoPago === "PAGADO") {
+    throw new Error("La guía ya se encuentra pagada")
+  }
+
+  // ============================================================
+  // 5. REGISTRAR PAGO
+  // ============================================================
+
+  const guiaActualizada = await registrarPagoGuia(guia.id, {
+    estadoPago: "PAGADO",
+
+    metodoPago: datosValidados.metodoPago,
+
+    numeroOperacion: datosValidados.numeroOperacion ?? null,
+
+    fechaPago: datosValidados.fechaPago,
+
+    horaPago: datosValidados.horaPago,
+  })
+
+  // ============================================================
+  // 6. SERIALIZAR
+  // ============================================================
+
+  return serializarGuia(guiaActualizada)
 }
 
 /**

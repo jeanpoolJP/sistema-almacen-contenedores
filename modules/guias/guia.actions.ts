@@ -9,11 +9,14 @@ import {
   obtenerGuiaPorNumeroService,
   obtenerGuiasService,
   anularGuiaService,
+  registrarPagoGuiaService,
 } from "./guia.service"
 
 import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
 
 import type { EstadoGuia } from "@/lib/generated/prisma"
+
+import { registrarPagoGuiaSchema } from "./guia.schema"
 
 /**
  * ============================================================
@@ -221,6 +224,32 @@ export async function obtenerGuiasAction({
         error instanceof Error
           ? error.message
           : "Ocurrió un error al obtener las guías",
+    }
+  }
+}
+
+/**
+ * ============================================================
+ * REGISTRAR PAGO DE GUÍA
+ * ============================================================
+ */
+export async function registrarPagoGuiaAction(data: unknown) {
+  try {
+    const datosValidados = registrarPagoGuiaSchema.parse(data)
+
+    await registrarPagoGuiaService(datosValidados)
+
+    return {
+      success: true,
+      message: "Pago registrado correctamente",
+    }
+  } catch (error) {
+    console.error("Error al registrar pago:", error)
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "No se pudo registrar el pago",
     }
   }
 }

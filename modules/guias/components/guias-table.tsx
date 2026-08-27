@@ -7,6 +7,7 @@ import { useEffect, useState, useTransition } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
+import { CreditCard } from "lucide-react"
 import {
   Ban,
   ChevronLeft,
@@ -66,6 +67,7 @@ import { EstadoBadge } from "./estado-badge"
 import { GuiaDetalleSheet } from "./guia-detalle-sheet"
 
 import { RegistrarSalidaDialog } from "./registrar-salida-dialog"
+import { RegistrarPagoDialog } from "./registrar-pago-dialog"
 
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
@@ -191,6 +193,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
   const [guiaAnular, setGuiaAnular] = useState<GuiaConRelaciones | null>(null)
 
   const [anulando, setAnulando] = useState(false)
+
+  const [guiaPago, setGuiaPago] = useState<GuiaConRelaciones | null>(null)
 
   /**
    * ==========================================================
@@ -779,6 +783,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
                         Ver detalles
                       </DropdownMenuItem>
 
+                      {/* REGISTRAR SALIDA */}
                       {guia.estado === "ALMACENADO" && (
                         <DropdownMenuItem onClick={() => setGuiaSalida(guia)}>
                           <LogOut className="mr-2 size-4" />
@@ -786,6 +791,16 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
                         </DropdownMenuItem>
                       )}
 
+                      {/* REGISTRAR PAGO */}
+                      {guia.estado === "RETIRADO" &&
+                        guia.estadoPago === "PENDIENTE" && (
+                          <DropdownMenuItem onClick={() => setGuiaPago(guia)}>
+                            <CreditCard className="mr-2 size-4" />
+                            Registrar pago
+                          </DropdownMenuItem>
+                        )}
+
+                      {/* ANULAR GUÍA */}
                       {guia.estado === "ALMACENADO" && (
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
@@ -889,6 +904,25 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
           onOpenChange={(open) => !open && setGuiaSalida(null)}
           onRegistrada={() => {
             setGuiaSalida(null)
+
+            buscarGuias(pagina, limite)
+
+            onCambio?.()
+          }}
+        />
+      )}
+
+      {/* ======================================================
+          PAGO
+        ====================================================== */}
+
+      {guiaPago && (
+        <RegistrarPagoDialog
+          guia={guiaPago}
+          open={!!guiaPago}
+          onOpenChange={(open) => !open && setGuiaPago(null)}
+          onRegistrado={() => {
+            setGuiaPago(null)
 
             buscarGuias(pagina, limite)
 
