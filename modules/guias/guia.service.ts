@@ -186,6 +186,9 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 /**
  * Registra la salida de un contenedor.
  */
+/**
+ * Registra la salida de un contenedor.
+ */
 export async function registrarSalidaGuiaService(
   data: RegistrarSalidaGuiaInput
 ) {
@@ -243,37 +246,60 @@ export async function registrarSalidaGuiaService(
   // 7. CALCULAR DÍAS
   // ============================================================
 
-  const diasAlmacenamiento = calcularDiasAlmacenamiento(
+  const diasCalculados = calcularDiasAlmacenamiento(
     guia.fechaIngreso,
     guia.horaIngreso,
     datosValidados.fechaSalida,
     datosValidados.horaSalida
   )
 
-  console.log("DÍAS CALCULADOS:", diasAlmacenamiento)
+  console.log("DÍAS CALCULADOS:", diasCalculados)
 
-  console.log("==============================================")
-
-  // ============================================================
-  // 8. OBTENER PRECIOS GUARDADOS EN LA GUÍA
-  // ============================================================
-
-  const precioPrimerDia = Number(guia.precioPrimerDia)
-
-  const precioDiaAdicional = Number(guia.precioDiaAdicional)
+  console.log(
+    "DÍAS RECIBIDOS DEL FORMULARIO:",
+    datosValidados.diasAlmacenamiento
+  )
 
   // ============================================================
-  // 9. OBTENER PORCENTAJE IGV
+  // 8. OBTENER CONFIGURACIÓN DE PRECIOS
   // ============================================================
 
   const configuracion = await obtenerConfiguracionPrecioService()
+
+  // ============================================================
+  // 9. DETERMINAR PRECIOS
+  // ============================================================
+
+  let precioPrimerDia: number
+
+  let precioDiaAdicional: number
+
+  if (datosValidados.tipoPrecio === "ESTANDAR") {
+    precioPrimerDia = Number(configuracion.precioPrimerDia)
+
+    precioDiaAdicional = Number(configuracion.precioDiaAdicional)
+  } else {
+    precioPrimerDia = datosValidados.precioPrimerDia
+
+    precioDiaAdicional = datosValidados.precioDiaAdicional
+  }
+
+  // ============================================================
+  // 10. OBTENER PORCENTAJE IGV
+  // ============================================================
 
   const porcentajeIGV = Number(
     guia.porcentajeIGV ?? configuracion.porcentajeIGV
   )
 
   // ============================================================
-  // 10. CALCULAR MONTO
+  // 11. OBTENER DÍAS DEFINITIVOS
+  // ============================================================
+
+  const diasAlmacenamiento = datosValidados.diasAlmacenamiento
+
+  // ============================================================
+  // 12. CALCULAR MONTO
   // ============================================================
 
   const calculo = calcularMontoGuia({
@@ -289,7 +315,7 @@ export async function registrarSalidaGuiaService(
   })
 
   // ============================================================
-  // 11. ACTUALIZAR GUÍA
+  // 13. ACTUALIZAR GUÍA
   // ============================================================
 
   const guiaActualizada = await actualizarGuia(guia.id, {
@@ -304,6 +330,12 @@ export async function registrarSalidaGuiaService(
     horaSalida: datosValidados.horaSalida,
 
     diasAlmacenamiento,
+
+    tipoPrecio: datosValidados.tipoPrecio,
+
+    precioPrimerDia,
+
+    precioDiaAdicional,
 
     subtotal: calculo.subtotal,
 
@@ -320,7 +352,6 @@ export async function registrarSalidaGuiaService(
 
   return serializarGuia(guiaActualizada)
 }
-
 /**
  * Obtiene una guía por ID.
  */

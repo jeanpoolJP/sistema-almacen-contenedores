@@ -6,70 +6,70 @@ import type {
   TipoDocumento,
   TipoPrecioGuia,
   TratamientoIGV,
-} from "@/lib/generated/prisma";
-import { GuiaConRelaciones } from "./components/guia-con-relaciones.type";
+} from "@/lib/generated/prisma"
+import { GuiaConRelaciones } from "./components/guia-con-relaciones.type"
 
 /**
  * Resultado del cálculo de días de almacenamiento.
  */
 export type CalculoAlmacenamiento = {
-  diasAlmacenamiento: number;
-};
+  diasAlmacenamiento: number
+}
 
 /**
  * Resultado del cálculo monetario.
  */
 export type CalculoMonto = {
-  subtotal: number;
-  montoIGV: number;
-  montoTotal: number;
-};
+  subtotal: number
+  montoIGV: number
+  montoTotal: number
+}
 
 /**
  * Datos necesarios para calcular
  * el monto de una guía.
  */
 export type DatosCalculoMonto = {
-  diasAlmacenamiento: number;
-  precioPrimerDia: number;
-  precioDiaAdicional: number;
-  tratamientoIGV: TratamientoIGV;
-  porcentajeIGV: number;
-};
+  diasAlmacenamiento: number
+  precioPrimerDia: number
+  precioDiaAdicional: number
+  tratamientoIGV: TratamientoIGV
+  porcentajeIGV: number
+}
 
 /**
  * Datos del cliente utilizados
  * al registrar una guía.
  */
 export type ClienteGuiaInput = {
-  tipoDocumento: TipoDocumento;
-  numeroDocumento: string;
-  nombreCompleto?: string | null;
-};
+  tipoDocumento: TipoDocumento
+  numeroDocumento: string
+  nombreCompleto?: string | null
+}
 
 /**
  * Datos del contenedor utilizados
  * al registrar una guía.
  */
 export type ContenedorGuiaInput = {
-  numeroContenedor: string;
-  marca: string;
-  medida: number;
-  tipo: TipoContenedor;
-};
+  numeroContenedor: string
+  marca: string
+  medida: number
+  tipo: TipoContenedor
+}
 
 /**
  * Datos del transportista utilizados
  * al registrar una guía.
  */
 export type TransportistaGuiaInput = {
-  empresaNombre: string;
+  empresaNombre: string
 
-  placa: string;
+  placa: string
 
-  conductorNombre: string;
-  numeroLicencia: string;
-};
+  conductorNombre: string
+  numeroLicencia: string
+}
 
 /**
  * Datos necesarios para crear una guía.
@@ -85,45 +85,53 @@ export type TransportistaGuiaInput = {
  * - Conductor
  */
 export type CrearGuiaInput = {
-  numeroGuia: string;
+  numeroGuia: string
 
-  cliente?: ClienteGuiaInput | null;
+  cliente?: ClienteGuiaInput | null
 
-  contenedor: ContenedorGuiaInput;
+  contenedor: ContenedorGuiaInput
 
-  transportistaIngreso: TransportistaGuiaInput;
+  transportistaIngreso: TransportistaGuiaInput
 
-  fechaIngreso: Date;
-  horaIngreso: Date;
+  fechaIngreso: Date
+  horaIngreso: Date
 
-  tipoPrecio: TipoPrecioGuia;
+  tipoPrecio: TipoPrecioGuia
 
   /**
    * Solo se utilizan cuando
    * tipoPrecio = PERSONALIZADO.
    */
-  precioPrimerDia?: number;
-  precioDiaAdicional?: number;
+  precioPrimerDia?: number
+  precioDiaAdicional?: number
 
-  tratamientoIGV: TratamientoIGV;
+  tratamientoIGV: TratamientoIGV
 
-  observaciones?: string | null;
-};
+  observaciones?: string | null
+}
 
 /**
  * Datos necesarios para registrar
  * la salida de una guía.
  */
 export type RegistrarSalidaGuiaInput = {
-  guiaId: number;
+  guiaId: number
 
-  transportistaSalida: TransportistaGuiaInput;
+  transportistaSalida: TransportistaGuiaInput
 
-  fechaSalida: Date;
-  horaSalida: Date;
+  fechaSalida: Date
+  horaSalida: Date
 
-  tratamientoIGV: TratamientoIGV;
-};
+  diasAlmacenamiento: number
+
+  tipoPrecio: TipoPrecioGuia
+
+  precioPrimerDia: number
+
+  precioDiaAdicional: number
+
+  tratamientoIGV: TratamientoIGV
+}
 
 /**
  * Datos internos que utiliza el repository
@@ -131,31 +139,31 @@ export type RegistrarSalidaGuiaInput = {
  * todas las relaciones.
  */
 export type CrearGuiaRepositoryInput = {
-  numeroGuia: string;
+  numeroGuia: string
 
-  clienteId?: number | null;
-  contenedorId: number;
+  clienteId?: number | null
+  contenedorId: number
 
-  empresaTransporteIngresoId: number;
-  vehiculoIngresoId: number;
-  conductorIngresoId: number;
+  empresaTransporteIngresoId: number
+  vehiculoIngresoId: number
+  conductorIngresoId: number
 
-  fechaIngreso: Date;
-  horaIngreso: Date;
+  fechaIngreso: Date
+  horaIngreso: Date
 
-  tipoPrecio: TipoPrecioGuia;
+  tipoPrecio: TipoPrecioGuia
 
-  precioPrimerDia: number;
-  precioDiaAdicional: number;
+  precioPrimerDia: number
+  precioDiaAdicional: number
 
-  porcentajeIGV: number;
+  porcentajeIGV: number
 
-  tratamientoIGV: TratamientoIGV;
+  tratamientoIGV: TratamientoIGV
 
-  estado: EstadoGuia;
+  estado: EstadoGuia
 
-  observaciones?: string | null;
-};
+  observaciones?: string | null
+}
 
 export type FiltrosGuias = {
   busqueda?: string
