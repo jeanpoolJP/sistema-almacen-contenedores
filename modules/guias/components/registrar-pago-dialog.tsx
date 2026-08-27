@@ -139,7 +139,7 @@ export function RegistrarPagoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[70vh] px-4 sm:px-6">
+        <ScrollArea className="max-h-[60vh] px-4 sm:px-6">
           <FormProvider {...form}>
             <form
               id="registrar-pago-form"

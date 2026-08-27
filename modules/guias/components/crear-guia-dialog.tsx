@@ -191,15 +191,15 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
               <Separator />
 
               <div className="space-y-3">
-                <p className={SECTION_TITLE}>Contenedor</p>
-                <ContenedorField />
+                <p className={SECTION_TITLE}>Transportista que entrega</p>
+                <TransportistaFields prefix="transportistaIngreso" />
               </div>
 
               <Separator />
 
               <div className="space-y-3">
-                <p className={SECTION_TITLE}>Transportista que entrega</p>
-                <TransportistaFields prefix="transportistaIngreso" />
+                <p className={SECTION_TITLE}>Contenedor</p>
+                <ContenedorField />
               </div>
 
               <Separator />
