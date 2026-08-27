@@ -18,15 +18,13 @@ type GuiasViewProps = {
   }
 }
 
-export function GuiasView({
-  data,
-}: GuiasViewProps) {
+export function GuiasView({ data }: GuiasViewProps) {
   const router = useRouter()
 
   return (
-    <div className="w-full px-4 py-6">
-      <div className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
+    <div className="space-y-6 p-6">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
               Guías de internamiento
@@ -37,15 +35,10 @@ export function GuiasView({
             </p>
           </div>
 
-          <CrearGuiaDialog
-            onCreada={() => router.refresh()}
-          />
+          <CrearGuiaDialog onCreada={() => router.refresh()} />
         </div>
 
-        <GuiasTable
-          data={data}
-          onCambio={() => router.refresh()}
-        />
+        <GuiasTable data={data} onCambio={() => router.refresh()} />
       </div>
     </div>
   )

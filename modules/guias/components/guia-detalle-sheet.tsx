@@ -40,16 +40,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <p className="text-sm font-semibold text-foreground">{children}</p>
 }
 
-function formatFecha(fecha: Date | null) {
-  if (!fecha) return null
-  return format(new Date(fecha), "dd MMM yyyy", { locale: es })
-}
-
-function formatHora(hora: Date | null) {
-  if (!hora) return null
-  return format(new Date(hora), "HH:mm")
-}
-
 function formatMoneda(valor: number | null) {
   if (valor === null || valor === undefined) return null
   return `S/ ${valor.toFixed(2)}`

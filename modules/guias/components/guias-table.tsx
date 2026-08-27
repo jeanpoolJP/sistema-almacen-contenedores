@@ -199,6 +199,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
    */
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setGuias(data.guias)
 
     setTotal(data.total)
@@ -819,7 +820,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
               onValueChange={cambiarLimite}
               disabled={isPending || exportando}
             >
-              <SelectTrigger className="w-[80px]">
+              <SelectTrigger className="w-20">
                 <SelectValue />
               </SelectTrigger>
 
@@ -850,7 +851,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
               Anterior
             </Button>
 
-            <span className="min-w-[100px] text-center text-sm">
+            <span className="min-w-25 text-center text-sm">
               Página {pagina} de {totalPaginas}
             </span>
 

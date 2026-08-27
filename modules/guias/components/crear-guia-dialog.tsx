@@ -1,14 +1,14 @@
 // modules/guias/components/crear-guia-dialog.tsx
 
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react"
+import { useForm, FormProvider } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { PlusCircle } from "lucide-react"
+import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -17,56 +17,55 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
 
-import { crearGuiaSchema, type CrearGuiaSchema } from "../guia.schema";
-import { crearGuiaAction } from "../guia.actions";
-import { ClienteField } from "./fields/cliente-field";
-import { ContenedorField } from "./fields/contenedor-field";
-import { TransportistaFields } from "./fields/transportista-fields";
-import { FechaHoraField } from "./fields/fecha-hora-field";
+import { crearGuiaSchema, type CrearGuiaSchema } from "../guia.schema"
+import { crearGuiaAction } from "../guia.actions"
+import { ClienteField } from "./fields/cliente-field"
+import { ContenedorField } from "./fields/contenedor-field"
+import { TransportistaFields } from "./fields/transportista-fields"
+import { FechaHoraField } from "./fields/fecha-hora-field"
 
 /**
  * Ajusta este import al action real de tu módulo de configuración.
  * Debe devolver la configuración de precios activa:
  * { precioPrimerDia, precioDiaAdicional, porcentajeIGV }
  */
-import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions";
+import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions"
 
-const SECTION_TITLE =
-  "text-sm font-semibold text-foreground";
+const SECTION_TITLE = "text-sm font-semibold text-foreground"
 
 type CrearGuiaDialogProps = {
-  onCreada?: () => void;
-};
+  onCreada?: () => void
+}
 
 export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [precioBase, setPrecioBase] = useState<{
-    precioPrimerDia: number;
-    precioDiaAdicional: number;
-  } | null>(null);
+    precioPrimerDia: number
+    precioDiaAdicional: number
+  } | null>(null)
 
   const form = useForm<CrearGuiaSchema>({
     resolver: zodResolver(crearGuiaSchema),
@@ -97,44 +96,43 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
       tratamientoIGV: "SIN_IGV",
       observaciones: "",
     },
-  });
+  })
 
-  const tipoPrecio = form.watch("tipoPrecio");
-  const tratamientoIGV = form.watch("tratamientoIGV");
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const tipoPrecio = form.watch("tipoPrecio")
+  const tratamientoIGV = form.watch("tratamientoIGV")
 
   // Carga la configuración de precios activa al abrir el diálogo,
   // para mostrar y usar por defecto los precios estándar.
   useEffect(() => {
-    if (!open) return;
+    if (!open) return
 
     obtenerConfiguracionPrecioAction().then((res) => {
       if (res?.success && res.data) {
         const base = {
           precioPrimerDia: Number(res.data.precioPrimerDia),
           precioDiaAdicional: Number(res.data.precioDiaAdicional),
-        };
-        setPrecioBase(base);
-        form.setValue("precioPrimerDia", base.precioPrimerDia);
-        form.setValue("precioDiaAdicional", base.precioDiaAdicional);
+        }
+        setPrecioBase(base)
+        form.setValue("precioPrimerDia", base.precioPrimerDia)
+        form.setValue("precioDiaAdicional", base.precioDiaAdicional)
       }
-    });
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open])
 
-  function handleTipoPrecioChange(
-    value: "ESTANDAR" | "PERSONALIZADO" | null,
-  ) {
-    if (!value) return;
+  function handleTipoPrecioChange(value: "ESTANDAR" | "PERSONALIZADO" | null) {
+    if (!value) return
 
-    form.setValue("tipoPrecio", value);
+    form.setValue("tipoPrecio", value)
     if (value === "ESTANDAR" && precioBase) {
-      form.setValue("precioPrimerDia", precioBase.precioPrimerDia);
-      form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional);
+      form.setValue("precioPrimerDia", precioBase.precioPrimerDia)
+      form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional)
     }
   }
 
   async function onSubmit(data: CrearGuiaSchema) {
-    setSubmitting(true);
+    setSubmitting(true)
 
     const payload = {
       ...data,
@@ -145,41 +143,40 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
               nombreCompleto: data.cliente.nombreCompleto || undefined,
             }
           : null,
-    };
-
-    const res = await crearGuiaAction(payload);
-    setSubmitting(false);
-
-    if (!res.success) {
-      toast.error(res.message);
-      return;
     }
 
-    toast.success(res.message);
-    form.reset();
-    setOpen(false);
-    onCreada?.();
+    const res = await crearGuiaAction(payload)
+    setSubmitting(false)
+
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+
+    toast.success(res.message)
+    form.reset()
+    setOpen(false)
+    onCreada?.()
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={<Button className="gap-2" />}
-      >
+      <DialogTrigger render={<Button className="gap-2" />}>
         <PlusCircle className="size-4" />
         Registrar guía
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl p-0">
-        <DialogHeader className="border-b px-6 py-4">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-4xl p-0 sm:w-[calc(100%-2rem)] lg:max-w-5xl">
+        <DialogHeader className="border-b px-4 py-4 sm:px-6">
           <DialogTitle>Registrar ingreso de contenedor</DialogTitle>
+
           <DialogDescription>
-            Completa los datos del cliente, el contenedor y el
-            transportista que entrega.
+            Completa los datos del cliente, el contenedor y el transportista que
+            entrega.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[70vh] px-6">
+        <ScrollArea className="max-h-[70vh] px-4 sm:px-6">
           <FormProvider {...form}>
             <form
               id="crear-guia-form"
@@ -192,9 +189,11 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Número de guía</FormLabel>
+
                     <FormControl>
                       <Input {...field} placeholder="Ej: G-000123" />
                     </FormControl>
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -215,9 +214,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
               <Separator />
 
               <div className="space-y-3">
-                <p className={SECTION_TITLE}>
-                  Transportista que entrega
-                </p>
+                <p className={SECTION_TITLE}>Transportista que entrega</p>
                 <TransportistaFields prefix="transportistaIngreso" />
               </div>
 
@@ -240,19 +237,20 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de precio</FormLabel>
+
                       <Select
                         onValueChange={handleTipoPrecioChange}
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
+
                         <SelectContent>
-                          <SelectItem value="ESTANDAR">
-                            Estándar
-                          </SelectItem>
+                          <SelectItem value="ESTANDAR">Estándar</SelectItem>
+
                           <SelectItem value="PERSONALIZADO">
                             Personalizado
                           </SelectItem>
@@ -262,33 +260,33 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="precioPrimerDia"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Precio primer día (S/)</FormLabel>
+
                         <FormControl>
                           <Input
                             type="number"
                             step="0.01"
                             disabled={tipoPrecio === "ESTANDAR"}
                             className={
-                              tipoPrecio === "ESTANDAR"
-                                ? "bg-muted"
-                                : undefined
+                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
                             }
                             value={field.value ?? ""}
                             onChange={(e) =>
                               field.onChange(
                                 e.target.value === ""
                                   ? undefined
-                                  : Number(e.target.value),
+                                  : Number(e.target.value)
                               )
                             }
                           />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
@@ -300,45 +298,47 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Precio día adicional (S/)</FormLabel>
+
                         <FormControl>
                           <Input
                             type="number"
                             step="0.01"
                             disabled={tipoPrecio === "ESTANDAR"}
                             className={
-                              tipoPrecio === "ESTANDAR"
-                                ? "bg-muted"
-                                : undefined
+                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
                             }
                             value={field.value ?? ""}
                             onChange={(e) =>
                               field.onChange(
                                 e.target.value === ""
                                   ? undefined
-                                  : Number(e.target.value),
+                                  : Number(e.target.value)
                               )
                             }
                           />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-0.5">
                     <Label>¿El cliente solicita factura (con IGV)?</Label>
+
                     <p className="text-xs text-muted-foreground">
                       Por defecto la guía no incluye IGV.
                     </p>
                   </div>
+
                   <Switch
                     checked={tratamientoIGV === "CON_IGV"}
                     onCheckedChange={(checked) =>
                       form.setValue(
                         "tratamientoIGV",
-                        checked ? "CON_IGV" : "SIN_IGV",
+                        checked ? "CON_IGV" : "SIN_IGV"
                       )
                     }
                   />
@@ -358,6 +358,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                         (opcional)
                       </span>
                     </FormLabel>
+
                     <FormControl>
                       <Textarea
                         {...field}
@@ -366,6 +367,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                         rows={3}
                       />
                     </FormControl>
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -374,23 +376,26 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
           </FormProvider>
         </ScrollArea>
 
-        <DialogFooter className="border-t px-6 py-4">
+        <DialogFooter className="border-t px-4 py-4 sm:px-6">
           <Button
             type="button"
             variant="outline"
             onClick={() => setOpen(false)}
+            className="w-full sm:w-auto"
           >
             Cancelar
           </Button>
+
           <Button
             type="submit"
             form="crear-guia-form"
             disabled={submitting}
+            className="w-full sm:w-auto"
           >
             {submitting ? "Guardando..." : "Registrar guía"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
