@@ -60,7 +60,7 @@ export function MovementsChart({ data }: MovementsChartProps) {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value: string) =>
+                  labelFormatter={(value) =>
                     new Date(value).toLocaleDateString("es-PE", {
                       day: "2-digit",
                       month: "short",

@@ -3,6 +3,8 @@
 import { obtenerGuiasAction } from "@/modules/guias/guia.actions"
 import { GuiasView } from "@/modules/guias/components/guias-view"
 
+export const dynamic = "force-dynamic"
+
 export default async function GuiasAdminPage() {
   const resultado = await obtenerGuiasAction({
     pagina: 1,
