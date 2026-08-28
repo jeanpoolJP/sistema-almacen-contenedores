@@ -1,6 +1,8 @@
 import { getDashboardData } from "@/modules/dashboard/dashboard.queries";
 import { DashboardView } from "@/modules/dashboard/dashboard-view";
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminPage() {
   const data = await getDashboardData();
 
