@@ -125,8 +125,16 @@ export const crearGuiaSchema = z
     numeroGuia: z
       .string()
       .trim()
-      .min(1, "El número de guía es obligatorio")
-      .max(30, "El número de guía no puede superar los 30 caracteres"),
+      .regex(/^\d+$/, "El número de guía solo puede contener números")
+      .transform((valor) => {
+        const numero = Number(valor)
+
+        if (numero > 999999) {
+          throw new Error("El número de guía no puede tener más de 6 dígitos")
+        }
+
+        return numero.toString().padStart(6, "0")
+      }),
 
     cliente: clienteGuiaSchema.nullable().optional(),
 

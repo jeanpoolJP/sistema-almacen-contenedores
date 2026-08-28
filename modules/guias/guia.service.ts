@@ -41,6 +41,7 @@ import { obtenerOCrearVehiculo } from "@/modules/vehiculos/vehiculos.service"
 import { obtenerOCrearConductor } from "@/modules/conductores/conductores.service"
 
 import type { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
+import { formatearNumeroGuia } from "./utils/formatear-numero-guia"
 
 /**
  * Crea una guía de internamiento.
@@ -55,16 +56,16 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
   const datosValidados = crearGuiaSchema.parse(data)
 
+  const numeroGuia = formatearNumeroGuia(datosValidados.numeroGuia)
+
   // ============================================================
   // 2. VERIFICAR NÚMERO DE GUÍA
   // ============================================================
 
-  const guiaExistente = await obtenerGuiaPorNumero(datosValidados.numeroGuia)
+  const guiaExistente = await obtenerGuiaPorNumero(numeroGuia)
 
   if (guiaExistente) {
-    throw new Error(
-      `Ya existe una guía con el número ${datosValidados.numeroGuia}`
-    )
+    throw new Error(`Ya existe una guía con el número ${numeroGuia}`)
   }
 
   // ============================================================
@@ -162,7 +163,7 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   // ============================================================
 
   const guia = await crearGuia({
-    numeroGuia: datosValidados.numeroGuia,
+    numeroGuia,
 
     clienteId: cliente?.id ?? null,
 
