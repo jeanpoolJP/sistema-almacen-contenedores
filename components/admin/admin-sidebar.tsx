@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+import { logoutAction } from "@/modules/auth/actions/logout"
+import { usePathname, useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 
 import {
   LayoutDashboard,
@@ -18,7 +19,7 @@ import {
   Warehouse,
   Sun,
   Moon,
-} from "lucide-react";
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -31,7 +32,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const menuItems = [
   {
@@ -69,12 +70,12 @@ const menuItems = [
     href: "/admin/conductores",
     icon: UsersRound,
   },
-/*   {
+  /*   {
     title: "Pagos",
     href: "/admin/pagos",
     icon: CreditCard,
   }, */
-];
+]
 
 const reportItems = [
   {
@@ -82,7 +83,7 @@ const reportItems = [
     href: "/admin/reportes",
     icon: BarChart3,
   },
-];
+]
 
 const systemItems = [
   {
@@ -90,29 +91,29 @@ const systemItems = [
     href: "/admin/configuracion",
     icon: Settings,
   },
-];
+]
 
 export function AdminSidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const pathname = usePathname()
+  const router = useRouter()
+  const { theme, setTheme } = useTheme()
 
-  const isDark = theme === "dark";
+  const isDark = theme === "dark"
 
   function isActive(href: string) {
     if (href === "/admin") {
-      return pathname === "/admin";
+      return pathname === "/admin"
     }
 
-    return pathname.startsWith(href);
+    return pathname.startsWith(href)
   }
 
   function navigateTo(href: string) {
-    router.push(href);
+    router.push(href)
   }
 
   function toggleTheme() {
-    setTheme(isDark ? "light" : "dark");
+    setTheme(isDark ? "light" : "dark")
   }
 
   return (
@@ -134,9 +135,7 @@ export function AdminSidebar() {
               </div>
 
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
-                  Almacén
-                </span>
+                <span className="truncate font-semibold">Almacén</span>
 
                 <span className="truncate text-xs text-muted-foreground">
                   Contenedores
@@ -155,15 +154,13 @@ export function AdminSidebar() {
         {/* PRINCIPAL */}
 
         <SidebarGroup>
-          <SidebarGroupLabel>
-            Principal
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Principal</SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
+                const Icon = item.icon
+                const active = isActive(item.href)
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -177,38 +174,7 @@ export function AdminSidebar() {
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* INFORMACIÓN */}
-
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            Información
-          </SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {reportItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={active}
-                      tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
-                    >
-                      <Icon />
-
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
+                )
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -217,15 +183,13 @@ export function AdminSidebar() {
         {/* SISTEMA */}
 
         <SidebarGroup>
-          <SidebarGroupLabel>
-            Sistema
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu>
               {systemItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
+                const Icon = item.icon
+                const active = isActive(item.href)
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -239,7 +203,7 @@ export function AdminSidebar() {
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
+                )
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -257,9 +221,7 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={
-                isDark
-                  ? "Cambiar a modo claro"
-                  : "Cambiar a modo oscuro"
+                isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
               }
               onClick={toggleTheme}
             >
@@ -269,11 +231,7 @@ export function AdminSidebar() {
                 <Moon className="size-4" />
               )}
 
-              <span>
-                {isDark
-                  ? "Modo claro"
-                  : "Modo oscuro"}
-              </span>
+              <span>{isDark ? "Modo claro" : "Modo oscuro"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
@@ -282,20 +240,20 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Cerrar sesión"
-              onClick={() => {
-                // TODO: implementar logout
-                console.log("Cerrar sesión");
+              onClick={async () => {
+                await logoutAction()
+
+                router.replace("/")
+                router.refresh()
               }}
             >
               <LogOut className="size-4" />
 
-              <span>
-                Cerrar sesión
-              </span>
+              <span>Cerrar sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

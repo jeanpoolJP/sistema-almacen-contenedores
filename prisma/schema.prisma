@@ -286,6 +286,15 @@ model GuiaInternamiento {
   @@map("guias_internamiento")
 }
 
+model UsuarioAuth {
+  id           Int      @id @default(autoincrement())
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("usuarios_auth")
+}
+
 model Pago {
   id              Int        @id @default(autoincrement())
   clienteId       Int        @map("cliente_id")
