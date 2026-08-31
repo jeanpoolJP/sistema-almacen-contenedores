@@ -290,7 +290,7 @@ model UsuarioAuth {
   id           Int      @id @default(autoincrement())
   passwordHash String   @map("password_hash") @db.VarChar(255)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamp(0)
 
   @@map("usuarios_auth")
 }
