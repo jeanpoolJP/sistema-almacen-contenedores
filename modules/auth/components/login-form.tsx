@@ -1,7 +1,10 @@
+// modules/auth/components/login-form.tsx
+
 "use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Loader2, LockKeyhole } from "lucide-react"
 
 import { loginAction } from "../actions/login"
 
@@ -28,50 +31,104 @@ export function LoginForm() {
     event.preventDefault()
 
     setError("")
-    setLoading(true)
 
-    const result = await loginAction(password)
-
-    if (result.error) {
-      setError(result.error)
-      setLoading(false)
+    if (!password) {
+      setError("Ingresa tu contraseña.")
       return
     }
 
-    router.replace("/admin")
-    router.refresh()
+    setLoading(true)
+
+    try {
+      const result = await loginAction(password)
+
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+
+      router.replace("/admin")
+      router.refresh()
+    } catch {
+      setError("No se pudo iniciar sesión. Intenta nuevamente.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <CardTitle>Almacén de Contenedores</CardTitle>
+    <Card className="w-full max-w-md shadow-lg">
+      <CardHeader className="space-y-4 text-center">
+        {/* LOGO / IDENTIDAD */}
+        <div className="mx-auto flex size-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <LockKeyhole className="size-7" />
+        </div>
 
-        <CardDescription>Ingresa tu contraseña para continuar</CardDescription>
+        <div className="space-y-1">
+          <CardTitle className="text-2xl font-semibold tracking-tight">
+            KRENCO
+          </CardTitle>
+
+          <CardDescription className="text-sm">
+            Sistema de Gestión de Almacén
+          </CardDescription>
+        </div>
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* CONTRASEÑA */}
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
 
             <Input
               id="password"
+              name="password"
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value)
+                setError("")
+              }}
               placeholder="Ingresa tu contraseña"
               autoComplete="current-password"
+              minLength={8}
+              maxLength={128}
+              required
               disabled={loading}
+              aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {/* ERROR */}
+          {error && (
+            <p
+              id="login-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
+              {error}
+            </p>
+          )}
 
+          {/* BOTÓN */}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Ingresando..." : "Ingresar"}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              "Iniciar sesión"
+            )}
           </Button>
         </form>
+
+        {/* INFORMACIÓN */}
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Acceso exclusivo para personal autorizado de KRENCO.
+        </p>
       </CardContent>
     </Card>
   )

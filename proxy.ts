@@ -1,9 +1,30 @@
+// proxy.ts
+
 import { NextRequest, NextResponse } from "next/server"
 import { jwtVerify } from "jose"
 
 const COOKIE_NAME = "auth_session"
 
-const secret = new TextEncoder().encode(process.env.AUTH_SECRET)
+const AUTH_ISSUER = "almacen-contenedores"
+const AUTH_AUDIENCE = "admin"
+
+const AUTH_SECRET = process.env.AUTH_SECRET
+
+if (!AUTH_SECRET) {
+  throw new Error("AUTH_SECRET no está configurado.")
+}
+
+if (AUTH_SECRET.length < 12) {
+  throw new Error("AUTH_SECRET debe tener al menos 12 caracteres.")
+}
+
+const secret = new TextEncoder().encode(AUTH_SECRET)
+
+/**
+ * ============================================================
+ * VERIFICAR SESIÓN
+ * ============================================================
+ */
 
 async function verificarSesion(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value
@@ -13,25 +34,44 @@ async function verificarSesion(request: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, secret, {
+      algorithms: ["HS256"],
+      issuer: AUTH_ISSUER,
+      audience: AUTH_AUDIENCE,
+    })
 
-    return payload.authenticated === true
+    if (payload.authenticated !== true) {
+      return false
+    }
+
+    if (!payload.sub) {
+      return false
+    }
+
+    return true
   } catch {
     return false
   }
 }
 
+/**
+ * ============================================================
+ * PROXY
+ * ============================================================
+ */
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // ============================================================
-  // PÁGINA DE LOGIN
-  // ============================================================
+  const autenticado = await verificarSesion(request)
+
+  /**
+   * ----------------------------------------------------------
+   * LOGIN
+   * ----------------------------------------------------------
+   */
 
   if (pathname === "/") {
-    const autenticado = await verificarSesion(request)
-
-    // Si ya inició sesión, no tiene sentido mostrarle el login
     if (autenticado) {
       return NextResponse.redirect(new URL("/admin", request.url))
     }
@@ -39,15 +79,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // ============================================================
-  // RUTAS DEL SISTEMA
-  // ============================================================
+  /**
+   * ----------------------------------------------------------
+   * ADMIN
+   * ----------------------------------------------------------
+   */
 
   if (pathname.startsWith("/admin")) {
-    const autenticado = await verificarSesion(request)
-
     if (!autenticado) {
-      return NextResponse.redirect(new URL("/", request.url))
+      const loginUrl = new URL("/", request.url)
+
+      return NextResponse.redirect(loginUrl)
     }
 
     return NextResponse.next()
@@ -55,6 +97,12 @@ export async function proxy(request: NextRequest) {
 
   return NextResponse.next()
 }
+
+/**
+ * ============================================================
+ * MATCHER
+ * ============================================================
+ */
 
 export const config = {
   matcher: ["/", "/admin/:path*"],

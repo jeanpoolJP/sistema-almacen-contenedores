@@ -1,3 +1,5 @@
+// modules\auth\actions\logout.ts
+
 "use server"
 
 import { cerrarSesion } from "../lib/session"
