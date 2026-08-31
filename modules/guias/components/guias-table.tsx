@@ -72,7 +72,11 @@ import { RegistrarPagoDialog } from "./registrar-pago-dialog"
 
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
-import type { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
+import type {
+  EstadoGuia,
+  EstadoPago,
+  TratamientoIGV,
+} from "@/lib/generated/prisma"
 
 import { anularGuiaAction, obtenerGuiasAction } from "../guia.actions"
 
@@ -165,6 +169,10 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     undefined
   )
 
+  const [tratamientoIGV, setTratamientoIGV] = useState<
+    TratamientoIGV | undefined
+  >(undefined)
+
   const [fechaDesde, setFechaDesde] = useState("")
 
   const [fechaHasta, setFechaHasta] = useState("")
@@ -238,6 +246,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
       estadoPago,
 
+      tratamientoIGV,
+
       fechaDesde: fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : undefined,
 
       fechaHasta: fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : undefined,
@@ -308,6 +318,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     setFechaHasta("")
 
     setEstadoPago(undefined)
+
+    setTratamientoIGV(undefined)
 
     startTransition(async () => {
       const resultado = await obtenerGuiasAction({
@@ -623,6 +635,33 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
                 <SelectItem value="PENDIENTE">Pendiente</SelectItem>
 
                 <SelectItem value="PAGADO">Pagado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* TRATAMIENTO IGV */}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tratamiento IGV</label>
+
+            <Select
+              value={tratamientoIGV ?? "TODOS"}
+              onValueChange={(value) => {
+                setTratamientoIGV(
+                  value === "TODOS" ? undefined : (value as TratamientoIGV)
+                )
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="TODOS">Todos</SelectItem>
+
+                <SelectItem value="CON_IGV">Con IGV</SelectItem>
+
+                <SelectItem value="SIN_IGV">Sin IGV</SelectItem>
               </SelectContent>
             </Select>
           </div>

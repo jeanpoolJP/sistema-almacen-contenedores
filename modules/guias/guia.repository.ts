@@ -9,6 +9,7 @@ import {
   EstadoPago,
   MetodoPago,
   Prisma,
+  TratamientoIGV,
 } from "@/lib/generated/prisma"
 
 /**
@@ -135,6 +136,7 @@ type ObtenerGuiasParams = {
 
   estado?: EstadoGuia
   estadoPago?: EstadoPago
+  tratamientoIGV?: TratamientoIGV
 
   fechaDesde?: Date
   fechaHasta?: Date
@@ -151,6 +153,7 @@ export async function obtenerGuias({
   documentoCliente,
   estado,
   estadoPago,
+  tratamientoIGV,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasParams) {
@@ -186,6 +189,10 @@ export async function obtenerGuias({
 
     ...(estadoPago && {
       estadoPago,
+    }),
+
+    ...(tratamientoIGV && {
+      tratamientoIGV,
     }),
 
     ...(fechaDesde || fechaHasta

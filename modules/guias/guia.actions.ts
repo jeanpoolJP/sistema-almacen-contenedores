@@ -14,7 +14,7 @@ import {
 
 import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
 
-import type { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
+import type { EstadoGuia, EstadoPago, TratamientoIGV } from "@/lib/generated/prisma"
 
 import { registrarPagoGuiaSchema } from "./guia.schema"
 
@@ -169,6 +169,7 @@ type ObtenerGuiasActionParams = {
 
   estado?: EstadoGuia
   estadoPago?: EstadoPago
+  tratamientoIGV?: TratamientoIGV
 
   fechaDesde?: Date
   fechaHasta?: Date
@@ -184,6 +185,7 @@ export async function obtenerGuiasAction({
 
   estado,
   estadoPago,
+  tratamientoIGV,
 
   fechaDesde,
   fechaHasta,
@@ -199,6 +201,7 @@ export async function obtenerGuiasAction({
 
       estado,
       estadoPago,
+      tratamientoIGV,
 
       fechaDesde,
       fechaHasta,
