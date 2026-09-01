@@ -19,6 +19,7 @@ import {
   Warehouse,
   Sun,
   Moon,
+  ClipboardCheck,
 } from "lucide-react"
 
 import {
@@ -49,6 +50,11 @@ const menuItems = [
     title: "Guías",
     href: "/admin/guias",
     icon: FileText,
+  },
+  {
+    title: "Inventario",
+    href: "/admin/inventario",
+    icon: ClipboardCheck,
   },
   {
     title: "Contenedores",

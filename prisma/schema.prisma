@@ -271,6 +271,8 @@ model GuiaInternamiento {
 
   conductorSalida Conductor? @relation("ConductorSalida", fields: [conductorSalidaId], references: [id], onDelete: SetNull)
 
+  inventarios InventarioDetalle[]
+
   // ============================================================
   // ÍNDICES
   // ============================================================
@@ -284,6 +286,57 @@ model GuiaInternamiento {
   @@index([vehiculoSalidaId], map: "idx_guias_vehiculo_salida_id")
   @@index([conductorSalidaId], map: "idx_guias_conductor_salida_id")
   @@map("guias_internamiento")
+}
+
+enum EstadoInventario {
+  EN_PROCESO
+  FINALIZADO
+}
+
+enum ResultadoInventario {
+  PENDIENTE
+  ENCONTRADO
+  NO_ENCONTRADO
+}
+
+model Inventario {
+  id Int @id @default(autoincrement())
+
+  fecha DateTime @db.Date
+
+  estado EstadoInventario @default(EN_PROCESO)
+
+  observaciones String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  detalles InventarioDetalle[]
+
+  @@index([fecha])
+  @@map("inventarios")
+}
+
+model InventarioDetalle {
+  id Int @id @default(autoincrement())
+
+  inventarioId Int @map("inventario_id")
+  guiaId Int @map("guia_id")
+
+  resultado ResultadoInventario @default(PENDIENTE)
+
+  observaciones String? @db.Text
+
+  verificadoAt DateTime? @map("verificado_at") @db.Timestamp(0)
+
+  inventario Inventario @relation( fields: [inventarioId], references: [id], onDelete: Cascade )
+
+  guia GuiaInternamiento @relation( fields: [guiaId], references: [id] )
+
+  @@unique([inventarioId, guiaId])
+  @@index([inventarioId])
+  @@index([guiaId])
+  @@map("inventario_detalles")
 }
 
 model UsuarioAuth {
