@@ -163,6 +163,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
   const [documentoCliente, setDocumentoCliente] = useState("")
 
+  const [sinCliente, setSinCliente] = useState(false)
+
   const [estado, setEstado] = useState<EstadoGuia | undefined>(undefined)
 
   const [estadoPago, setEstadoPago] = useState<EstadoPago | undefined>(
@@ -242,6 +244,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
       documentoCliente: documentoCliente.trim() || undefined,
 
+      sinCliente,
+
       estado,
 
       estadoPago,
@@ -310,6 +314,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     setNumeroContenedor("")
 
     setDocumentoCliente("")
+
+    setSinCliente(false)
 
     setEstado(undefined)
 
@@ -583,6 +589,29 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
               onChange={(e) => setDocumentoCliente(e.target.value)}
               placeholder="DNI o RUC"
             />
+          </div>
+
+          {/* CLIENTE */}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Cliente</label>
+
+            <Select
+              value={sinCliente ? "SIN_CLIENTE" : "TODOS"}
+              onValueChange={(value) => {
+                setSinCliente(value === "SIN_CLIENTE")
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Todos los clientes" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="TODOS">Todos los clientes</SelectItem>
+
+                <SelectItem value="SIN_CLIENTE">Sin cliente</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* ESTADO */}

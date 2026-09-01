@@ -134,6 +134,8 @@ type ObtenerGuiasParams = {
   numeroContenedor?: string
   documentoCliente?: string
 
+  sinCliente?: boolean
+
   estado?: EstadoGuia
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
@@ -151,6 +153,7 @@ export async function obtenerGuias({
   numeroGuia,
   numeroContenedor,
   documentoCliente,
+  sinCliente,
   estado,
   estadoPago,
   tratamientoIGV,
@@ -181,6 +184,10 @@ export async function obtenerGuias({
           mode: "insensitive",
         },
       },
+    }),
+
+    ...(sinCliente && {
+      clienteId: null,
     }),
 
     ...(estado && {

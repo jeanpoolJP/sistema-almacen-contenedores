@@ -14,7 +14,11 @@ import {
 
 import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
 
-import type { EstadoGuia, EstadoPago, TratamientoIGV } from "@/lib/generated/prisma"
+import type {
+  EstadoGuia,
+  EstadoPago,
+  TratamientoIGV,
+} from "@/lib/generated/prisma"
 
 import { registrarPagoGuiaSchema } from "./guia.schema"
 
@@ -167,6 +171,8 @@ type ObtenerGuiasActionParams = {
   numeroContenedor?: string
   documentoCliente?: string
 
+  sinCliente?: boolean
+
   estado?: EstadoGuia
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
@@ -182,6 +188,7 @@ export async function obtenerGuiasAction({
   numeroGuia,
   numeroContenedor,
   documentoCliente,
+  sinCliente,
 
   estado,
   estadoPago,
@@ -198,6 +205,7 @@ export async function obtenerGuiasAction({
       numeroGuia,
       numeroContenedor,
       documentoCliente,
+      sinCliente,
 
       estado,
       estadoPago,

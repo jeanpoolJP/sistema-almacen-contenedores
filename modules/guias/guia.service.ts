@@ -40,7 +40,11 @@ import { obtenerOCrearVehiculo } from "@/modules/vehiculos/vehiculos.service"
 
 import { obtenerOCrearConductor } from "@/modules/conductores/conductores.service"
 
-import type { EstadoGuia, EstadoPago, TratamientoIGV } from "@/lib/generated/prisma"
+import type {
+  EstadoGuia,
+  EstadoPago,
+  TratamientoIGV,
+} from "@/lib/generated/prisma"
 import { formatearNumeroGuia } from "./utils/formatear-numero-guia"
 
 /**
@@ -404,6 +408,8 @@ type ObtenerGuiasServiceParams = {
   numeroContenedor?: string
   documentoCliente?: string
 
+  sinCliente?: boolean
+
   estado?: EstadoGuia
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
@@ -418,6 +424,7 @@ export async function obtenerGuiasService({
   numeroGuia,
   numeroContenedor,
   documentoCliente,
+  sinCliente,
   estado,
   estadoPago,
   tratamientoIGV,
@@ -430,6 +437,7 @@ export async function obtenerGuiasService({
     numeroGuia,
     numeroContenedor,
     documentoCliente,
+    sinCliente,
     estado,
     estadoPago,
     tratamientoIGV,
