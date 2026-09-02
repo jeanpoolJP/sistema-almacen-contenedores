@@ -46,6 +46,7 @@ import type {
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 import { formatearNumeroGuia } from "./utils/formatear-numero-guia"
+import { calcularMontoEspacioAlquilado } from "./utils/calcular-monto-espacio-alquilado"
 
 /**
  * Crea una guía de internamiento.
@@ -142,20 +143,27 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   // 9. DETERMINAR PRECIOS
   // ============================================================
 
-  let precioPrimerDia: number
+  let precioPrimerDia = 0
 
-  let precioDiaAdicional: number
+  let precioDiaAdicional = 0
+
+  let precioIngresoSalida: number | undefined
 
   if (datosValidados.tipoPrecio === "ESTANDAR") {
     precioPrimerDia = Number(configuracion.precioPrimerDia)
 
     precioDiaAdicional = Number(configuracion.precioDiaAdicional)
-  } else {
+  }
+
+  if (datosValidados.tipoPrecio === "PERSONALIZADO") {
     precioPrimerDia = datosValidados.precioPrimerDia!
 
     precioDiaAdicional = datosValidados.precioDiaAdicional!
   }
 
+  if (datosValidados.tipoPrecio === "ESPACIO_ALQUILADO") {
+    precioIngresoSalida = datosValidados.precioIngresoSalida!
+  }
   // ============================================================
   // 10. PORCENTAJE IGV
   // ============================================================
@@ -189,6 +197,8 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
     precioDiaAdicional,
 
+    precioIngresoSalida,
+
     porcentajeIGV,
 
     tratamientoIGV: datosValidados.tratamientoIGV,
@@ -203,12 +213,24 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
 /**
  * Registra la salida de un contenedor.
+ *
+ * El operador puede modificar:
+ *
+ * - Tipo de precio
+ * - Días de almacenamiento
+ * - Precios personalizados
+ * - Cantidad de movimientos
+ * - Precio por movimiento
+ * - Tratamiento de IGV
+ *
+ * El monto definitivo siempre se calcula
+ * nuevamente en el servidor antes de guardar.
  */
 export async function registrarSalidaGuiaService(
   data: RegistrarSalidaGuiaInput
 ) {
   // ============================================================
-  // 1. VALIDAR
+  // 1. VALIDAR DATOS
   // ============================================================
 
   const datosValidados = registrarSalidaGuiaSchema.parse(data)
@@ -237,9 +259,13 @@ export async function registrarSalidaGuiaService(
 
   const empresaSalida = await obtenerOCrearEmpresaTransporte({
     nombre: datosValidados.transportistaSalida.empresaNombre,
+
     ruc: datosValidados.transportistaSalida.ruc,
+
     telefono: datosValidados.transportistaSalida.telefono,
+
     contactoLogistico: datosValidados.transportistaSalida.contactoLogistico,
+
     nombreEncargado: datosValidados.transportistaSalida.nombreEncargado,
   })
 
@@ -262,7 +288,7 @@ export async function registrarSalidaGuiaService(
   })
 
   // ============================================================
-  // 7. CALCULAR DÍAS
+  // 7. CALCULAR DÍAS AUTOMÁTICAMENTE
   // ============================================================
 
   const diasCalculados = calcularDiasAlmacenamiento(
@@ -272,36 +298,24 @@ export async function registrarSalidaGuiaService(
     datosValidados.horaSalida
   )
 
-  console.log("DÍAS CALCULADOS:", diasCalculados)
+  console.log("Días calculados automáticamente:", diasCalculados)
 
   console.log(
-    "DÍAS RECIBIDOS DEL FORMULARIO:",
+    "Días ingresados por el operador:",
     datosValidados.diasAlmacenamiento
   )
 
   // ============================================================
-  // 8. OBTENER CONFIGURACIÓN DE PRECIOS
+  // 8. LOS DÍAS DEL FORMULARIO SON LOS DEFINITIVOS
+  // ============================================================
+
+  const diasAlmacenamiento = datosValidados.diasAlmacenamiento
+
+  // ============================================================
+  // 9. OBTENER CONFIGURACIÓN
   // ============================================================
 
   const configuracion = await obtenerConfiguracionPrecioService()
-
-  // ============================================================
-  // 9. DETERMINAR PRECIOS
-  // ============================================================
-
-  let precioPrimerDia: number
-
-  let precioDiaAdicional: number
-
-  if (datosValidados.tipoPrecio === "ESTANDAR") {
-    precioPrimerDia = Number(configuracion.precioPrimerDia)
-
-    precioDiaAdicional = Number(configuracion.precioDiaAdicional)
-  } else {
-    precioPrimerDia = datosValidados.precioPrimerDia
-
-    precioDiaAdicional = datosValidados.precioDiaAdicional
-  }
 
   // ============================================================
   // 10. OBTENER PORCENTAJE IGV
@@ -312,43 +326,150 @@ export async function registrarSalidaGuiaService(
   )
 
   // ============================================================
-  // 11. OBTENER DÍAS DEFINITIVOS
+  // 11. VARIABLES DEL CÁLCULO
   // ============================================================
 
-  const diasAlmacenamiento = datosValidados.diasAlmacenamiento
+  let precioPrimerDia = 0
+  let precioDiaAdicional = 0
+
+  let cantidadMovimientos: number | null = null
+  let precioMovimiento: number | null = null
+  let subtotalMovimientos: number | null = null
+
+  let subtotal = 0
+  let montoIGV = 0
+  let montoTotal = 0
 
   // ============================================================
-  // 12. CALCULAR MONTO
+  // 12. DETERMINAR TIPO DE PRECIO
   // ============================================================
 
-  const calculo = calcularMontoGuia({
-    diasAlmacenamiento,
+  if (datosValidados.tipoPrecio === "ESTANDAR") {
+    // ----------------------------------------------------------
+    // ESTÁNDAR
+    // ----------------------------------------------------------
 
-    precioPrimerDia,
+    precioPrimerDia = Number(configuracion.precioPrimerDia)
 
-    precioDiaAdicional,
+    precioDiaAdicional = Number(configuracion.precioDiaAdicional)
 
-    tratamientoIGV: datosValidados.tratamientoIGV,
+    const calculo = calcularMontoGuia({
+      diasAlmacenamiento,
 
-    porcentajeIGV,
-  })
+      precioPrimerDia,
+
+      precioDiaAdicional,
+
+      tratamientoIGV: datosValidados.tratamientoIGV,
+
+      porcentajeIGV,
+    })
+
+    subtotal = calculo.subtotal
+    montoIGV = calculo.montoIGV
+    montoTotal = calculo.montoTotal
+  } else if (datosValidados.tipoPrecio === "PERSONALIZADO") {
+    // ----------------------------------------------------------
+    // PERSONALIZADO
+    // ----------------------------------------------------------
+
+    if (datosValidados.precioPrimerDia === undefined) {
+      throw new Error("El precio del primer día es obligatorio")
+    }
+
+    if (datosValidados.precioDiaAdicional === undefined) {
+      throw new Error("El precio del día adicional es obligatorio")
+    }
+
+    precioPrimerDia = datosValidados.precioPrimerDia
+
+    precioDiaAdicional = datosValidados.precioDiaAdicional
+
+    const calculo = calcularMontoGuia({
+      diasAlmacenamiento,
+
+      precioPrimerDia,
+
+      precioDiaAdicional,
+
+      tratamientoIGV: datosValidados.tratamientoIGV,
+
+      porcentajeIGV,
+    })
+
+    subtotal = calculo.subtotal
+    montoIGV = calculo.montoIGV
+    montoTotal = calculo.montoTotal
+  } else if (datosValidados.tipoPrecio === "ESPACIO_ALQUILADO") {
+    // ----------------------------------------------------------
+    // ESPACIO ALQUILADO
+    // ----------------------------------------------------------
+
+    if (datosValidados.precioIngresoSalida === undefined) {
+      throw new Error("El precio de ingreso y salida es obligatorio")
+    }
+
+    if (datosValidados.cantidadMovimientos === undefined) {
+      throw new Error("La cantidad de movimientos es obligatoria")
+    }
+
+    if (datosValidados.precioMovimiento === undefined) {
+      throw new Error("El precio por movimiento es obligatorio")
+    }
+
+    const precioIngresoSalida = datosValidados.precioIngresoSalida
+
+    cantidadMovimientos = datosValidados.cantidadMovimientos
+
+    precioMovimiento = datosValidados.precioMovimiento
+
+    subtotalMovimientos = cantidadMovimientos * precioMovimiento
+
+    const calculo = calcularMontoEspacioAlquilado({
+      precioIngresoSalida,
+      cantidadMovimientos,
+      precioMovimiento,
+      tratamientoIGV: datosValidados.tratamientoIGV,
+      porcentajeIGV,
+    })
+
+    subtotal = calculo.subtotal
+    montoIGV = calculo.montoIGV
+    montoTotal = calculo.montoTotal
+  }
 
   // ============================================================
   // 13. ACTUALIZAR GUÍA
   // ============================================================
 
   const guiaActualizada = await actualizarGuia(guia.id, {
+    // --------------------------------------------------------
+    // TRANSPORTE DE SALIDA
+    // --------------------------------------------------------
+
     empresaTransporteSalidaId: empresaSalida.id,
 
     vehiculoSalidaId: vehiculoSalida.id,
 
     conductorSalidaId: conductorSalida.id,
 
+    // --------------------------------------------------------
+    // FECHA Y HORA
+    // --------------------------------------------------------
+
     fechaSalida: datosValidados.fechaSalida,
 
     horaSalida: datosValidados.horaSalida,
 
+    // --------------------------------------------------------
+    // ALMACENAMIENTO
+    // --------------------------------------------------------
+
     diasAlmacenamiento,
+
+    // --------------------------------------------------------
+    // PRECIOS
+    // --------------------------------------------------------
 
     tipoPrecio: datosValidados.tipoPrecio,
 
@@ -356,18 +477,46 @@ export async function registrarSalidaGuiaService(
 
     precioDiaAdicional,
 
-    subtotal: calculo.subtotal,
+    precioIngresoSalida: datosValidados.precioIngresoSalida,
+
+    // --------------------------------------------------------
+    // MOVIMIENTOS
+    // --------------------------------------------------------
+
+    cantidadMovimientos,
+
+    precioMovimiento,
+
+    subtotalMovimientos,
+
+    // --------------------------------------------------------
+    // TOTALES
+    // --------------------------------------------------------
+
+    subtotal,
 
     porcentajeIGV,
 
-    montoIGV: calculo.montoIGV,
+    montoIGV,
 
-    montoTotal: calculo.montoTotal,
+    montoTotal,
+
+    // --------------------------------------------------------
+    // IGV
+    // --------------------------------------------------------
 
     tratamientoIGV: datosValidados.tratamientoIGV,
 
+    // --------------------------------------------------------
+    // ESTADO
+    // --------------------------------------------------------
+
     estado: "RETIRADO",
   })
+
+  // ============================================================
+  // 14. SERIALIZAR
+  // ============================================================
 
   return serializarGuia(guiaActualizada)
 }
@@ -451,6 +600,19 @@ export async function obtenerGuiasService({
     precioPrimerDia: Number(guia.precioPrimerDia),
 
     precioDiaAdicional: Number(guia.precioDiaAdicional),
+
+    precioIngresoSalida:
+      guia.precioIngresoSalida === null
+        ? null
+        : Number(guia.precioIngresoSalida),
+
+    precioMovimiento:
+      guia.precioMovimiento === null ? null : Number(guia.precioMovimiento),
+
+    subtotalMovimientos:
+      guia.subtotalMovimientos === null
+        ? null
+        : Number(guia.subtotalMovimientos),
 
     subtotal: guia.subtotal === null ? null : Number(guia.subtotal),
 

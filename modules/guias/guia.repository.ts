@@ -9,6 +9,7 @@ import {
   EstadoPago,
   MetodoPago,
   Prisma,
+  TipoPrecioGuia,
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 
@@ -41,9 +42,10 @@ export async function crearGuia(data: CrearGuiaRepositoryInput) {
 
       tipoPrecio: data.tipoPrecio,
 
-      precioPrimerDia: data.precioPrimerDia,
+      precioPrimerDia: data.precioPrimerDia ?? 0,
+      precioDiaAdicional: data.precioDiaAdicional ?? 0,
 
-      precioDiaAdicional: data.precioDiaAdicional,
+      precioIngresoSalida: data.precioIngresoSalida ?? null,
 
       porcentajeIGV: data.porcentajeIGV,
 

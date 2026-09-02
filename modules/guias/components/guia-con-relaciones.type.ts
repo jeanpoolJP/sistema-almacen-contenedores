@@ -37,8 +37,14 @@ export type GuiaConRelaciones = {
   diasAlmacenamiento: number | null
 
   tipoPrecio: TipoPrecioGuia
+
   precioPrimerDia: number
   precioDiaAdicional: number
+
+  precioIngresoSalida: number | null
+  cantidadMovimientos: number | null
+  precioMovimiento: number | null
+  subtotalMovimientos: number | null
 
   subtotal: number | null
   porcentajeIGV: number | null

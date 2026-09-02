@@ -138,6 +138,7 @@ model Contenedor {
 enum TipoPrecioGuia {
   ESTANDAR
   PERSONALIZADO
+  ESPACIO_ALQUILADO
 }
 
 enum TratamientoIGV {
@@ -206,6 +207,12 @@ model GuiaInternamiento {
   precioPrimerDia Decimal @map("precio_primer_dia") @db.Decimal(10, 2)
 
   precioDiaAdicional Decimal @map("precio_dia_adicional") @db.Decimal(10, 2)
+
+  // Precios para ESPACIO_ALQUILADO
+  precioIngresoSalida Decimal? @map("precio_ingreso_salida") @db.Decimal(10, 2)
+  cantidadMovimientos Int? @map("cantidad_movimientos")
+  precioMovimiento Decimal? @map("precio_movimiento") @db.Decimal(10, 2)
+  subtotalMovimientos Decimal? @map("subtotal_movimientos") @db.Decimal(10, 2)
 
   subtotal Decimal? @db.Decimal(10, 2)
 

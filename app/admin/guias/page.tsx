@@ -11,9 +11,5 @@ export default async function GuiasAdminPage() {
     limite: 10,
   })
 
-  return (
-    <GuiasView
-      data={resultado.data}
-    />
-  )
+  return <GuiasView data={resultado.data} />
 }

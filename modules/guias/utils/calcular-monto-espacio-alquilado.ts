@@ -1,37 +1,49 @@
-// modules/guias/utils/calcular-monto.ts
+// modules\guias\utils\calcular-monto-espacio-alquilado.ts
 
-import type { CalculoMonto, DatosCalculoMonto } from "../guia.types"
+import type { TratamientoIGV } from "@/lib/generated/prisma"
+
+import type { CalculoMonto } from "../guia.types"
+
+type DatosCalculoEspacioAlquilado = {
+  precioIngresoSalida: number
+  cantidadMovimientos: number
+  precioMovimiento: number
+
+  tratamientoIGV: TratamientoIGV
+  porcentajeIGV: number
+}
 
 /**
- * Calcula el subtotal, IGV y monto total
- * para las modalidades:
+ * Calcula el monto de una guía cuyo precio
+ * corresponde a un espacio alquilado.
  *
- * - ESTANDAR
- * - PERSONALIZADO
+ * Fórmula:
  *
- * ESPACIO_ALQUILADO utiliza una calculadora diferente.
+ * precio ingreso/salida
+ * +
+ * (cantidad movimientos × precio movimiento)
  */
-export function calcularMontoGuia({
-  diasAlmacenamiento,
-  precioPrimerDia,
-  precioDiaAdicional,
+export function calcularMontoEspacioAlquilado({
+  precioIngresoSalida,
+  cantidadMovimientos,
+  precioMovimiento,
   tratamientoIGV,
   porcentajeIGV,
-}: DatosCalculoMonto): CalculoMonto {
+}: DatosCalculoEspacioAlquilado): CalculoMonto {
   // ============================================================
   // 1. VALIDACIONES
   // ============================================================
 
-  if (!Number.isInteger(diasAlmacenamiento) || diasAlmacenamiento < 1) {
-    throw new Error("Los días de almacenamiento deben ser mayores a 0")
+  if (!Number.isFinite(precioIngresoSalida) || precioIngresoSalida < 0) {
+    throw new Error("El precio de ingreso y salida no es válido")
   }
 
-  if (!Number.isFinite(precioPrimerDia) || precioPrimerDia <= 0) {
-    throw new Error("El precio del primer día debe ser mayor a 0")
+  if (!Number.isInteger(cantidadMovimientos) || cantidadMovimientos < 0) {
+    throw new Error("La cantidad de movimientos no es válida")
   }
 
-  if (!Number.isFinite(precioDiaAdicional) || precioDiaAdicional < 0) {
-    throw new Error("El precio del día adicional no puede ser negativo")
+  if (!Number.isFinite(precioMovimiento) || precioMovimiento < 0) {
+    throw new Error("El precio por movimiento no puede ser negativo")
   }
 
   if (
@@ -43,16 +55,16 @@ export function calcularMontoGuia({
   }
 
   // ============================================================
-  // 2. CALCULAR DÍAS ADICIONALES
+  // 2. CALCULAR MOVIMIENTOS
   // ============================================================
 
-  const diasAdicionales = Math.max(0, diasAlmacenamiento - 1)
+  const subtotalMovimientos = cantidadMovimientos * precioMovimiento
 
   // ============================================================
   // 3. CALCULAR SUBTOTAL
   // ============================================================
 
-  const subtotal = precioPrimerDia + diasAdicionales * precioDiaAdicional
+  const subtotal = precioIngresoSalida + subtotalMovimientos
 
   // ============================================================
   // 4. CALCULAR IGV

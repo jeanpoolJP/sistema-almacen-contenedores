@@ -2,13 +2,11 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon, Clock, CopyPlus, LogOut } from "lucide-react"
 import { toast } from "sonner"
-import { format } from "date-fns"
-import { es } from "date-fns/locale"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -49,6 +47,8 @@ import { registrarSalidaGuiaAction } from "../guia.actions"
 import { TransportistaFields } from "./fields/transportista-fields"
 import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
+import { calcularMontoGuia } from "../utils/calcular-monto"
+import { calcularMontoEspacioAlquilado } from "../utils/calcular-monto-espacio-alquilado"
 
 import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions"
 
@@ -115,6 +115,14 @@ function combinarFechaHoraSalida(fecha: Date, hora: Date) {
   )
 }
 
+function formatearMonto(valor: number) {
+  return `S/ ${valor.toFixed(2)}`
+}
+
+function valorParaInput(valor: number | undefined) {
+  return valor === undefined || Number.isNaN(valor) ? "" : valor
+}
+
 type RegistrarSalidaDialogProps = {
   guia: GuiaConRelaciones
   open: boolean
@@ -134,12 +142,8 @@ export function RegistrarSalidaDialog({
   const [precioBase, setPrecioBase] = useState<{
     precioPrimerDia: number
     precioDiaAdicional: number
+    porcentajeIGV: number
   } | null>(null)
-
-  const precioPersonalizadoGuia = {
-    precioPrimerDia: Number(guia.precioPrimerDia),
-    precioDiaAdicional: Number(guia.precioDiaAdicional),
-  }
 
   const form = useForm<RegistrarSalidaGuiaSchema>({
     resolver: zodResolver(registrarSalidaGuiaSchema),
@@ -165,20 +169,46 @@ export function RegistrarSalidaDialog({
 
       tipoPrecio: guia.tipoPrecio,
 
-      precioPrimerDia: Number(guia.precioPrimerDia),
+      precioPrimerDia:
+        guia.precioPrimerDia !== null
+          ? Number(guia.precioPrimerDia)
+          : undefined,
 
-      precioDiaAdicional: Number(guia.precioDiaAdicional),
+      precioDiaAdicional:
+        guia.precioDiaAdicional !== null
+          ? Number(guia.precioDiaAdicional)
+          : undefined,
 
       tratamientoIGV: guia.tratamientoIGV,
+
+      cantidadMovimientos:
+        guia.cantidadMovimientos !== null
+          ? Number(guia.cantidadMovimientos)
+          : undefined,
+
+      precioMovimiento:
+        guia.precioMovimiento !== null
+          ? Number(guia.precioMovimiento)
+          : undefined,
+      precioIngresoSalida:
+        guia.precioIngresoSalida !== null
+          ? Number(guia.precioIngresoSalida)
+          : 50,
     },
   })
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const tratamientoIGV = form.watch("tratamientoIGV")
   const tipoPrecio = form.watch("tipoPrecio")
   const fechaSalida = form.watch("fechaSalida")
   const horaSalida = form.watch("horaSalida")
+  const diasAlmacenamiento = form.watch("diasAlmacenamiento")
+  const precioPrimerDia = form.watch("precioPrimerDia")
+  const precioDiaAdicional = form.watch("precioDiaAdicional")
+  const cantidadMovimientos = form.watch("cantidadMovimientos")
+  const precioMovimiento = form.watch("precioMovimiento")
+  const precioIngresoSalida = form.watch("precioIngresoSalida")
 
+  // Calcular días automáticamente
   useEffect(() => {
     if (!fechaSalida || !horaSalida || diasEditados) {
       return
@@ -209,6 +239,50 @@ export function RegistrarSalidaDialog({
     guia.horaIngreso,
     form,
   ])
+
+  // Cargar configuración de precios
+  useEffect(() => {
+    if (!open) return
+
+    async function cargarConfiguracion() {
+      try {
+        const res = await obtenerConfiguracionPrecioAction()
+
+        if (!res.success || !res.data) {
+          toast.error(
+            res.success
+              ? "No se recibió la configuración de precios"
+              : res.message
+          )
+          return
+        }
+
+        setPrecioBase({
+          precioPrimerDia: Number(res.data.precioPrimerDia),
+          precioDiaAdicional: Number(res.data.precioDiaAdicional),
+          porcentajeIGV: Number(res.data.porcentajeIGV),
+        })
+
+        // Si el tipo es ESTANDAR, sincronizar con la configuración
+        if (tipoPrecio === "ESTANDAR") {
+          form.setValue("precioPrimerDia", Number(res.data.precioPrimerDia), {
+            shouldValidate: true,
+          })
+          form.setValue(
+            "precioDiaAdicional",
+            Number(res.data.precioDiaAdicional),
+            {
+              shouldValidate: true,
+            }
+          )
+        }
+      } catch {
+        toast.error("No se pudo cargar la configuración de precios")
+      }
+    }
+
+    cargarConfiguracion()
+  }, [open, tipoPrecio, form])
 
   function copiarDatosIngreso() {
     form.setValue(
@@ -274,23 +348,297 @@ export function RegistrarSalidaDialog({
     onRegistrada?.()
   }
 
-  function handleTipoPrecioChange(value: "ESTANDAR" | "PERSONALIZADO" | null) {
+  function handleTipoPrecioChange(
+    value: "ESTANDAR" | "PERSONALIZADO" | "ESPACIO_ALQUILADO" | null
+  ) {
     if (!value) return
 
     form.setValue("tipoPrecio", value)
 
-    if (value === "ESTANDAR" && precioBase) {
-      form.setValue("precioPrimerDia", precioBase.precioPrimerDia)
-      form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional)
+    if (value === "ESTANDAR") {
+      if (!precioBase) {
+        toast.error("No se pudo cargar la configuración de precios")
+        return
+      }
+
+      form.setValue("precioPrimerDia", precioBase.precioPrimerDia, {
+        shouldValidate: true,
+      })
+
+      form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional, {
+        shouldValidate: true,
+      })
 
       return
     }
 
     if (value === "PERSONALIZADO") {
-      form.setValue("precioPrimerDia", Number(guia.precioPrimerDia))
+      form.setValue(
+        "precioPrimerDia",
+        guia.precioPrimerDia !== null ? Number(guia.precioPrimerDia) : undefined
+      )
 
-      form.setValue("precioDiaAdicional", Number(guia.precioDiaAdicional))
+      form.setValue(
+        "precioDiaAdicional",
+        guia.precioDiaAdicional !== null
+          ? Number(guia.precioDiaAdicional)
+          : undefined
+      )
+
+      return
     }
+
+    if (value === "ESPACIO_ALQUILADO") {
+      form.setValue("precioPrimerDia", undefined)
+      form.setValue("precioDiaAdicional", undefined)
+    }
+  }
+
+  const calculo = useMemo(() => {
+    try {
+      if (!tipoPrecio) return null
+
+      // Determinar porcentaje IGV
+      const porcentajeIGV =
+        guia.porcentajeIGV !== null
+          ? Number(guia.porcentajeIGV)
+          : precioBase?.porcentajeIGV
+
+      if (porcentajeIGV === undefined) {
+        return null
+      }
+
+      if (tipoPrecio === "ESTANDAR") {
+        if (
+          !precioBase ||
+          !diasAlmacenamiento ||
+          diasAlmacenamiento < 1 ||
+          precioBase.precioPrimerDia === undefined ||
+          precioBase.precioDiaAdicional === undefined
+        ) {
+          return null
+        }
+
+        return calcularMontoGuia({
+          diasAlmacenamiento: Number(diasAlmacenamiento),
+          precioPrimerDia: precioBase.precioPrimerDia,
+          precioDiaAdicional: precioBase.precioDiaAdicional,
+          tratamientoIGV,
+          porcentajeIGV,
+        })
+      }
+
+      if (tipoPrecio === "PERSONALIZADO") {
+        if (
+          !diasAlmacenamiento ||
+          diasAlmacenamiento < 1 ||
+          precioPrimerDia === undefined ||
+          precioPrimerDia <= 0 ||
+          precioDiaAdicional === undefined ||
+          precioDiaAdicional < 0
+        ) {
+          return null
+        }
+
+        return calcularMontoGuia({
+          diasAlmacenamiento: Number(diasAlmacenamiento),
+          precioPrimerDia: Number(precioPrimerDia),
+          precioDiaAdicional: Number(precioDiaAdicional),
+          tratamientoIGV,
+          porcentajeIGV,
+        })
+      }
+
+      if (tipoPrecio === "ESPACIO_ALQUILADO") {
+        if (
+          precioIngresoSalida === undefined ||
+          precioIngresoSalida < 0 ||
+          cantidadMovimientos === undefined ||
+          cantidadMovimientos < 0 ||
+          precioMovimiento === undefined ||
+          precioMovimiento < 0
+        ) {
+          return null
+        }
+
+        return calcularMontoEspacioAlquilado({
+          precioIngresoSalida: Number(precioIngresoSalida),
+          cantidadMovimientos: Number(cantidadMovimientos),
+          precioMovimiento: Number(precioMovimiento),
+          tratamientoIGV,
+          porcentajeIGV,
+        })
+      }
+
+      return null
+    } catch {
+      return null
+    }
+  }, [
+    tipoPrecio,
+    diasAlmacenamiento,
+    precioPrimerDia,
+    precioDiaAdicional,
+    precioIngresoSalida,
+    cantidadMovimientos,
+    precioMovimiento,
+    tratamientoIGV,
+    precioBase,
+    guia.porcentajeIGV,
+  ])
+
+  const getCalculoTitle = () => {
+    if (tipoPrecio === "ESTANDAR") return "Cálculo de almacenamiento"
+    if (tipoPrecio === "PERSONALIZADO") return "Cálculo personalizado"
+    if (tipoPrecio === "ESPACIO_ALQUILADO")
+      return "Cálculo de espacio alquilado"
+    return "Cálculo"
+  }
+
+  const renderCalculoPreview = () => {
+    if (!calculo) {
+      return (
+        <div className="rounded-lg border bg-muted/50 p-4 text-center text-sm text-muted-foreground">
+          Completa los datos para calcular el monto
+        </div>
+      )
+    }
+
+    const diasAdicionales = Math.max(0, Number(diasAlmacenamiento || 0) - 1)
+
+    if (tipoPrecio === "ESTANDAR" || tipoPrecio === "PERSONALIZADO") {
+      return (
+        <div className="rounded-lg border bg-primary/5 p-4">
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Primer día</span>
+              <span className="font-medium">
+                {formatearMonto(
+                  tipoPrecio === "ESTANDAR"
+                    ? precioBase?.precioPrimerDia || 0
+                    : Number(precioPrimerDia) || 0
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Días adicionales</span>
+              <span className="font-medium">{diasAdicionales}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Precio día adicional
+              </span>
+              <span className="font-medium">
+                {formatearMonto(
+                  tipoPrecio === "ESTANDAR"
+                    ? precioBase?.precioDiaAdicional || 0
+                    : Number(precioDiaAdicional) || 0
+                )}
+              </span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium">
+                {formatearMonto(calculo.subtotal)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">IGV</span>
+              <span className="font-medium">
+                {formatearMonto(calculo.montoIGV)}
+              </span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between text-base font-bold">
+              <span>Monto total</span>
+              <span className="text-primary">
+                {formatearMonto(calculo.montoTotal)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (tipoPrecio === "ESPACIO_ALQUILADO") {
+      const subtotalMovimientos =
+        Number(cantidadMovimientos || 0) * Number(precioMovimiento || 0)
+
+      return (
+        <div className="rounded-lg border bg-primary/5 p-4">
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Precio ingreso / salida
+              </span>
+
+              <span className="font-medium">
+                {formatearMonto(Number(precioIngresoSalida) || 0)}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Movimientos</span>
+
+              <span className="font-medium">
+                {Number(cantidadMovimientos) || 0}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Precio por movimiento
+              </span>
+
+              <span className="font-medium">
+                {formatearMonto(Number(precioMovimiento) || 0)}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                Subtotal movimientos
+              </span>
+
+              <span className="font-medium">
+                {formatearMonto(subtotalMovimientos)}
+              </span>
+            </div>
+
+            <Separator className="my-2" />
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+
+              <span className="font-medium">
+                {formatearMonto(calculo.subtotal)}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">IGV</span>
+
+              <span className="font-medium">
+                {formatearMonto(calculo.montoIGV)}
+              </span>
+            </div>
+
+            <Separator className="my-2" />
+
+            <div className="flex justify-between text-base font-bold">
+              <span>Monto total</span>
+
+              <span className="text-primary">
+                {formatearMonto(calculo.montoTotal)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return null
   }
 
   return (
@@ -316,7 +664,7 @@ export function RegistrarSalidaDialog({
             >
               {/* ============================================================
                 TRANSPORTISTA
-            ============================================================ */}
+              ============================================================ */}
 
               <div className="space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -343,7 +691,7 @@ export function RegistrarSalidaDialog({
 
               {/* ============================================================
                 FECHA Y HORA DE SALIDA
-            ============================================================ */}
+              ============================================================ */}
 
               <div className="space-y-4">
                 <div>
@@ -390,7 +738,7 @@ export function RegistrarSalidaDialog({
 
               {/* ============================================================
                 ALMACENAMIENTO Y PRECIOS
-            ============================================================ */}
+              ============================================================ */}
 
               <div className="space-y-4">
                 <div>
@@ -417,7 +765,7 @@ export function RegistrarSalidaDialog({
                           type="number"
                           min="1"
                           step="1"
-                          value={field.value ?? ""}
+                          value={valorParaInput(field.value)}
                           onChange={(e) => {
                             const value = e.target.value
 
@@ -462,6 +810,10 @@ export function RegistrarSalidaDialog({
                           <SelectItem value="PERSONALIZADO">
                             Personalizado
                           </SelectItem>
+
+                          <SelectItem value="ESPACIO_ALQUILADO">
+                            Espacio alquilado
+                          </SelectItem>
                         </SelectContent>
                       </Select>
 
@@ -471,93 +823,209 @@ export function RegistrarSalidaDialog({
                 />
 
                 {/* PRECIOS */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {/* PRECIO PRIMER DÍA */}
-                  <FormField
-                    control={form.control}
-                    name="precioPrimerDia"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Precio primer día (S/)</FormLabel>
+                {(tipoPrecio === "ESTANDAR" ||
+                  tipoPrecio === "PERSONALIZADO") && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* PRECIO PRIMER DÍA */}
+                    <FormField
+                      control={form.control}
+                      name="precioPrimerDia"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio primer día (S/)</FormLabel>
 
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            disabled={tipoPrecio === "ESTANDAR"}
-                            className={
-                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
-                            }
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? undefined
-                                  : Number(e.target.value)
-                              )
-                            }
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                          />
-                        </FormControl>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              disabled={tipoPrecio === "ESTANDAR"}
+                              className={
+                                tipoPrecio === "ESTANDAR"
+                                  ? "bg-muted"
+                                  : undefined
+                              }
+                              value={valorParaInput(field.value)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  {/* PRECIO DÍA ADICIONAL */}
-                  <FormField
-                    control={form.control}
-                    name="precioDiaAdicional"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Precio día adicional (S/)</FormLabel>
+                    {/* PRECIO DÍA ADICIONAL */}
+                    <FormField
+                      control={form.control}
+                      name="precioDiaAdicional"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio día adicional (S/)</FormLabel>
 
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            disabled={tipoPrecio === "ESTANDAR"}
-                            className={
-                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
-                            }
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? undefined
-                                  : Number(e.target.value)
-                              )
-                            }
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                          />
-                        </FormControl>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              disabled={tipoPrecio === "ESTANDAR"}
+                              className={
+                                tipoPrecio === "ESTANDAR"
+                                  ? "bg-muted"
+                                  : undefined
+                              }
+                              value={valorParaInput(field.value)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
 
               <Separator />
 
               {/* ============================================================
+                ESPACIO ALQUILADO - CAMPOS ADICIONALES
+              ============================================================ */}
+
+              {tipoPrecio === "ESPACIO_ALQUILADO" && (
+                <>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="precioIngresoSalida"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio ingreso / salida (S/)</FormLabel>
+
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={valorParaInput(field.value)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+
+                          <FormMessage />
+
+                          <p className="text-xs text-muted-foreground">
+                            Precio base por ingreso y salida. Puedes modificarlo
+                            para esta guía.
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cantidadMovimientos"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cantidad de movimientos</FormLabel>
+
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={valorParaInput(field.value)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="precioMovimiento"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Precio por movimiento (S/)</FormLabel>
+
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={valorParaInput(field.value)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </FormControl>
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Separator />
+                </>
+              )}
+
+              {/* ============================================================
                 IGV
-            ============================================================ */}
+              ============================================================ */}
 
               <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-0.5">
                   <Label>¿El cliente solicita factura (con IGV)?</Label>
 
                   <p className="text-xs text-muted-foreground">
-                    Se recalculará el monto total con el 18% de IGV.
+                    Se recalculará el monto total con el IGV correspondiente.
                   </p>
                 </div>
 
@@ -571,13 +1039,22 @@ export function RegistrarSalidaDialog({
                   }
                 />
               </div>
+
+              {/* ============================================================
+                PREVISUALIZACIÓN DEL CÁLCULO
+              ============================================================ */}
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">{getCalculoTitle()}</h4>
+                {renderCalculoPreview()}
+              </div>
             </form>
           </FormProvider>
         </ScrollArea>
 
         {/* ================================================================
           FOOTER
-      ================================================================ */}
+        ================================================================ */}
 
         <DialogFooter className="border-t px-4 py-4 sm:px-6">
           <Button

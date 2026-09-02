@@ -461,9 +461,17 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
         "Tipo precio": guia.tipoPrecio,
 
-        "Precio primer día": guia.precioPrimerDia,
+        "Precio primer día": guia.precioPrimerDia ?? "",
 
-        "Precio día adicional": guia.precioDiaAdicional,
+        "Precio día adicional": guia.precioDiaAdicional ?? "",
+
+        "Precio ingreso / salida": guia.precioIngresoSalida ?? "",
+
+        "Cantidad movimientos": guia.cantidadMovimientos ?? "",
+
+        "Precio por movimiento": guia.precioMovimiento ?? "",
+
+        "Subtotal movimientos": guia.subtotalMovimientos ?? "",
 
         Subtotal: guia.subtotal ?? "",
 

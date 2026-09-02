@@ -14,48 +14,30 @@ export function calcularDiasAlmacenamiento(
   fechaIngreso: Date,
   horaIngreso: Date,
   fechaSalida: Date,
-  horaSalida: Date,
+  horaSalida: Date
 ): number {
-  const ingreso =
-    combinarFechaHora(
-      fechaIngreso,
-      horaIngreso,
-    );
+  const ingreso = combinarFechaHora(fechaIngreso, horaIngreso)
 
-  const salida =
-    combinarFechaHora(
-      fechaSalida,
-      horaSalida,
-    );
+  const salida = combinarFechaHora(fechaSalida, horaSalida)
 
   if (salida <= ingreso) {
     throw new Error(
-      "La fecha y hora de salida deben ser posteriores a la fecha y hora de ingreso",
-    );
+      "La fecha y hora de salida deben ser posteriores a la fecha y hora de ingreso"
+    )
   }
 
-  const diferenciaMilisegundos =
-    salida.getTime() -
-    ingreso.getTime();
+  const diferenciaMilisegundos = salida.getTime() - ingreso.getTime()
 
-  const horas =
-    diferenciaMilisegundos /
-    (1000 * 60 * 60);
+  const horas = diferenciaMilisegundos / (1000 * 60 * 60)
 
-  return Math.max(
-    1,
-    Math.ceil(horas / 24),
-  );
+  return Math.max(1, Math.ceil(horas / 24))
 }
 
 /**
  * Combina una fecha y una hora utilizando
  * exclusivamente componentes UTC.
  */
-function combinarFechaHora(
-  fecha: Date,
-  hora: Date,
-): Date {
+function combinarFechaHora(fecha: Date, hora: Date): Date {
   return new Date(
     Date.UTC(
       fecha.getUTCFullYear(),
@@ -64,7 +46,7 @@ function combinarFechaHora(
       hora.getUTCHours(),
       hora.getUTCMinutes(),
       hora.getUTCSeconds(),
-      0,
-    ),
-  );
+      0
+    )
+  )
 }

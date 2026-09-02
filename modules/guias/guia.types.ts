@@ -35,6 +35,11 @@ export type DatosCalculoMonto = {
   diasAlmacenamiento: number
   precioPrimerDia: number
   precioDiaAdicional: number
+
+  precioIngresoSalida?: number
+  cantidadMovimientos?: number
+  precioMovimiento?: number
+
   tratamientoIGV: TratamientoIGV
   porcentajeIGV: number
 }
@@ -105,6 +110,7 @@ export type CrearGuiaInput = {
 
   tipoPrecio: TipoPrecioGuia
 
+  precioIngresoSalida?: number 
   /**
    * Solo se utilizan cuando
    * tipoPrecio = PERSONALIZADO.
@@ -133,9 +139,13 @@ export type RegistrarSalidaGuiaInput = {
 
   tipoPrecio: TipoPrecioGuia
 
-  precioPrimerDia: number
+  precioPrimerDia?: number
+  precioDiaAdicional?: number
 
-  precioDiaAdicional: number
+  precioIngresoSalida?: number
+
+  cantidadMovimientos?: number
+  precioMovimiento?: number
 
   tratamientoIGV: TratamientoIGV
 }
@@ -177,12 +187,13 @@ export type CrearGuiaRepositoryInput = {
 
   tipoPrecio: TipoPrecioGuia
 
-  precioPrimerDia: number
-  precioDiaAdicional: number
+  precioPrimerDia?: number
+  precioDiaAdicional?: number
+
+  precioIngresoSalida?: number
+  tratamientoIGV: TratamientoIGV
 
   porcentajeIGV: number
-
-  tratamientoIGV: TratamientoIGV
 
   estado: EstadoGuia
 

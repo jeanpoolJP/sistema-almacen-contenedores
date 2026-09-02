@@ -161,28 +161,62 @@ export function GuiaDetalleSheet({
 
             <div className="space-y-2">
               <SectionTitle>Almacenamiento y precio</SectionTitle>
+
               <div className="grid grid-cols-2 gap-3">
                 <Dato
                   label="Días de almacenamiento"
                   value={guia.diasAlmacenamiento}
                 />
+
                 <Dato
                   label="Tipo de precio"
                   value={
                     guia.tipoPrecio === "ESTANDAR"
                       ? "Estándar"
-                      : "Personalizado"
+                      : guia.tipoPrecio === "PERSONALIZADO"
+                        ? "Personalizado"
+                        : "Espacio alquilado"
                   }
                 />
-                <Dato
-                  label="Precio primer día"
-                  value={formatMoneda(guia.precioPrimerDia)}
-                />
-                <Dato
-                  label="Precio día adicional"
-                  value={formatMoneda(guia.precioDiaAdicional)}
-                />
+
+                {guia.tipoPrecio === "ESPACIO_ALQUILADO" ? (
+                  <>
+                    <Dato
+                      label="Precio ingreso / salida"
+                      value={formatMoneda(guia.precioIngresoSalida)}
+                    />
+
+                    <Dato
+                      label="Cantidad de movimientos"
+                      value={guia.cantidadMovimientos ?? 0}
+                    />
+
+                    <Dato
+                      label="Precio por movimiento"
+                      value={formatMoneda(guia.precioMovimiento)}
+                    />
+
+                    <Dato
+                      label="Subtotal movimientos"
+                      value={formatMoneda(guia.subtotalMovimientos)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Dato
+                      label="Precio primer día"
+                      value={formatMoneda(guia.precioPrimerDia)}
+                    />
+
+                    <Dato
+                      label="Precio día adicional"
+                      value={formatMoneda(guia.precioDiaAdicional)}
+                    />
+                  </>
+                )}
+
                 <Dato label="Subtotal" value={formatMoneda(guia.subtotal)} />
+
                 <Dato
                   label={
                     guia.tratamientoIGV === "CON_IGV"
@@ -196,6 +230,7 @@ export function GuiaDetalleSheet({
                   }
                 />
               </div>
+
               <div className="rounded-lg bg-muted p-3">
                 <p className="text-xs text-muted-foreground">Monto total</p>
                 <p className="text-lg font-semibold">

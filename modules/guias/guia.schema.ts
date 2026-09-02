@@ -150,7 +150,7 @@ export const crearGuiaSchema = z
       message: "La hora de ingreso es obligatoria",
     }),
 
-    tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO"]),
+    tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO", "ESPACIO_ALQUILADO"]),
 
     precioPrimerDia: z
       .number()
@@ -164,6 +164,12 @@ export const crearGuiaSchema = z
       .min(0, "El precio adicional no puede ser negativo")
       .optional(),
 
+    precioIngresoSalida: z
+      .number()
+      .finite()
+      .positive("El precio de ingreso y salida debe ser mayor a 0")
+      .optional(),
+
     tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
 
     observaciones: z
@@ -174,10 +180,6 @@ export const crearGuiaSchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    /**
-     * Si el precio es PERSONALIZADO,
-     * ambos valores son obligatorios.
-     */
     if (data.tipoPrecio === "PERSONALIZADO") {
       if (data.precioPrimerDia === undefined) {
         ctx.addIssue({
@@ -197,42 +199,105 @@ export const crearGuiaSchema = z
         })
       }
     }
+
+    if (data.tipoPrecio === "ESPACIO_ALQUILADO") {
+      if (data.precioIngresoSalida === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["precioIngresoSalida"],
+          message:
+            "El precio de ingreso y salida es obligatorio para un espacio alquilado",
+        })
+      }
+    }
   })
 
 /**
  * Schema para registrar la salida
  * de una guía.
  */
-export const registrarSalidaGuiaSchema = z.object({
-  guiaId: z.number().int().positive(),
+export const registrarSalidaGuiaSchema = z
+  .object({
+    guiaId: z.number().int().positive(),
 
-  transportistaSalida: transportistaGuiaSchema,
+    transportistaSalida: transportistaGuiaSchema,
 
-  fechaSalida: z.date({
-    message: "La fecha de salida es obligatoria",
-  }),
+    fechaSalida: z.date({
+      message: "La fecha de salida es obligatoria",
+    }),
 
-  horaSalida: z.date({
-    message: "La hora de salida es obligatoria",
-  }),
+    horaSalida: z.date({
+      message: "La hora de salida es obligatoria",
+    }),
 
-  diasAlmacenamiento: z
-    .number()
-    .int()
-    .positive("Los días de almacenamiento deben ser mayores a 0"),
+    diasAlmacenamiento: z
+      .number()
+      .int()
+      .positive("Los días de almacenamiento deben ser mayores a 0"),
 
-  tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO"]),
+    tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO", "ESPACIO_ALQUILADO"]),
 
-  precioPrimerDia: z
-    .number()
-    .nonnegative("El precio del primer día no puede ser negativo"),
+    precioPrimerDia: z
+      .number()
+      .nonnegative("El precio del primer día no puede ser negativo")
+      .optional(),
 
-  precioDiaAdicional: z
-    .number()
-    .nonnegative("El precio de los días adicionales no puede ser negativo"),
+    precioDiaAdicional: z
+      .number()
+      .nonnegative("El precio de los días adicionales no puede ser negativo")
+      .optional(),
 
-  tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
-})
+    /**
+     * Precio base por ingreso y salida.
+     * Solo es obligatorio para ESPACIO_ALQUILADO.
+     */
+    precioIngresoSalida: z
+      .number()
+      .finite()
+      .nonnegative("El precio de ingreso y salida no puede ser negativo")
+      .optional(),
+
+    cantidadMovimientos: z
+      .number()
+      .int()
+      .nonnegative("La cantidad de movimientos no puede ser negativa")
+      .optional(),
+
+    precioMovimiento: z
+      .number()
+      .finite()
+      .nonnegative("El precio por movimiento no puede ser negativo")
+      .optional(),
+
+    tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
+  })
+  .superRefine((data, ctx) => {
+    if (data.tipoPrecio === "ESPACIO_ALQUILADO") {
+      if (data.precioIngresoSalida === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["precioIngresoSalida"],
+          message: "El precio de ingreso y salida es obligatorio",
+        })
+      }
+
+      if (data.cantidadMovimientos === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["cantidadMovimientos"],
+          message: "La cantidad de movimientos es obligatoria",
+        })
+      }
+
+      if (data.precioMovimiento === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["precioMovimiento"],
+          message: "El precio por movimiento es obligatorio",
+        })
+      }
+    }
+  })
 
 export type CrearGuiaSchema = z.infer<typeof crearGuiaSchema>
 
