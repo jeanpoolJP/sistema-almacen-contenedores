@@ -120,7 +120,9 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  function handleTipoPrecioChange(value: "ESTANDAR" | "PERSONALIZADO" | null) {
+  function handleTipoPrecioChange(
+    value: "ESTANDAR" | "PERSONALIZADO" | "ESPACIO_ALQUILADO" | null
+  ) {
     if (!value) return
 
     form.setValue("tipoPrecio", value)
