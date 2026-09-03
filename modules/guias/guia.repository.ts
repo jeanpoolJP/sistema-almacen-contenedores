@@ -365,3 +365,73 @@ export async function anularGuia(id: number) {
     },
   })
 }
+
+/**
+ * Obtiene las guías seleccionadas para validar
+ * una asignación masiva de cliente.
+ *
+ * Solo se recuperan las guías ESPACIO_ALQUILADO.
+ */
+/**
+ * Obtiene las guías de espacio alquilado
+ * que todavía no tienen un cliente asignado.
+ */
+export async function obtenerGuiasEspacioAlquilado() {
+  return prisma.guiaInternamiento.findMany({
+    where: {
+      tipoPrecio: "ESPACIO_ALQUILADO",
+      clienteId: null,
+    },
+    select: {
+      id: true,
+      numeroGuia: true,
+      clienteId: true,
+      estado: true,
+      contenedor: {
+        select: {
+          numeroContenedor: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+}
+
+export async function obtenerGuiasEspacioAlquiladoPorIds(guiaIds: number[]) {
+  return prisma.guiaInternamiento.findMany({
+    where: {
+      id: {
+        in: guiaIds,
+      },
+      tipoPrecio: "ESPACIO_ALQUILADO",
+    },
+    select: {
+      id: true,
+      clienteId: true,
+      tipoPrecio: true,
+    },
+  })
+}
+
+/**
+ * Asigna un cliente a múltiples guías
+ * de tipo ESPACIO_ALQUILADO.
+ */
+export async function asignarClienteAGuiasEspacioAlquilado(
+  guiaIds: number[],
+  clienteId: number
+) {
+  return prisma.guiaInternamiento.updateMany({
+    where: {
+      id: {
+        in: guiaIds,
+      },
+      tipoPrecio: "ESPACIO_ALQUILADO",
+    },
+    data: {
+      clienteId,
+    },
+  })
+}

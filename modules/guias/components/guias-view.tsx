@@ -1,4 +1,4 @@
-// modules/guias/components/guias-view.tsx
+// modules\guias\components\guias-view.tsx
 
 "use client"
 
@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { CrearGuiaDialog } from "./crear-guia-dialog"
 import { GuiasTable } from "./guias-table"
+import { AsignarClienteEspacioAlquiladoDialog } from "./asignar-cliente-espacio-alquilado-dialog"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
 type GuiasViewProps = {
@@ -35,10 +36,21 @@ export function GuiasView({ data }: GuiasViewProps) {
             </p>
           </div>
 
-          <CrearGuiaDialog onCreada={() => router.refresh()} />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <AsignarClienteEspacioAlquiladoDialog
+              onAsignada={() => router.refresh()}
+            />
+
+            <CrearGuiaDialog
+              onCreada={() => router.refresh()}
+            />
+          </div>
         </div>
 
-        <GuiasTable data={data} onCambio={() => router.refresh()} />
+        <GuiasTable
+          data={data}
+          onCambio={() => router.refresh()}
+        />
       </div>
     </div>
   )

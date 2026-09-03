@@ -8,8 +8,10 @@ import {
   obtenerGuiaPorIdService,
   obtenerGuiaPorNumeroService,
   obtenerGuiasService,
+  obtenerGuiasEspacioAlquiladoService,
   anularGuiaService,
   registrarPagoGuiaService,
+  asignarClienteMasivoService,
 } from "./guia.service"
 
 import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
@@ -292,6 +294,78 @@ export async function anularGuiaAction(id: number) {
         error instanceof Error
           ? error.message
           : "Ocurrió un error al anular la guía",
+    }
+  }
+}
+
+type AsignarClienteMasivoInput = {
+  guiaIds: number[]
+  clienteId: number
+}
+
+export async function obtenerGuiasEspacioAlquiladoAction() {
+  try {
+    const guias = await obtenerGuiasEspacioAlquiladoService()
+
+    return {
+      success: true,
+      data: guias,
+      message: null,
+    }
+  } catch (error) {
+    console.error("Error al obtener guías de espacio alquilado:", error)
+
+    return {
+      success: false,
+      data: [],
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudieron obtener las guías de espacio alquilado.",
+    }
+  }
+}
+
+export async function asignarClienteMasivoAction({
+  guiaIds,
+  clienteId,
+}: AsignarClienteMasivoInput) {
+  try {
+    if (!Array.isArray(guiaIds) || guiaIds.length === 0) {
+      return {
+        success: false,
+        message: "Debes seleccionar al menos una guía.",
+      }
+    }
+
+    if (!Number.isInteger(clienteId) || clienteId <= 0) {
+      return {
+        success: false,
+        message: "El cliente seleccionado no es válido.",
+      }
+    }
+
+    const resultado = await asignarClienteMasivoService({
+      guiaIds,
+      clienteId,
+    })
+
+    return {
+      success: true,
+      message: `Cliente asignado correctamente a ${resultado.cantidadActualizada} guía${
+        resultado.cantidadActualizada === 1 ? "" : "s"
+      }.`,
+      data: resultado,
+    }
+  } catch (error) {
+    console.error("Error en asignarClienteMasivoAction:", error)
+
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al asignar el cliente a las guías.",
     }
   }
 }

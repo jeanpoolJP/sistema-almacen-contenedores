@@ -7,8 +7,13 @@ import {
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
   obtenerGuias,
+  obtenerGuiasEspacioAlquilado,
   registrarPagoGuia,
+  asignarClienteAGuiasEspacioAlquilado,
+  obtenerGuiasEspacioAlquiladoPorIds,
 } from "./guia.repository"
+
+import { findClienteById } from "@/modules/clientes/cliente.repository"
 
 import {
   crearGuiaSchema,
@@ -628,6 +633,21 @@ export async function obtenerGuiasService({
   }
 }
 
+export async function obtenerGuiasEspacioAlquiladoService() {
+  const guias = await obtenerGuiasEspacioAlquilado()
+
+  return guias.map(
+    (
+      guia: Awaited<ReturnType<typeof obtenerGuiasEspacioAlquilado>>[number]
+    ) => ({
+      ...guia,
+      contenedor: {
+        numeroContenedor: guia.contenedor.numeroContenedor,
+      },
+    })
+  )
+}
+
 /**
  * Registra el pago de una guía.
  */
@@ -735,4 +755,60 @@ export async function anularGuiaService(id: number) {
   }
 
   return anularGuia(id)
+}
+
+type AsignarClienteMasivoParams = {
+  guiaIds: number[]
+  clienteId: number
+}
+
+/**
+ * Asigna masivamente un cliente a múltiples
+ * guías de tipo ESPACIO_ALQUILADO.
+ */
+export async function asignarClienteMasivoService({
+  guiaIds,
+  clienteId,
+}: AsignarClienteMasivoParams) {
+  // Evitar IDs duplicados
+  const idsUnicos = [...new Set(guiaIds)]
+
+  // Validar que existan guías seleccionadas
+  if (idsUnicos.length === 0) {
+    throw new Error("Debes seleccionar al menos una guía")
+  }
+
+  // Validar que el cliente exista
+  const cliente = await findClienteById(clienteId)
+
+  if (!cliente) {
+    throw new Error("El cliente seleccionado no existe")
+  }
+
+  // Obtener únicamente las guías ESPACIO_ALQUILADO
+  const guias = await obtenerGuiasEspacioAlquiladoPorIds(idsUnicos)
+
+  // Verificar que todas las guías seleccionadas
+  // realmente sean ESPACIO_ALQUILADO
+  if (guias.length !== idsUnicos.length) {
+    throw new Error(
+      "Una o más guías seleccionadas no son de tipo ESPACIO_ALQUILADO o no existen"
+    )
+  }
+
+  // Verificar si alguna guía ya tiene un cliente
+  const guiasConCliente = guias.filter((guia) => guia.clienteId !== null)
+
+  // Realizar la actualización
+  const resultado = await asignarClienteAGuiasEspacioAlquilado(
+    idsUnicos,
+    clienteId
+  )
+
+  return {
+    cantidadSeleccionada: idsUnicos.length,
+    cantidadActualizada: resultado.count,
+    guiasConCliente: guiasConCliente.length,
+    cliente,
+  }
 }
