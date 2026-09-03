@@ -281,8 +281,7 @@ export function AsignarClienteEspacioAlquiladoDialog({
         Asignar cliente
       </DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] w-full max-w-[calc(100vw-2rem)] overflow-hidden p-0 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
-        {" "}
+      <DialogContent className="flex max-h-[90vh] w-full max-w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
         {/* ========================================================
             HEADER
         ======================================================== */}
@@ -294,12 +293,13 @@ export function AsignarClienteEspacioAlquiladoDialog({
             espacio alquilado seleccionadas.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] px-4 sm:px-6">
-          <div className="space-y-6 py-4">
-            {/* ======================================================
-                CLIENTE
-            ====================================================== */}
 
+        {/* ========================================================
+            BODY (SCROLLABLE)
+        ======================================================== */}
+        <ScrollArea className="flex-1 px-4 sm:px-6">
+          <div className="space-y-6 py-4">
+            {/* CLIENTE */}
             <div className="space-y-3">
               <div>
                 <h3 className="text-sm font-semibold">Cliente</h3>
@@ -347,7 +347,6 @@ export function AsignarClienteEspacioAlquiladoDialog({
               </div>
 
               {/* CLIENTE ENCONTRADO */}
-
               {cliente && (
                 <div className="rounded-lg border bg-muted/40 p-4">
                   <div className="flex items-start gap-3">
@@ -371,10 +370,7 @@ export function AsignarClienteEspacioAlquiladoDialog({
               )}
             </div>
 
-            {/* ======================================================
-                GUÍAS
-            ====================================================== */}
-
+            {/* GUÍAS */}
             <div className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -408,7 +404,6 @@ export function AsignarClienteEspacioAlquiladoDialog({
               </div>
 
               {/* BUSCAR GUÍA */}
-
               <div className="relative">
                 <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -422,7 +417,6 @@ export function AsignarClienteEspacioAlquiladoDialog({
               </div>
 
               {/* LISTA */}
-
               <div className="overflow-hidden rounded-lg border">
                 {cargandoGuias ? (
                   <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
@@ -482,10 +476,7 @@ export function AsignarClienteEspacioAlquiladoDialog({
               </div>
             </div>
 
-            {/* ======================================================
-                RESUMEN
-            ====================================================== */}
-
+            {/* RESUMEN */}
             <div className="rounded-lg border bg-muted/40 p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -501,6 +492,7 @@ export function AsignarClienteEspacioAlquiladoDialog({
             </div>
           </div>
         </ScrollArea>
+
         {/* ========================================================
             FOOTER
         ======================================================== */}
@@ -521,7 +513,6 @@ export function AsignarClienteEspacioAlquiladoDialog({
             className="gap-2"
           >
             {submitting && <Loader2 className="size-4 animate-spin" />}
-
             {submitting ? "Asignando..." : "Asignar cliente"}
           </Button>
         </DialogFooter>
