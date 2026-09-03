@@ -48,7 +48,10 @@ import { TransportistaFields } from "./fields/transportista-fields"
 import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 import { calcularMontoGuia } from "../utils/calcular-monto"
-import { calcularMontoEspacioAlquilado } from "../utils/calcular-monto-espacio-alquilado"
+import {
+  calcularMontoEspacioAlquilado,
+  calcularPrecioMovimientos,
+} from "../utils/calcular-monto-espacio-alquilado"
 
 import { obtenerConfiguracionPrecioAction } from "@/modules/configuracion/configuracion.actions"
 
@@ -186,10 +189,6 @@ export function RegistrarSalidaDialog({
           ? Number(guia.cantidadMovimientos)
           : undefined,
 
-      precioMovimiento:
-        guia.precioMovimiento !== null
-          ? Number(guia.precioMovimiento)
-          : undefined,
       precioIngresoSalida:
         guia.precioIngresoSalida !== null
           ? Number(guia.precioIngresoSalida)
@@ -205,7 +204,6 @@ export function RegistrarSalidaDialog({
   const precioPrimerDia = form.watch("precioPrimerDia")
   const precioDiaAdicional = form.watch("precioDiaAdicional")
   const cantidadMovimientos = form.watch("cantidadMovimientos")
-  const precioMovimiento = form.watch("precioMovimiento")
   const precioIngresoSalida = form.watch("precioIngresoSalida")
 
   // Calcular días automáticamente
@@ -454,9 +452,7 @@ export function RegistrarSalidaDialog({
           precioIngresoSalida === undefined ||
           precioIngresoSalida < 0 ||
           cantidadMovimientos === undefined ||
-          cantidadMovimientos < 0 ||
-          precioMovimiento === undefined ||
-          precioMovimiento < 0
+          cantidadMovimientos < 0
         ) {
           return null
         }
@@ -464,7 +460,6 @@ export function RegistrarSalidaDialog({
         return calcularMontoEspacioAlquilado({
           precioIngresoSalida: Number(precioIngresoSalida),
           cantidadMovimientos: Number(cantidadMovimientos),
-          precioMovimiento: Number(precioMovimiento),
           tratamientoIGV,
           porcentajeIGV,
         })
@@ -481,7 +476,6 @@ export function RegistrarSalidaDialog({
     precioDiaAdicional,
     precioIngresoSalida,
     cantidadMovimientos,
-    precioMovimiento,
     tratamientoIGV,
     precioBase,
     guia.porcentajeIGV,
@@ -562,8 +556,11 @@ export function RegistrarSalidaDialog({
     }
 
     if (tipoPrecio === "ESPACIO_ALQUILADO") {
-      const subtotalMovimientos =
-        Number(cantidadMovimientos || 0) * Number(precioMovimiento || 0)
+      const cantidadMovimientosNumero = Number(cantidadMovimientos || 0)
+
+      const subtotalMovimientos = calcularPrecioMovimientos(
+        cantidadMovimientosNumero
+      )
 
       return (
         <div className="rounded-lg border bg-primary/5 p-4">
@@ -581,24 +578,12 @@ export function RegistrarSalidaDialog({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Movimientos</span>
 
-              <span className="font-medium">
-                {Number(cantidadMovimientos) || 0}
-              </span>
+              <span className="font-medium">{cantidadMovimientosNumero}</span>
             </div>
 
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                Precio por movimiento
-              </span>
-
-              <span className="font-medium">
-                {formatearMonto(Number(precioMovimiento) || 0)}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                Subtotal movimientos
+                Tarifa por movimientos
               </span>
 
               <span className="font-medium">
@@ -962,37 +947,6 @@ export function RegistrarSalidaDialog({
                               type="number"
                               min="0"
                               step="1"
-                              value={valorParaInput(field.value)}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? undefined
-                                    : Number(e.target.value)
-                                )
-                              }
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                            />
-                          </FormControl>
-
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="precioMovimiento"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <FormLabel>Precio por movimiento (S/)</FormLabel>
-
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
                               value={valorParaInput(field.value)}
                               onChange={(e) =>
                                 field.onChange(

@@ -288,14 +288,6 @@ export const registrarSalidaGuiaSchema = z
           message: "La cantidad de movimientos es obligatoria",
         })
       }
-
-      if (data.precioMovimiento === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["precioMovimiento"],
-          message: "El precio por movimiento es obligatorio",
-        })
-      }
     }
   })
 

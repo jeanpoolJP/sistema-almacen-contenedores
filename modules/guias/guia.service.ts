@@ -46,7 +46,10 @@ import type {
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 import { formatearNumeroGuia } from "./utils/formatear-numero-guia"
-import { calcularMontoEspacioAlquilado } from "./utils/calcular-monto-espacio-alquilado"
+import {
+  calcularMontoEspacioAlquilado,
+  calcularPrecioMovimientos,
+} from "./utils/calcular-monto-espacio-alquilado"
 
 /**
  * Crea una guía de internamiento.
@@ -219,8 +222,7 @@ export async function crearGuiaService(data: CrearGuiaInput) {
  * - Tipo de precio
  * - Días de almacenamiento
  * - Precios personalizados
- * - Cantidad de movimientos
- * - Precio por movimiento
+ * - Cantidad de movimiento
  * - Tratamiento de IGV
  *
  * El monto definitivo siempre se calcula
@@ -333,7 +335,6 @@ export async function registrarSalidaGuiaService(
   let precioDiaAdicional = 0
 
   let cantidadMovimientos: number | null = null
-  let precioMovimiento: number | null = null
   let subtotalMovimientos: number | null = null
 
   let subtotal = 0
@@ -413,22 +414,16 @@ export async function registrarSalidaGuiaService(
       throw new Error("La cantidad de movimientos es obligatoria")
     }
 
-    if (datosValidados.precioMovimiento === undefined) {
-      throw new Error("El precio por movimiento es obligatorio")
-    }
-
     const precioIngresoSalida = datosValidados.precioIngresoSalida
 
     cantidadMovimientos = datosValidados.cantidadMovimientos
 
-    precioMovimiento = datosValidados.precioMovimiento
-
-    subtotalMovimientos = cantidadMovimientos * precioMovimiento
+    // La tarifa depende automáticamente de la cantidad de movimientos.
+    subtotalMovimientos = calcularPrecioMovimientos(cantidadMovimientos)
 
     const calculo = calcularMontoEspacioAlquilado({
       precioIngresoSalida,
       cantidadMovimientos,
-      precioMovimiento,
       tratamientoIGV: datosValidados.tratamientoIGV,
       porcentajeIGV,
     })
@@ -484,8 +479,6 @@ export async function registrarSalidaGuiaService(
     // --------------------------------------------------------
 
     cantidadMovimientos,
-
-    precioMovimiento,
 
     subtotalMovimientos,
 

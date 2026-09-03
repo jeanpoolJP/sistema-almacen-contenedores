@@ -1,4 +1,4 @@
-// modules\guias\utils\calcular-monto-espacio-alquilado.ts
+// modules/guias/utils/calcular-monto-espacio-alquilado.ts
 
 import type { TratamientoIGV } from "@/lib/generated/prisma"
 
@@ -7,10 +7,43 @@ import type { CalculoMonto } from "../guia.types"
 type DatosCalculoEspacioAlquilado = {
   precioIngresoSalida: number
   cantidadMovimientos: number
-  precioMovimiento: number
 
   tratamientoIGV: TratamientoIGV
   porcentajeIGV: number
+}
+
+/**
+ * Determina el costo de los movimientos según la cantidad.
+ *
+ * Reglas:
+ * 0 - 5 movimientos   → S/ 0
+ * 6 - 10 movimientos  → S/ 100
+ * 11 - 15 movimientos → S/ 150
+ * 16 - 20 movimientos → S/ 200
+ * 21+ movimientos     → S/ 250
+ */
+export function calcularPrecioMovimientos(cantidadMovimientos: number): number {
+  if (!Number.isInteger(cantidadMovimientos) || cantidadMovimientos < 0) {
+    throw new Error("La cantidad de movimientos no es válida")
+  }
+
+  if (cantidadMovimientos <= 5) {
+    return 0
+  }
+
+  if (cantidadMovimientos <= 10) {
+    return 100
+  }
+
+  if (cantidadMovimientos <= 15) {
+    return 150
+  }
+
+  if (cantidadMovimientos <= 20) {
+    return 200
+  }
+
+  return 250
 }
 
 /**
@@ -21,12 +54,11 @@ type DatosCalculoEspacioAlquilado = {
  *
  * precio ingreso/salida
  * +
- * (cantidad movimientos × precio movimiento)
+ * tarifa de movimientos según cantidad
  */
 export function calcularMontoEspacioAlquilado({
   precioIngresoSalida,
   cantidadMovimientos,
-  precioMovimiento,
   tratamientoIGV,
   porcentajeIGV,
 }: DatosCalculoEspacioAlquilado): CalculoMonto {
@@ -42,10 +74,6 @@ export function calcularMontoEspacioAlquilado({
     throw new Error("La cantidad de movimientos no es válida")
   }
 
-  if (!Number.isFinite(precioMovimiento) || precioMovimiento < 0) {
-    throw new Error("El precio por movimiento no puede ser negativo")
-  }
-
   if (
     !Number.isFinite(porcentajeIGV) ||
     porcentajeIGV < 0 ||
@@ -58,7 +86,7 @@ export function calcularMontoEspacioAlquilado({
   // 2. CALCULAR MOVIMIENTOS
   // ============================================================
 
-  const subtotalMovimientos = cantidadMovimientos * precioMovimiento
+  const subtotalMovimientos = calcularPrecioMovimientos(cantidadMovimientos)
 
   // ============================================================
   // 3. CALCULAR SUBTOTAL
