@@ -13,11 +13,11 @@ import { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
 import type {
   DashboardData,
   DashboardStats,
-  DistribucionTipoContenedor,
   MovimientoDiario,
   IngresoMensual,
   GuiaReciente,
   PagoPendiente,
+  DistribucionMedidaContenedor,
 } from "./dashboard.types"
 
 const NOMBRES_MES = [
@@ -115,26 +115,38 @@ async function getStats(): Promise<DashboardStats> {
 }
 
 // ============================================================
-// Distribución de contenedores almacenados por tipo (NORMAL / REEFER)
+// Distribución de contenedores almacenados por medida (20 / 40)
 // ============================================================
 async function getDistribucionContenedores(): Promise<
-  DistribucionTipoContenedor[]
+  DistribucionMedidaContenedor[]
 > {
   const guias = await prisma.guiaInternamiento.findMany({
-    where: { estado: EstadoGuia.ALMACENADO },
-    select: { contenedor: { select: { tipo: true } } },
+    where: {
+      estado: EstadoGuia.ALMACENADO,
+    },
+    select: {
+      contenedor: {
+        select: {
+          medida: true,
+        },
+      },
+    },
   })
 
-  const conteo = new Map<string, number>()
+  const conteo = new Map<number, number>()
+
   for (const g of guias) {
-    const tipo = g.contenedor.tipo
-    conteo.set(tipo, (conteo.get(tipo) ?? 0) + 1)
+    const medida = g.contenedor.medida
+
+    conteo.set(medida, (conteo.get(medida) ?? 0) + 1)
   }
 
-  return Array.from(conteo.entries()).map(([tipo, cantidad]) => ({
-    tipo: tipo as DistribucionTipoContenedor["tipo"],
-    cantidad,
-  }))
+  return Array.from(conteo.entries())
+    .sort(([medidaA], [medidaB]) => medidaA - medidaB)
+    .map(([medida, cantidad]) => ({
+      medida,
+      cantidad,
+    }))
 }
 
 // ============================================================
