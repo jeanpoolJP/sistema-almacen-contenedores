@@ -240,75 +240,85 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
                           <SelectItem value="PERSONALIZADO">
                             Personalizado
                           </SelectItem>
+
+                          <SelectItem value="ESPACIO_ALQUILADO">
+                            Espacio alquilado
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="precioPrimerDia"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Precio primer día (S/)</FormLabel>
+                {tipoPrecio !== "ESPACIO_ALQUILADO" && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="precioPrimerDia"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio primer día (S/)</FormLabel>
 
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            disabled={tipoPrecio === "ESTANDAR"}
-                            className={
-                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
-                            }
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? undefined
-                                  : Number(e.target.value)
-                              )
-                            }
-                          />
-                        </FormControl>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              disabled={tipoPrecio === "ESTANDAR"}
+                              className={
+                                tipoPrecio === "ESTANDAR"
+                                  ? "bg-muted"
+                                  : undefined
+                              }
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                            />
+                          </FormControl>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="precioDiaAdicional"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Precio día adicional (S/)</FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="precioDiaAdicional"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio día adicional (S/)</FormLabel>
 
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            disabled={tipoPrecio === "ESTANDAR"}
-                            className={
-                              tipoPrecio === "ESTANDAR" ? "bg-muted" : undefined
-                            }
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? undefined
-                                  : Number(e.target.value)
-                              )
-                            }
-                          />
-                        </FormControl>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              disabled={tipoPrecio === "ESTANDAR"}
+                              className={
+                                tipoPrecio === "ESTANDAR"
+                                  ? "bg-muted"
+                                  : undefined
+                              }
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? undefined
+                                    : Number(e.target.value)
+                                )
+                              }
+                            />
+                          </FormControl>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-0.5">

@@ -199,17 +199,6 @@ export const crearGuiaSchema = z
         })
       }
     }
-
-    if (data.tipoPrecio === "ESPACIO_ALQUILADO") {
-      if (data.precioIngresoSalida === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["precioIngresoSalida"],
-          message:
-            "El precio de ingreso y salida es obligatorio para un espacio alquilado",
-        })
-      }
-    }
   })
 
 /**
