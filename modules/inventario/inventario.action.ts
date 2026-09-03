@@ -15,11 +15,14 @@ import {
 } from "./inventario.service"
 
 /**
- * Obtiene todos los inventarios.
+ * Obtiene los inventarios con paginacion.
  */
-export async function listarInventariosAction() {
+export async function listarInventariosAction(
+  page: number = 1,
+  limit: number = 10
+) {
   try {
-    return await listarInventarios()
+    return await listarInventarios(page, limit)
   } catch (error) {
     console.error("Error al listar inventarios:", error)
 
@@ -66,25 +69,37 @@ export async function obtenerGuiasDisponiblesAction() {
  * El service se encarga de obtener automáticamente
  * las guías cuyo estado sea ALMACENADO.
  */
+
 export async function crearInventarioAction(
   fecha: Date,
   observaciones?: string
 ) {
-  try {
-    if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
-      throw new Error("La fecha del inventario no es válida.")
+  if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
+    return {
+      success: false,
+      message: "La fecha del inventario no es válida.",
     }
+  }
 
-    return await crearInventario(fecha, observaciones)
+  try {
+    const inventario = await crearInventario(fecha, observaciones)
+
+    return {
+      success: true,
+      data: inventario,
+    }
   } catch (error) {
     console.error("Error al crear inventario:", error)
 
-    throw new Error(
-      error instanceof Error ? error.message : "No se pudo crear el inventario."
-    )
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el inventario.",
+    }
   }
 }
-
 /**
  * Registra la verificación física de un contenedor.
  */

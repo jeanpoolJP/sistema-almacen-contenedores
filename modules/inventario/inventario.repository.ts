@@ -1,27 +1,43 @@
 // modules/inventario/inventario.repository.ts
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 import {
   EstadoInventario,
   ResultadoInventario,
-} from "@/lib/generated/prisma/client";
+} from "@/lib/generated/prisma/client"
 
 /**
- * Obtiene los inventarios registrados.
+ * Obtiene los inventarios registrados con paginacion.
  */
-export async function obtenerInventarios() {
-  return prisma.inventario.findMany({
-    orderBy: {
-      fecha: "desc",
-    },
-    include: {
-      _count: {
-        select: {
-          detalles: true,
+export async function obtenerInventarios(page: number, limit: number) {
+  const skip = (page - 1) * limit
+
+  const [inventarios, total] = await prisma.$transaction([
+    prisma.inventario.findMany({
+      skip,
+      take: limit,
+      orderBy: {
+        fecha: "desc",
+      },
+      include: {
+        _count: {
+          select: {
+            detalles: true,
+          },
         },
       },
-    },
-  });
+    }),
+
+    prisma.inventario.count(),
+  ])
+
+  return {
+    inventarios,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  }
 }
 
 /**
@@ -63,7 +79,7 @@ export async function obtenerInventarioPorId(id: number) {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -100,7 +116,7 @@ export async function obtenerGuiasAlmacenadas() {
         fechaIngreso: "asc",
       },
     ],
-  });
+  })
 }
 
 /**
@@ -129,10 +145,10 @@ export async function crearInventario(
       include: {
         detalles: true,
       },
-    });
+    })
 
-    return inventario;
-  });
+    return inventario
+  })
 }
 
 /**
@@ -152,11 +168,9 @@ export async function actualizarResultadoDetalle(
       resultado,
       observaciones,
       verificadoAt:
-        resultado === ResultadoInventario.PENDIENTE
-          ? null
-          : new Date(),
+        resultado === ResultadoInventario.PENDIENTE ? null : new Date(),
     },
-  });
+  })
 }
 
 /**
@@ -170,48 +184,46 @@ export async function finalizarInventario(id: number) {
     data: {
       estado: EstadoInventario.FINALIZADO,
     },
-  });
+  })
 }
 
 /**
  * Obtiene un inventario junto con sus estadísticas.
  */
 export async function obtenerEstadisticasInventario(id: number) {
-  const [total, pendientes, encontrados, noEncontrados] =
-    await Promise.all([
-      prisma.inventarioDetalle.count({
-        where: {
-          inventarioId: id,
-        },
-      }),
+  const [total, pendientes, encontrados, noEncontrados] = await Promise.all([
+    prisma.inventarioDetalle.count({
+      where: {
+        inventarioId: id,
+      },
+    }),
 
-      prisma.inventarioDetalle.count({
-        where: {
-          inventarioId: id,
-          resultado: ResultadoInventario.PENDIENTE,
-        },
-      }),
+    prisma.inventarioDetalle.count({
+      where: {
+        inventarioId: id,
+        resultado: ResultadoInventario.PENDIENTE,
+      },
+    }),
 
-      prisma.inventarioDetalle.count({
-        where: {
-          inventarioId: id,
-          resultado: ResultadoInventario.ENCONTRADO,
-        },
-      }),
+    prisma.inventarioDetalle.count({
+      where: {
+        inventarioId: id,
+        resultado: ResultadoInventario.ENCONTRADO,
+      },
+    }),
 
-      prisma.inventarioDetalle.count({
-        where: {
-          inventarioId: id,
-          resultado: ResultadoInventario.NO_ENCONTRADO,
-        },
-      }),
-    ]);
+    prisma.inventarioDetalle.count({
+      where: {
+        inventarioId: id,
+        resultado: ResultadoInventario.NO_ENCONTRADO,
+      },
+    }),
+  ])
 
   return {
     total,
     pendientes,
     encontrados,
     noEncontrados,
-  };
+  }
 }
-

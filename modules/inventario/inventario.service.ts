@@ -16,10 +16,10 @@ import {
 } from "./inventario.repository"
 
 /**
- * Obtiene todos los inventarios registrados.
+ * Obtiene los inventarios registrados con paginacion.
  */
-export async function listarInventarios() {
-  return obtenerInventarios()
+export async function listarInventarios(page: number = 1, limit: number = 10) {
+  return obtenerInventarios(page, limit)
 }
 
 /**

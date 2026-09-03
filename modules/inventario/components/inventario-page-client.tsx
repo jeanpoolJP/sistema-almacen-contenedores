@@ -27,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 type Inventario = {
   id: number
@@ -71,12 +73,17 @@ type InventarioCompleto = {
 
 type InventarioPageClientProps = {
   inventarios: Inventario[]
+  page: number
+  total: number
+  totalPages: number
 }
 
 export function InventarioPageClient({
-  inventarios: inventariosIniciales,
+  inventarios,
+  page,
+  total,
+  totalPages,
 }: InventarioPageClientProps) {
-  const [inventarios, setInventarios] = useState(inventariosIniciales)
 
   const [inventarioSeleccionado, setInventarioSeleccionado] =
     useState<InventarioCompleto | null>(null)
@@ -90,6 +97,8 @@ export function InventarioPageClient({
 
   const [isPending, startTransition] = useTransition()
 
+  const router = useRouter()
+
   async function crearInventario() {
     if (!fecha) {
       return
@@ -97,7 +106,7 @@ export function InventarioPageClient({
 
     startTransition(async () => {
       try {
-        const nuevoInventario = await crearInventarioAction(
+        await crearInventarioAction(
           new Date(`${fecha}T00:00:00`),
           observaciones.trim() || undefined
         )
@@ -108,17 +117,7 @@ export function InventarioPageClient({
 
         setObservaciones("")
 
-        const inventarioActualizado: Inventario = {
-          id: nuevoInventario.id,
-          fecha: nuevoInventario.fecha,
-          estado: nuevoInventario.estado,
-          observaciones: nuevoInventario.observaciones,
-          _count: {
-            detalles: nuevoInventario.detalles.length,
-          },
-        }
-
-        setInventarios((actuales) => [inventarioActualizado, ...actuales])
+        router.refresh()
       } catch (error) {
         console.error("Error al crear inventario:", error)
 
@@ -207,16 +206,6 @@ export function InventarioPageClient({
 
         setInventarioSeleccionado(inventarioActualizado as InventarioCompleto)
 
-        setInventarios((actuales) =>
-          actuales.map((inventario) =>
-            inventario.id === inventarioSeleccionado.id
-              ? {
-                  ...inventario,
-                  estado: "FINALIZADO",
-                }
-              : inventario
-          )
-        )
       } catch (error) {
         console.error("Error al finalizar inventario:", error)
 
@@ -230,7 +219,15 @@ export function InventarioPageClient({
   }
 
   function actualizarDatos() {
-    window.location.reload()
+    router.refresh()
+  }
+
+  function cambiarPagina(nuevaPagina: number) {
+    if (nuevaPagina < 1 || nuevaPagina > totalPages) {
+      return
+    }
+
+    router.push(`/admin/inventario?page=${nuevaPagina}`)
   }
 
   return (
@@ -254,6 +251,38 @@ export function InventarioPageClient({
         onNuevo={() => setDialogNuevo(true)}
         onVer={verInventario}
       />
+
+      {totalPages > 0 && (
+        <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Página {page} de {totalPages} · {total} inventarios
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => cambiarPagina(page - 1)}
+              disabled={page <= 1 || isPending}
+            >
+              Anterior
+            </Button>
+
+            <span className="min-w-[80px] text-center text-sm font-medium">
+              {page} / {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => cambiarPagina(page + 1)}
+              disabled={page >= totalPages || isPending}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ================================================== */}
       {/* DIALOG: NUEVO INVENTARIO */}
