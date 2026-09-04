@@ -29,7 +29,7 @@ type TransportistaFieldsProps = {
 type EstadoBusqueda = "idle" | "buscando" | "existente" | "nuevo"
 
 export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
-  const { control, setValue } = useFormContext()
+  const { control, setValue, clearErrors } = useFormContext()
 
   // ============================================================
   // ESTADOS DE BÚSQUEDA
@@ -63,15 +63,12 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
           // Empresa existente
           setEstadoEmpresa("existente")
 
-          // Datos de la empresa
           setValue(`${prefix}.empresaNombre`, res.data.nombre, {
             shouldValidate: true,
           })
-
           setValue(`${prefix}.telefono`, res.data.telefono ?? "", {
             shouldValidate: true,
           })
-
           setValue(
             `${prefix}.contactoLogistico`,
             res.data.contactoLogistico ?? "",
@@ -79,7 +76,6 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
               shouldValidate: true,
             }
           )
-
           setValue(
             `${prefix}.nombreEncargado`,
             res.data.nombreEncargado ?? "",
@@ -91,14 +87,17 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
           // Empresa nueva
           setEstadoEmpresa("nuevo")
 
-          // Permitimos registrar los datos manualmente
-          setValue(`${prefix}.empresaNombre`, "", {
-            shouldValidate: true,
-          })
-
+          // Asignamos cadena vacía sin forzar 'shouldValidate'
+          setValue(`${prefix}.empresaNombre`, "")
           setValue(`${prefix}.telefono`, "")
           setValue(`${prefix}.contactoLogistico`, "")
           setValue(`${prefix}.nombreEncargado`, "")
+
+          // Limpiamos errores para evitar que se pinte en rojo antes de que el usuario interactúe
+          clearErrors(`${prefix}.empresaNombre`)
+          clearErrors(`${prefix}.telefono`)
+          clearErrors(`${prefix}.contactoLogistico`)
+          clearErrors(`${prefix}.nombreEncargado`)
         }
       })
     })
@@ -124,6 +123,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
           setEstadoVehiculo("existente")
         } else {
           setEstadoVehiculo("nuevo")
+          clearErrors(`${prefix}.vehiculoPlaca`)
         }
       })
     })
@@ -155,6 +155,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
           setEstadoConductor("nuevo")
 
           setValue(`${prefix}.conductorNombre`, "")
+          clearErrors(`${prefix}.conductorNombre`)
         }
       })
     })
@@ -231,7 +232,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
         name={`${prefix}.empresaNombre`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Razón social</FormLabel>
+            <FormLabel>Nombre de la Empresa</FormLabel>
 
             <FormControl>
               <Input
