@@ -158,7 +158,12 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   let precioIngresoSalida: number | undefined
 
   if (datosValidados.tipoPrecio === "ESTANDAR") {
-    precioPrimerDia = Number(configuracion.precioPrimerDia)
+    // Los contenedores REEFER tienen una tarifa especial
+    // para el primer día.
+    precioPrimerDia =
+      datosValidados.contenedor.tipo === "REEFER"
+        ? 40
+        : Number(configuracion.precioPrimerDia)
 
     precioDiaAdicional = Number(configuracion.precioDiaAdicional)
   }
@@ -172,6 +177,7 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   if (datosValidados.tipoPrecio === "ESPACIO_ALQUILADO") {
     precioIngresoSalida = datosValidados.precioIngresoSalida!
   }
+
   // ============================================================
   // 10. PORCENTAJE IGV
   // ============================================================
@@ -355,7 +361,10 @@ export async function registrarSalidaGuiaService(
     // ESTÁNDAR
     // ----------------------------------------------------------
 
-    precioPrimerDia = Number(configuracion.precioPrimerDia)
+    precioPrimerDia =
+      guia.contenedor.tipo === "REEFER"
+        ? 40
+        : Number(configuracion.precioPrimerDia)
 
     precioDiaAdicional = Number(configuracion.precioDiaAdicional)
 

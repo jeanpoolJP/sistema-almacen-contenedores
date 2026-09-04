@@ -206,6 +206,9 @@ export function RegistrarSalidaDialog({
   const cantidadMovimientos = form.watch("cantidadMovimientos")
   const precioIngresoSalida = form.watch("precioIngresoSalida")
 
+  const precioPrimerDiaEstandar =
+    guia.contenedor.tipo === "REEFER" ? 40 : precioBase?.precioPrimerDia
+
   // Calcular días automáticamente
   useEffect(() => {
     if (!fechaSalida || !horaSalida || diasEditados) {
@@ -263,9 +266,16 @@ export function RegistrarSalidaDialog({
 
         // Si el tipo es ESTANDAR, sincronizar con la configuración
         if (tipoPrecio === "ESTANDAR") {
-          form.setValue("precioPrimerDia", Number(res.data.precioPrimerDia), {
-            shouldValidate: true,
-          })
+          form.setValue(
+            "precioPrimerDia",
+            guia.contenedor.tipo === "REEFER"
+              ? 40
+              : Number(res.data.precioPrimerDia),
+            {
+              shouldValidate: true,
+            }
+          )
+
           form.setValue(
             "precioDiaAdicional",
             Number(res.data.precioDiaAdicional),
@@ -359,9 +369,13 @@ export function RegistrarSalidaDialog({
         return
       }
 
-      form.setValue("precioPrimerDia", precioBase.precioPrimerDia, {
-        shouldValidate: true,
-      })
+      form.setValue(
+        "precioPrimerDia",
+        guia.contenedor.tipo === "REEFER" ? 40 : precioBase.precioPrimerDia,
+        {
+          shouldValidate: true,
+        }
+      )
 
       form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional, {
         shouldValidate: true,
@@ -417,9 +431,19 @@ export function RegistrarSalidaDialog({
           return null
         }
 
+        if (
+          !precioBase ||
+          !diasAlmacenamiento ||
+          diasAlmacenamiento < 1 ||
+          precioPrimerDiaEstandar === undefined ||
+          precioBase.precioDiaAdicional === undefined
+        ) {
+          return null
+        }
+
         return calcularMontoGuia({
           diasAlmacenamiento: Number(diasAlmacenamiento),
-          precioPrimerDia: precioBase.precioPrimerDia,
+          precioPrimerDia: precioPrimerDiaEstandar,
           precioDiaAdicional: precioBase.precioDiaAdicional,
           tratamientoIGV,
           porcentajeIGV,
@@ -478,6 +502,7 @@ export function RegistrarSalidaDialog({
     cantidadMovimientos,
     tratamientoIGV,
     precioBase,
+    precioPrimerDiaEstandar,
     guia.porcentajeIGV,
   ])
 
@@ -509,7 +534,7 @@ export function RegistrarSalidaDialog({
               <span className="font-medium">
                 {formatearMonto(
                   tipoPrecio === "ESTANDAR"
-                    ? precioBase?.precioPrimerDia || 0
+                    ? precioPrimerDiaEstandar || 0
                     : Number(precioPrimerDia) || 0
                 )}
               </span>

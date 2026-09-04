@@ -83,6 +83,10 @@ export function RegistrarPagoDialog({
     },
   })
 
+  /* Obtenemos el método actual para actualizar la UI dinámicamente */
+  const metodoPagoActual = form.watch("metodoPago")
+  const esEfectivo = metodoPagoActual === "EFECTIVO"
+
   async function onSubmit(data: RegistrarPagoGuiaSchema) {
     setSubmitting(true)
 
@@ -209,8 +213,8 @@ export function RegistrarPagoDialog({
               />
 
               {/* ============================================================
-                  NÚMERO DE OPERACIÓN
-              ============================================================ */}
+                   NÚMERO DE OPERACIÓN
+                ============================================================ */}
 
               <FormField
                 control={form.control}
@@ -219,21 +223,31 @@ export function RegistrarPagoDialog({
                   <FormItem>
                     <FormLabel>
                       Número de operación
-                      <span className="ml-1 text-muted-foreground">
-                        (opcional)
-                      </span>
+                      {esEfectivo ? (
+                        <span className="ml-1 text-muted-foreground">
+                          (opcional)
+                        </span>
+                      ) : (
+                        <span className="ml-1 text-destructive">*</span>
+                      )}
                     </FormLabel>
 
                     <FormControl>
                       <Input
-                        placeholder="Ej. 123456789"
+                        placeholder={
+                          esEfectivo
+                            ? "Ej. 123456789 (opcional)"
+                            : "Ej. 123456789"
+                        }
                         {...field}
                         value={field.value ?? ""}
                       />
                     </FormControl>
 
                     <p className="text-xs text-muted-foreground">
-                      Puedes dejarlo vacío si el pago fue en efectivo.
+                      {esEfectivo
+                        ? "Puedes dejarlo vacío si el pago fue en efectivo."
+                        : "Obligatorio para pagos por Yape, Plin, Transferencia o Tarjeta."}
                     </p>
 
                     <FormMessage />

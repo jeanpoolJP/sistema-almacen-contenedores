@@ -100,6 +100,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
   // eslint-disable-next-line react-hooks/incompatible-library
   const tipoPrecio = form.watch("tipoPrecio")
   const tratamientoIGV = form.watch("tratamientoIGV")
+  const tipoContenedor = form.watch("contenedor.tipo")
 
   // Carga la configuración de precios activa al abrir el diálogo,
   // para mostrar y usar por defecto los precios estándar.
@@ -127,10 +128,25 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
 
     form.setValue("tipoPrecio", value)
     if (value === "ESTANDAR" && precioBase) {
-      form.setValue("precioPrimerDia", precioBase.precioPrimerDia)
+      form.setValue(
+        "precioPrimerDia",
+        tipoContenedor === "REEFER" ? 40 : precioBase.precioPrimerDia
+      )
+
       form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional)
     }
   }
+
+  useEffect(() => {
+    if (tipoPrecio !== "ESTANDAR" || !precioBase) return
+
+    form.setValue(
+      "precioPrimerDia",
+      tipoContenedor === "REEFER" ? 40 : precioBase.precioPrimerDia
+    )
+
+    form.setValue("precioDiaAdicional", precioBase.precioDiaAdicional)
+  }, [tipoContenedor, tipoPrecio, precioBase, form])
 
   async function onSubmit(data: CrearGuiaSchema) {
     setSubmitting(true)

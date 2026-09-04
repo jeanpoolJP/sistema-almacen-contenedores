@@ -286,34 +286,46 @@ export type RegistrarSalidaGuiaSchema = z.infer<
   typeof registrarSalidaGuiaSchema
 >
 
-export const registrarPagoGuiaSchema = z.object({
-  guiaId: z.number().int().positive(),
+export const registrarPagoGuiaSchema = z
+  .object({
+    guiaId: z.number().int().positive(),
 
-  metodoPago: z.enum([
-    "EFECTIVO",
-    "YAPE",
-    "PLIN",
-    "TRANSFERENCIA",
-    "TARJETA",
-    "OTRO",
-  ]),
+    metodoPago: z.enum([
+      "EFECTIVO",
+      "YAPE",
+      "PLIN",
+      "TRANSFERENCIA",
+      "TARJETA",
+      "OTRO",
+    ]),
 
-  cliente: clienteGuiaSchema.nullable().optional(),
+    cliente: clienteGuiaSchema.nullable().optional(),
 
-  numeroOperacion: z
-    .string()
-    .trim()
-    .max(100, "El número de operación es demasiado largo")
-    .optional()
-    .nullable(),
+    numeroOperacion: z
+      .string()
+      .trim()
+      .max(100, "El número de operación es demasiado largo")
+      .optional()
+      .nullable(),
 
-  fechaPago: z.date({
-    message: "La fecha de pago es obligatoria",
-  }),
+    fechaPago: z.date({
+      message: "La fecha de pago es obligatoria",
+    }),
 
-  horaPago: z.date({
-    message: "La hora de pago es obligatoria",
-  }),
-})
+    horaPago: z.date({
+      message: "La hora de pago es obligatoria",
+    }),
+  })
+  .superRefine((data, ctx) => {
+    // Si el método NO es efectivo y el número de operación viene vacío o nulo
+    if (data.metodoPago !== "EFECTIVO" && !data.numeroOperacion?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["numeroOperacion"],
+        message:
+          "El número de operación es obligatorio para este método de pago",
+      })
+    }
+  })
 
 export type RegistrarPagoGuiaSchema = z.infer<typeof registrarPagoGuiaSchema>
