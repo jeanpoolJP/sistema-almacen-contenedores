@@ -1,16 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Container,
   LogIn,
   LogOut,
   Wallet,
   CircleDollarSign,
-  Users,
-} from "lucide-react";
-import type { DashboardStats } from "../dashboard.types";
+} from "lucide-react"
+import type { DashboardStats } from "../dashboard.types"
 
 interface StatsCardsProps {
-  stats: DashboardStats;
+  stats: DashboardStats
 }
 
 function formatearMoneda(valor: number) {
@@ -18,7 +17,7 @@ function formatearMoneda(valor: number) {
     style: "currency",
     currency: "PEN",
     minimumFractionDigits: 2,
-  }).format(valor);
+  }).format(valor)
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
@@ -27,6 +26,12 @@ export function StatsCards({ stats }: StatsCardsProps) {
       titulo: "Contenedores almacenados",
       valor: stats.contenedoresAlmacenados.toString(),
       descripcion: "Actualmente en el almacén",
+      icono: Container,
+    },
+    {
+      titulo: "Contenedores de CIF PERU",
+      valor: stats.contenedoresCifPeru.toString(),
+      descripcion: "Actualmente en espacio alquilado",
       icono: Container,
     },
     {
@@ -53,13 +58,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       descripcion: "Ingresos del mes actual",
       icono: CircleDollarSign,
     },
-    {
-      titulo: "Clientes activos",
-      valor: stats.clientesActivos.toString(),
-      descripcion: `${stats.guiasDelMes} guías este mes`,
-      icono: Users,
-    },
-  ];
+  ]
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -72,11 +71,13 @@ export function StatsCards({ stats }: StatsCardsProps) {
             <item.icono className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight">{item.valor}</div>
+            <div className="text-2xl font-bold tracking-tight">
+              {item.valor}
+            </div>
             <p className="text-xs text-muted-foreground">{item.descripcion}</p>
           </CardContent>
         </Card>
       ))}
     </div>
-  );
+  )
 }

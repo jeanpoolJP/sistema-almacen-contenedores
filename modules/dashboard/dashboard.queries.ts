@@ -9,7 +9,7 @@ import "server-only"
 //   if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 //
 import { prisma } from "@/lib/prisma"
-import { EstadoGuia, EstadoPago } from "@/lib/generated/prisma"
+import { EstadoGuia, EstadoPago, TipoPrecioGuia } from "@/lib/generated/prisma"
 import type {
   DashboardData,
   DashboardStats,
@@ -66,50 +66,87 @@ async function getStats(): Promise<DashboardStats> {
 
   const [
     contenedoresAlmacenados,
+    contenedoresCifPeru,
     ingresosHoy,
     salidasHoy,
     porCobrar,
     cobradoMes,
-    clientesActivos,
     guiasDelMes,
   ] = await Promise.all([
-    // Un contenedor almacenado = una guía ALMACENADO (1 guía = 1 contenedor en almacén)
+    // Todos los contenedores actualmente almacenados
     prisma.guiaInternamiento.count({
-      where: { estado: EstadoGuia.ALMACENADO },
+      where: {
+        estado: EstadoGuia.ALMACENADO,
+      },
     }),
+
+    // Contenedores actualmente almacenados bajo espacio alquilado
+    // CIF PERU S.A.C. es actualmente el único cliente con este tipo de precio.
     prisma.guiaInternamiento.count({
-      where: { fechaIngreso: { gte: inicioHoy, lte: finHoy } },
+      where: {
+        estado: EstadoGuia.ALMACENADO,
+        tipoPrecio: TipoPrecioGuia.ESPACIO_ALQUILADO,
+      },
     }),
+
     prisma.guiaInternamiento.count({
-      where: { fechaSalida: { gte: inicioHoy, lte: finHoy } },
+      where: {
+        fechaIngreso: {
+          gte: inicioHoy,
+          lte: finHoy,
+        },
+      },
     }),
+
+    prisma.guiaInternamiento.count({
+      where: {
+        fechaSalida: {
+          gte: inicioHoy,
+          lte: finHoy,
+        },
+      },
+    }),
+
     prisma.guiaInternamiento.aggregate({
-      _sum: { montoTotal: true },
+      _sum: {
+        montoTotal: true,
+      },
       where: {
         estadoPago: EstadoPago.PENDIENTE,
-        estado: { not: EstadoGuia.ANULADO },
+        estado: {
+          not: EstadoGuia.ANULADO,
+        },
       },
     }),
+
     prisma.guiaInternamiento.aggregate({
-      _sum: { montoTotal: true },
+      _sum: {
+        montoTotal: true,
+      },
       where: {
         estadoPago: EstadoPago.PAGADO,
-        fechaPago: { gte: inicioMes },
+        fechaPago: {
+          gte: inicioMes,
+        },
       },
     }),
-    prisma.cliente.count({ where: { activo: true } }),
+
     prisma.guiaInternamiento.count({
-      where: { createdAt: { gte: inicioMes } },
+      where: {
+        createdAt: {
+          gte: inicioMes,
+        },
+      },
     }),
   ])
 
   return {
     contenedoresAlmacenados,
+    contenedoresCifPeru,
     ingresosHoy,
     salidasHoy,
     montoPorCobrar: Number(porCobrar._sum.montoTotal ?? 0),
     montoCobradoMes: Number(cobradoMes._sum.montoTotal ?? 0),
-    clientesActivos,
     guiasDelMes,
   }
 }

@@ -6,11 +6,11 @@ import type {
 
 export interface DashboardStats {
   contenedoresAlmacenados: number
+  contenedoresCifPeru: number
   ingresosHoy: number
   salidasHoy: number
   montoPorCobrar: number
   montoCobradoMes: number
-  clientesActivos: number
   guiasDelMes: number
 }
 
