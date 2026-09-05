@@ -78,6 +78,13 @@ import type {
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { ChevronDown } from "lucide-react"
+
 import { anularGuiaAction, obtenerGuiasAction } from "../guia.actions"
 
 import { exportarExcel } from "@/lib/exportar-excel"
@@ -156,6 +163,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
    * FILTROS
    * ==========================================================
    */
+
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
   const [numeroGuia, setNumeroGuia] = useState("")
 
@@ -556,210 +565,233 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
           FILTROS
       ====================================================== */}
 
-      <div className="rounded-lg border p-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* NÚMERO GUÍA */}
+      <Collapsible
+        open={filtrosAbiertos}
+        onOpenChange={setFiltrosAbiertos}
+        className="rounded-lg border"
+      >
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <h3 className="text-sm font-semibold">Filtros de búsqueda</h3>
+            <p className="text-xs text-muted-foreground">
+              Filtra las guías por número, cliente, estado o fecha.
+            </p>
+          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">N° de guía</label>
-
-            <div className="relative">
-              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-
-              <Input
-                value={numeroGuia}
-                onChange={(e) => setNumeroGuia(e.target.value)}
-                placeholder="Buscar guía..."
-                className="pl-8"
+          <CollapsibleTrigger>
+            <Button variant="outline" size="sm" type="button">
+              {filtrosAbiertos ? "Ocultar filtros" : "Mostrar filtros"}
+              <ChevronDown
+                className={`ml-2 size-4 transition-transform ${
+                  filtrosAbiertos ? "rotate-180" : ""
+                }`}
               />
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+
+        <CollapsibleContent>
+          <div className="border-t p-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* NÚMERO GUÍA */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">N° de guía</label>
+
+                <div className="relative">
+                  <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+
+                  <Input
+                    value={numeroGuia}
+                    onChange={(e) => setNumeroGuia(e.target.value)}
+                    placeholder="Buscar guía..."
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              {/* CONTENEDOR */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Contenedor</label>
+
+                <Input
+                  value={numeroContenedor}
+                  onChange={(e) => setNumeroContenedor(e.target.value)}
+                  placeholder="Número de contenedor"
+                />
+              </div>
+
+              {/* DOCUMENTO */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Documento del cliente
+                </label>
+
+                <Input
+                  value={documentoCliente}
+                  onChange={(e) => setDocumentoCliente(e.target.value)}
+                  placeholder="DNI o RUC"
+                />
+              </div>
+
+              {/* CLIENTE */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Cliente</label>
+
+                <Select
+                  value={sinCliente ? "SIN_CLIENTE" : "TODOS"}
+                  onValueChange={(value) => {
+                    setSinCliente(value === "SIN_CLIENTE")
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Todos los clientes" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="TODOS">Todos los clientes</SelectItem>
+
+                    <SelectItem value="SIN_CLIENTE">Sin cliente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ESTADO */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Estado</label>
+
+                <Select
+                  value={estado ?? "TODOS"}
+                  onValueChange={(value) => {
+                    setEstado(
+                      value === "TODOS" ? undefined : (value as EstadoGuia)
+                    )
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Todos los estados" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="TODOS">Todos los estados</SelectItem>
+
+                    <SelectItem value="ALMACENADO">Almacenado</SelectItem>
+
+                    <SelectItem value="RETIRADO">Retirado</SelectItem>
+
+                    <SelectItem value="ANULADO">Anulado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ESTADO DE PAGO */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Estado de pago</label>
+
+                <Select
+                  value={estadoPago ?? "TODOS"}
+                  onValueChange={(value) => {
+                    setEstadoPago(
+                      value === "TODOS" ? undefined : (value as EstadoPago)
+                    )
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Todos los estados de pago" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="TODOS">Todos los estados</SelectItem>
+
+                    <SelectItem value="PENDIENTE">Pendiente</SelectItem>
+
+                    <SelectItem value="PAGADO">Pagado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* TRATAMIENTO IGV */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tratamiento IGV</label>
+
+                <Select
+                  value={tratamientoIGV ?? "TODOS"}
+                  onValueChange={(value) => {
+                    setTratamientoIGV(
+                      value === "TODOS" ? undefined : (value as TratamientoIGV)
+                    )
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="TODOS">Todos</SelectItem>
+                    <SelectItem value="CON_IGV">Con IGV</SelectItem>
+                    <SelectItem value="SIN_IGV">Sin IGV</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* FECHA DESDE */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Fecha desde</label>
+
+                <Input
+                  type="date"
+                  value={fechaDesde}
+                  onChange={(e) => setFechaDesde(e.target.value)}
+                />
+              </div>
+
+              {/* FECHA HASTA */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Fecha hasta</label>
+
+                <Input
+                  type="date"
+                  value={fechaHasta}
+                  onChange={(e) => setFechaHasta(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* BOTONES */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                onClick={aplicarFiltros}
+                disabled={isPending || exportando}
+              >
+                {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Buscar
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={limpiarFiltros}
+                disabled={isPending || exportando}
+              >
+                <X className="mr-2 size-4" />
+                Limpiar filtros
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={manejarExportarExcel}
+                disabled={isPending || exportando || total === 0}
+              >
+                {exportando ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 size-4" />
+                )}
+
+                {exportando ? "Exportando..." : "Exportar Excel"}
+              </Button>
             </div>
           </div>
-
-          {/* CONTENEDOR */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Contenedor</label>
-
-            <Input
-              value={numeroContenedor}
-              onChange={(e) => setNumeroContenedor(e.target.value)}
-              placeholder="Número de contenedor"
-            />
-          </div>
-
-          {/* DOCUMENTO */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Documento del cliente</label>
-
-            <Input
-              value={documentoCliente}
-              onChange={(e) => setDocumentoCliente(e.target.value)}
-              placeholder="DNI o RUC"
-            />
-          </div>
-
-          {/* CLIENTE */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Cliente</label>
-
-            <Select
-              value={sinCliente ? "SIN_CLIENTE" : "TODOS"}
-              onValueChange={(value) => {
-                setSinCliente(value === "SIN_CLIENTE")
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos los clientes" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="TODOS">Todos los clientes</SelectItem>
-
-                <SelectItem value="SIN_CLIENTE">Sin cliente</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* ESTADO */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Estado</label>
-
-            <Select
-              value={estado ?? "TODOS"}
-              onValueChange={(value) => {
-                setEstado(value === "TODOS" ? undefined : (value as EstadoGuia))
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos los estados" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="TODOS">Todos los estados</SelectItem>
-
-                <SelectItem value="ALMACENADO">Almacenado</SelectItem>
-
-                <SelectItem value="RETIRADO">Retirado</SelectItem>
-
-                <SelectItem value="ANULADO">Anulado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* ESTADO DE PAGO */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Estado de pago</label>
-
-            <Select
-              value={estadoPago ?? "TODOS"}
-              onValueChange={(value) => {
-                setEstadoPago(
-                  value === "TODOS" ? undefined : (value as EstadoPago)
-                )
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos los estados de pago" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="TODOS">Todos los estados</SelectItem>
-
-                <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-
-                <SelectItem value="PAGADO">Pagado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* TRATAMIENTO IGV */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tratamiento IGV</label>
-
-            <Select
-              value={tratamientoIGV ?? "TODOS"}
-              onValueChange={(value) => {
-                setTratamientoIGV(
-                  value === "TODOS" ? undefined : (value as TratamientoIGV)
-                )
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="TODOS">Todos</SelectItem>
-
-                <SelectItem value="CON_IGV">Con IGV</SelectItem>
-
-                <SelectItem value="SIN_IGV">Sin IGV</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* FECHA DESDE */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Fecha desde</label>
-
-            <Input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-            />
-          </div>
-
-          {/* FECHA HASTA */}
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Fecha hasta</label>
-
-            <Input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* BOTONES */}
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={aplicarFiltros} disabled={isPending || exportando}>
-            {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Buscar
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={limpiarFiltros}
-            disabled={isPending || exportando}
-          >
-            <X className="mr-2 size-4" />
-            Limpiar filtros
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={manejarExportarExcel}
-            disabled={isPending || exportando || total === 0}
-          >
-            {exportando ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 size-4" />
-            )}
-
-            {exportando ? "Exportando..." : "Exportar Excel"}
-          </Button>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* ======================================================
           INFORMACIÓN
@@ -849,7 +881,16 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
                 {/* CONTENEDOR */}
 
-                <TableCell>{guia.contenedor.numeroContenedor}</TableCell>
+                <TableCell>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {guia.contenedor.marca}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {guia.contenedor.numeroContenedor}
+                    </p>
+                  </div>
+                </TableCell>
 
                 {/* INGRESO */}
 
