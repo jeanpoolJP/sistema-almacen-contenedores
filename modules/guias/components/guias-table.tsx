@@ -578,16 +578,19 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
             </p>
           </div>
 
-          <CollapsibleTrigger>
-            <Button variant="outline" size="sm" type="button">
-              {filtrosAbiertos ? "Ocultar filtros" : "Mostrar filtros"}
-              <ChevronDown
-                className={`ml-2 size-4 transition-transform ${
-                  filtrosAbiertos ? "rotate-180" : ""
-                }`}
-              />
-            </Button>
-          </CollapsibleTrigger>
+          <CollapsibleTrigger
+            render={
+              <Button variant="outline" size="sm" type="button">
+                {filtrosAbiertos ? "Ocultar filtros" : "Mostrar filtros"}
+
+                <ChevronDown
+                  className={`ml-2 size-4 transition-transform ${
+                    filtrosAbiertos ? "rotate-180" : ""
+                  }`}
+                />
+              </Button>
+            }
+          />
         </div>
 
         <CollapsibleContent>

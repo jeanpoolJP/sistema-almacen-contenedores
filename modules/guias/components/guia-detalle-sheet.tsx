@@ -21,6 +21,10 @@ import { Separator } from "@/components/ui/separator"
 import { EstadoBadge } from "./estado-badge"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
+import { Download } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { exportarGuiaPDF } from "../utils/exportar-guia-pdf"
+
 type GuiaDetalleSheetProps = {
   guia: GuiaConRelaciones | null
   open: boolean
@@ -56,9 +60,22 @@ export function GuiaDetalleSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="border-b px-6 py-4">
-          <div className="flex items-center gap-3">
-            <SheetTitle>Guía {guia.numeroGuia}</SheetTitle>
-            <EstadoBadge estado={guia.estado} />
+          {/* Agregamos pr-8 al contenedor para que el ml-auto respete el espacio del botón de cerrar (X) */}
+          <div className="flex items-center gap-3 pr-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <SheetTitle>Guía {guia.numeroGuia}</SheetTitle>
+              <EstadoBadge estado={guia.estado} />
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto shrink-0 gap-2"
+              onClick={() => exportarGuiaPDF(guia)}
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
           </div>
           <SheetDescription>
             Registrada el{" "}
