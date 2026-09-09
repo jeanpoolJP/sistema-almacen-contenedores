@@ -2,6 +2,7 @@
 
 type RateLimitEntry = {
   intentos: number
+  ventanaHasta: number
   bloqueadoHasta: number
 }
 
@@ -21,12 +22,17 @@ export function puedeIntentarLogin(ip: string) {
 
   const registro = intentos.get(ip)
 
+  // No existe ningún registro para esta IP
   if (!registro) {
     return {
       permitido: true,
       intentosRestantes: MAX_INTENTOS,
     }
   }
+
+  // ==========================================================
+  // COMPROBAR BLOQUEO
+  // ==========================================================
 
   if (registro.bloqueadoHasta > ahora) {
     return {
@@ -35,7 +41,11 @@ export function puedeIntentarLogin(ip: string) {
     }
   }
 
-  if (ahora - registro.bloqueadoHasta >= VENTANA_MS) {
+  // ==========================================================
+  // LA VENTANA DE INTENTOS YA TERMINÓ
+  // ==========================================================
+
+  if (registro.ventanaHasta <= ahora) {
     intentos.delete(ip)
 
     return {
@@ -44,9 +54,16 @@ export function puedeIntentarLogin(ip: string) {
     }
   }
 
+  // ==========================================================
+  // TODAVÍA ESTAMOS DENTRO DE LA VENTANA
+  // ==========================================================
+
   return {
     permitido: true,
-    intentosRestantes: Math.max(0, MAX_INTENTOS - registro.intentos),
+    intentosRestantes: Math.max(
+      0,
+      MAX_INTENTOS - registro.intentos
+    ),
   }
 }
 
@@ -58,16 +75,43 @@ export function registrarIntentoFallido(ip: string) {
 
   const registro = intentos.get(ip)
 
+  // ==========================================================
+  // PRIMER INTENTO FALLIDO
+  // ==========================================================
+
   if (!registro) {
     intentos.set(ip, {
       intentos: 1,
-      bloqueadoHasta: ahora + VENTANA_MS,
+      ventanaHasta: ahora + VENTANA_MS,
+      bloqueadoHasta: 0,
     })
 
     return
   }
 
+  // ==========================================================
+  // LA VENTANA ANTERIOR YA TERMINÓ
+  // ==========================================================
+
+  if (registro.ventanaHasta <= ahora) {
+    intentos.set(ip, {
+      intentos: 1,
+      ventanaHasta: ahora + VENTANA_MS,
+      bloqueadoHasta: 0,
+    })
+
+    return
+  }
+
+  // ==========================================================
+  // INCREMENTAR INTENTOS
+  // ==========================================================
+
   registro.intentos += 1
+
+  // ==========================================================
+  // BLOQUEAR AL LLEGAR AL MÁXIMO
+  // ==========================================================
 
   if (registro.intentos >= MAX_INTENTOS) {
     registro.bloqueadoHasta = ahora + BLOQUEO_MS
