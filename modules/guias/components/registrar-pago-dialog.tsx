@@ -2,13 +2,12 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CreditCard, WalletCards } from "lucide-react"
 import { toast } from "sonner"
 
-import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 import {
   registrarPagoGuiaSchema,
@@ -68,6 +68,8 @@ export function RegistrarPagoDialog({
   onRegistrado,
 }: RegistrarPagoDialogProps) {
   const [submitting, setSubmitting] = useState(false)
+
+  const tieneCliente = guia.cliente !== null
   const [registrarCliente, setRegistrarCliente] = useState(false)
 
   const form = useForm<RegistrarPagoGuiaSchema>({
@@ -82,6 +84,32 @@ export function RegistrarPagoDialog({
       horaPago: undefined,
     },
   })
+
+  useEffect(() => {
+    if (!open) {
+      setRegistrarCliente(false)
+      return
+    }
+
+    setRegistrarCliente(false)
+
+    form.reset({
+      guiaId: guia.id,
+
+      cliente: guia.cliente
+        ? {
+            tipoDocumento: guia.cliente.tipoDocumento,
+            numeroDocumento: guia.cliente.numeroDocumento,
+            nombreCompleto: guia.cliente.nombreCompleto ?? "",
+          }
+        : null,
+
+      metodoPago: "YAPE",
+      numeroOperacion: "",
+      fechaPago: undefined,
+      horaPago: undefined,
+    })
+  }, [open, guia, form])
 
   /* Obtenemos el método actual para actualizar la UI dinámicamente */
   const metodoPagoActual = form.watch("metodoPago")
@@ -183,13 +211,16 @@ export function RegistrarPagoDialog({
                   <FormItem>
                     <FormLabel>Método de pago</FormLabel>
 
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? "YAPE"}
+                      onValueChange={field.onChange}
+                    >
+                      {" "}
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecciona un método" />
                         </SelectTrigger>
                       </FormControl>
-
                       <SelectContent>
                         <SelectItem value="EFECTIVO">Efectivo</SelectItem>
 
@@ -262,44 +293,96 @@ export function RegistrarPagoDialog({
                 ============================================================ */}
 
               <div className="space-y-4">
-                <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold">Datos del cliente</p>
+                <div>
+                  <p className="text-sm font-semibold">Cliente</p>
 
+                  {tieneCliente ? (
                     <p className="text-xs text-muted-foreground">
-                      Opcional. Solo registra los datos si el cliente desea
-                      identificarse.
+                      Cliente asociado a la guía.
                     </p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      Registrar cliente
-                    </span>
-
-                    <Switch
-                      checked={registrarCliente}
-                      onCheckedChange={(checked) => {
-                        setRegistrarCliente(checked)
-
-                        if (!checked) {
-                          form.setValue("cliente", null)
-                        } else {
-                          form.setValue("cliente", {
-                            tipoDocumento: "DNI",
-                            numeroDocumento: "",
-                            nombreCompleto: "",
-                          })
-                        }
-                      }}
-                    />
-                  </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Esta guía no tiene un cliente asociado. Puedes
+                      identificarlo durante el registro del pago si corresponde.
+                    </p>
+                  )}
                 </div>
 
-                {registrarCliente && (
-                  <div className="rounded-lg border p-4">
-                    <ClienteField />
+                {tieneCliente ? (
+                  /* ========================================================
+                       CLIENTE YA ASOCIADO → SOLO LECTURA
+                   ======================================================== */
+                  <div className="rounded-lg border bg-muted/40 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-sm font-medium">
+                          {guia.cliente?.nombreCompleto ||
+                            "Sin nombre registrado"}
+                        </p>
+
+                        <p className="text-xs text-muted-foreground">
+                          {guia.cliente?.tipoDocumento}:{" "}
+                          {guia.cliente?.numeroDocumento}
+                        </p>
+                      </div>
+
+                      <span className="shrink-0 rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                        Solo lectura
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Este cliente ya está asociado a la guía y no puede
+                      modificarse durante el registro del pago.
+                    </p>
                   </div>
+                ) : (
+                  /* ========================================================
+       SIN CLIENTE → OPCIONAL
+    ======================================================== */
+                  <>
+                    <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">
+                          Identificar cliente
+                        </p>
+
+                        <p className="text-xs text-muted-foreground">
+                          Opcional. Puedes registrar el pago sin asociar ningún
+                          cliente.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground">
+                          Asociar cliente
+                        </span>
+
+                        <Switch
+                          checked={registrarCliente}
+                          onCheckedChange={(checked) => {
+                            setRegistrarCliente(checked)
+
+                            if (!checked) {
+                              form.setValue("cliente", null)
+                            } else {
+                              form.setValue("cliente", {
+                                tipoDocumento: "DNI",
+                                numeroDocumento: "",
+                                nombreCompleto: "",
+                              })
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {registrarCliente && (
+                      <div className="rounded-lg border p-4">
+                        <ClienteField />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

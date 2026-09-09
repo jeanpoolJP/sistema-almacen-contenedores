@@ -678,7 +678,7 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   }
 
   // ============================================================
-  // 3. VALIDAR QUE TENGA UN MONTO TOTAL
+  // 3. VALIDAR MONTO
   // ============================================================
 
   if (guia.montoTotal === null) {
@@ -696,23 +696,19 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   }
 
   // ============================================================
-  // 5. BUSCAR O CREAR CLIENTE
+  // 5. DETERMINAR CLIENTE
   // ============================================================
 
-  let clienteId: number | null = null
+  let clienteId = guia.clienteId
 
-  if (datosValidados.cliente) {
+  // La guía NO tiene cliente
+  if (!guia.clienteId && datosValidados.cliente) {
     const cliente = await obtenerOCrearCliente({
       tipoDocumento: datosValidados.cliente.tipoDocumento,
-
       numeroDocumento: datosValidados.cliente.numeroDocumento,
-
       nombreCompleto: datosValidados.cliente.nombreCompleto || null,
-
       telefono: "",
-
       observaciones: "",
-
       activo: true,
     })
 
@@ -720,7 +716,7 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
   }
 
   // ============================================================
-  // 6. REGISTRAR PAGO Y ASOCIAR CLIENTE
+  // 6. REGISTRAR PAGO
   // ============================================================
 
   const guiaActualizada = await registrarPagoGuia(guia.id, {
@@ -743,6 +739,7 @@ export async function registrarPagoGuiaService(data: RegistrarPagoGuiaInput) {
 
   return serializarGuia(guiaActualizada)
 }
+
 /**
  * Anula una guía.
  *
