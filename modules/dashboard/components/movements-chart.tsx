@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -15,11 +15,11 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-} from "@/components/ui/chart";
-import type { MovimientoDiario } from "../dashboard.types";
+} from "@/components/ui/chart"
+import type { MovimientoDiario } from "../dashboard.types"
 
 interface MovementsChartProps {
-  data: MovimientoDiario[];
+  data: MovimientoDiario[]
 }
 
 const chartConfig = {
@@ -31,17 +31,46 @@ const chartConfig = {
     label: "Salidas",
     color: "var(--chart-2)",
   },
-} satisfies ChartConfig;
+} satisfies ChartConfig
+
+// Helper para parsear "YYYY-MM-DD" sin desfase UTC
+function parsearFechaLocal(fechaStr: string) {
+  const [year, month, day] = fechaStr.split("-").map(Number)
+  // Se usa Date(year, monthIndex, day) para instanciar en hora local directamente
+  return new Date(year, month - 1, day)
+}
+
+function formatearFechaEje(fechaStr: string) {
+  const fecha = parsearFechaLocal(fechaStr)
+  return fecha.toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "short",
+  })
+}
+
+function formatearFechaTooltip(fechaStr: string) {
+  const fecha = parsearFechaLocal(fechaStr)
+  return fecha.toLocaleDateString("es-PE", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+}
 
 export function MovementsChart({ data }: MovementsChartProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Movimientos del almacén</CardTitle>
-        <CardDescription>Ingresos y salidas de los últimos 14 días</CardDescription>
+        <CardDescription>
+          Ingresos y salidas de los últimos 14 días
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="aspect-auto h-[260px] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[260px] w-full"
+        >
           <AreaChart data={data} margin={{ left: 12, right: 12 }}>
             <CartesianGrid vertical={false} />
             <XAxis
@@ -50,34 +79,41 @@ export function MovementsChart({ data }: MovementsChartProps) {
               axisLine={false}
               tickMargin={8}
               minTickGap={24}
-              tickFormatter={(value: string) =>
-                new Date(value).toLocaleDateString("es-PE", {
-                  day: "2-digit",
-                  month: "short",
-                })
-              }
+              tickFormatter={(value: string) => formatearFechaEje(value)}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("es-PE", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                  labelFormatter={(value: unknown) =>
+                    typeof value === "string" ? formatearFechaTooltip(value) : ""
                   }
                 />
               }
             />
             <defs>
               <linearGradient id="fillIngresos" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-ingresos)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-ingresos)" stopOpacity={0.1} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-ingresos)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-ingresos)"
+                  stopOpacity={0.1}
+                />
               </linearGradient>
               <linearGradient id="fillSalidas" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-salidas)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-salidas)" stopOpacity={0.1} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-salidas)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-salidas)"
+                  stopOpacity={0.1}
+                />
               </linearGradient>
             </defs>
             <Area
@@ -99,5 +135,5 @@ export function MovementsChart({ data }: MovementsChartProps) {
         </ChartContainer>
       </CardContent>
     </Card>
-  );
+  )
 }

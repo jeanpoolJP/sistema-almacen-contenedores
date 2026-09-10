@@ -30,8 +30,38 @@ function formatearMoneda(valor: number | null) {
   }).format(valor)
 }
 
-function formatearFecha(fecha: Date) {
-  return new Date(fecha).toLocaleDateString("es-PE", {
+function formatearFecha(fecha: Date | string) {
+  if (!fecha) return "—"
+
+  const dateObj = typeof fecha === "string" ? new Date(fecha) : fecha
+
+  // Maneja strings fecha ISO puros guardados a medianoche UTC
+  if (
+    typeof fecha === "string" &&
+    (fecha.includes("T00:00:00") || !fecha.includes("T"))
+  ) {
+    const parteFecha = fecha.split("T")[0]
+    const [year, month, day] = parteFecha.split("-").map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString("es-PE", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  // Maneja objetos Date o ISO con hora convierte a zona America/Lima
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Lima",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(dateObj)
+
+  const year = Number(partes.find((p) => p.type === "year")?.value)
+  const month = Number(partes.find((p) => p.type === "month")?.value)
+  const day = Number(partes.find((p) => p.type === "day")?.value)
+
+  return new Date(year, month - 1, day).toLocaleDateString("es-PE", {
     day: "2-digit",
     month: "short",
     year: "numeric",

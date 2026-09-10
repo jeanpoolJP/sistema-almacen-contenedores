@@ -1,13 +1,7 @@
+// modules\dashboard\dashboard.queries.ts
+
 import "server-only"
 
-// NOTA: ajusta este import a donde tengas tu singleton de PrismaClient.
-// Si no lo tienes, créalo en lib/prisma.ts:
-//
-//   import { PrismaClient } from "@/lib/generated/prisma";
-//   const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-//   export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-//   if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-//
 import { prisma } from "@/lib/prisma"
 import { EstadoGuia, EstadoPago, TipoPrecioGuia } from "@/lib/generated/prisma"
 import type {
@@ -19,6 +13,10 @@ import type {
   PagoPendiente,
   DistribucionMedidaContenedor,
 } from "./dashboard.types"
+
+import { formatInTimeZone, toZonedTime, fromZonedTime } from "date-fns-tz"
+
+const ZONA_HORARIA = "America/Lima"
 
 const NOMBRES_MES = [
   "Ene",
@@ -35,34 +33,56 @@ const NOMBRES_MES = [
   "Dic",
 ]
 
-function inicioDelDia(fecha: Date) {
-  const d = new Date(fecha)
-  d.setHours(0, 0, 0, 0)
-  return d
+// ============================================================
+// Helpers para cálculo exacto de rangos con Timezone
+// ============================================================
+function rangoDelDiaEnLima(fecha = new Date()) {
+  const ahoraEnLima = toZonedTime(fecha, ZONA_HORARIA)
+  const year = ahoraEnLima.getFullYear()
+  const month = ahoraEnLima.getMonth()
+  const day = ahoraEnLima.getDate()
+
+  // 00:00:00 y 23:59:59.999 en horario de Lima
+  const inicioLima = new Date(year, month, day, 0, 0, 0, 0)
+  const finLima = new Date(year, month, day, 23, 59, 59, 999)
+
+  // Convertir a objetos UTC equivalentes para consultar a Prisma
+  return {
+    inicio: fromZonedTime(inicioLima, ZONA_HORARIA),
+    fin: fromZonedTime(finLima, ZONA_HORARIA),
+  }
 }
 
-function finDelDia(fecha: Date) {
-  const d = new Date(fecha)
-  d.setHours(23, 59, 59, 999)
-  return d
-}
+function inicioDelMesEnLima(fecha = new Date()) {
+  const ahoraEnLima = toZonedTime(fecha, ZONA_HORARIA)
+  const inicioMesLima = new Date(
+    ahoraEnLima.getFullYear(),
+    ahoraEnLima.getMonth(),
+    1,
+    0,
+    0,
+    0,
+    0
+  )
 
-function inicioDelMes(fecha: Date) {
-  return new Date(fecha.getFullYear(), fecha.getMonth(), 1)
+  return fromZonedTime(inicioMesLima, ZONA_HORARIA)
 }
 
 function aClaveDia(fecha: Date) {
-  return fecha.toISOString().slice(0, 10)
+  // Si la fecha fue guardada a medianoche UTC (00:00:00Z),
+  // debemos usar UTC para extraer el YYYY-MM-DD correcto y evitar que reste 5 horas.
+  if (fecha.getUTCHours() === 0 && fecha.getUTCMinutes() === 0) {
+    return fecha.toISOString().split("T")[0]
+  }
+  return formatInTimeZone(fecha, ZONA_HORARIA, "yyyy-MM-dd")
 }
 
 // ============================================================
 // Tarjetas de estadísticas (KPIs)
 // ============================================================
 async function getStats(): Promise<DashboardStats> {
-  const hoy = new Date()
-  const inicioHoy = inicioDelDia(hoy)
-  const finHoy = finDelDia(hoy)
-  const inicioMes = inicioDelMes(hoy)
+  const { inicio: inicioHoy, fin: finHoy } = rangoDelDiaEnLima()
+  const inicioMes = inicioDelMesEnLima()
 
   const [
     contenedoresAlmacenados,
@@ -81,7 +101,6 @@ async function getStats(): Promise<DashboardStats> {
     }),
 
     // Contenedores actualmente almacenados bajo espacio alquilado
-    // CIF PERU S.A.C. es actualmente el único cliente con este tipo de precio.
     prisma.guiaInternamiento.count({
       where: {
         estado: EstadoGuia.ALMACENADO,
@@ -174,7 +193,6 @@ async function getDistribucionContenedores(): Promise<
 
   for (const g of guias) {
     const medida = g.contenedor.medida
-
     conteo.set(medida, (conteo.get(medida) ?? 0) + 1)
   }
 
@@ -186,40 +204,55 @@ async function getDistribucionContenedores(): Promise<
     }))
 }
 
-// ============================================================
-// Movimientos diarios (ingresos vs salidas) — últimos N días
-// ============================================================
 async function getMovimientosDiarios(dias = 14): Promise<MovimientoDiario[]> {
   const hoy = new Date()
-  const inicio = inicioDelDia(
-    new Date(hoy.getTime() - (dias - 1) * 24 * 60 * 60 * 1000)
+  const ahoraEnLima = toZonedTime(hoy, ZONA_HORARIA)
+
+  // Rango para la consulta
+  const inicioRangoLima = new Date(
+    ahoraEnLima.getFullYear(),
+    ahoraEnLima.getMonth(),
+    ahoraEnLima.getDate() - (dias - 1),
+    0,
+    0,
+    0,
+    0
   )
+  const inicioUTC = fromZonedTime(inicioRangoLima, ZONA_HORARIA)
 
   const [ingresos, salidas] = await Promise.all([
     prisma.guiaInternamiento.findMany({
-      where: { fechaIngreso: { gte: inicio } },
+      where: { fechaIngreso: { gte: inicioUTC } },
       select: { fechaIngreso: true },
     }),
     prisma.guiaInternamiento.findMany({
-      where: { fechaSalida: { gte: inicio } },
+      where: { fechaSalida: { gte: inicioUTC } },
       select: { fechaSalida: true },
     }),
   ])
 
   const mapa = new Map<string, { ingresos: number; salidas: number }>()
+
+  // Generar las llaves YYYY-MM-DD
   for (let i = 0; i < dias; i++) {
-    const fecha = new Date(inicio.getTime() + i * 24 * 60 * 60 * 1000)
-    mapa.set(aClaveDia(fecha), { ingresos: 0, salidas: 0 })
+    const d = new Date(inicioRangoLima)
+    d.setDate(d.getDate() + i)
+    const clave = formatInTimeZone(d, ZONA_HORARIA, "yyyy-MM-dd")
+    mapa.set(clave, { ingresos: 0, salidas: 0 })
   }
 
+  // Contar ingresos
   for (const g of ingresos) {
-    const registro = mapa.get(aClaveDia(g.fechaIngreso))
+    const clave = aClaveDia(g.fechaIngreso)
+    const registro = mapa.get(clave)
     if (registro) registro.ingresos += 1
   }
 
+  // Contar salidas
   for (const g of salidas) {
     if (!g.fechaSalida) continue
-    const registro = mapa.get(aClaveDia(g.fechaSalida))
+    const clave = aClaveDia(g.fechaSalida)
+    const registro = mapa.get(clave)
     if (registro) registro.salidas += 1
   }
 
@@ -233,27 +266,39 @@ async function getMovimientosDiarios(dias = 14): Promise<MovimientoDiario[]> {
 // Ingresos (dinero cobrado) por mes — últimos N meses
 // ============================================================
 async function getIngresosMensuales(meses = 6): Promise<IngresoMensual[]> {
-  const hoy = new Date()
-  const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - (meses - 1), 1)
+  const inicioMes = inicioDelMesEnLima()
+
+  // Retroceder N-1 meses
+  const inicioRango = toZonedTime(inicioMes, ZONA_HORARIA)
+  inicioRango.setMonth(inicioRango.getMonth() - (meses - 1))
+  const inicioUTC = fromZonedTime(inicioRango, ZONA_HORARIA)
 
   const pagos = await prisma.guiaInternamiento.findMany({
     where: {
       estadoPago: EstadoPago.PAGADO,
-      fechaPago: { gte: inicio },
+      fechaPago: { gte: inicioUTC },
     },
     select: { fechaPago: true, montoTotal: true },
   })
 
   const mapa = new Map<string, number>()
   for (let i = 0; i < meses; i++) {
-    const fecha = new Date(inicio.getFullYear(), inicio.getMonth() + i, 1)
-    mapa.set(`${NOMBRES_MES[fecha.getMonth()]} ${fecha.getFullYear()}`, 0)
+    const fecha = new Date(inicioRango)
+    fecha.setMonth(fecha.getMonth() + i)
+    const clave = `${NOMBRES_MES[fecha.getMonth()]} ${fecha.getFullYear()}`
+    mapa.set(clave, 0)
   }
 
   for (const p of pagos) {
     if (!p.fechaPago) continue
-    const clave = `${NOMBRES_MES[p.fechaPago.getMonth()]} ${p.fechaPago.getFullYear()}`
-    mapa.set(clave, (mapa.get(clave) ?? 0) + Number(p.montoTotal ?? 0))
+
+    const mes = Number(formatInTimeZone(p.fechaPago, ZONA_HORARIA, "M"))
+    const año = Number(formatInTimeZone(p.fechaPago, ZONA_HORARIA, "yyyy"))
+    const clave = `${NOMBRES_MES[mes - 1]} ${año}`
+
+    if (mapa.has(clave)) {
+      mapa.set(clave, (mapa.get(clave) ?? 0) + Number(p.montoTotal ?? 0))
+    }
   }
 
   return Array.from(mapa.entries()).map(([mes, monto]) => ({ mes, monto }))
@@ -288,36 +333,24 @@ async function getGuiasRecientes(limite = 8): Promise<GuiaReciente[]> {
 // ============================================================
 // Pagos pendientes con mayor monto
 // ============================================================
-
 async function getPagosPendientes(limite = 5): Promise<PagoPendiente[]> {
   const guias = await prisma.guiaInternamiento.findMany({
     where: {
-      // Solo guías pendientes de pago
       estadoPago: EstadoPago.PENDIENTE,
-
-      // No mostrar guías anuladas
       estado: {
         not: EstadoGuia.ANULADO,
       },
-
-      // Solo guías que ya tienen días de almacenamiento calculados
       diasAlmacenamiento: {
         not: null,
       },
-
-      // Solo guías que tienen monto total calculado
       montoTotal: {
         not: null,
       },
     },
-
-    // Las de mayor monto primero
     orderBy: {
       montoTotal: "desc",
     },
-
     take: limite,
-
     include: {
       cliente: {
         select: {
