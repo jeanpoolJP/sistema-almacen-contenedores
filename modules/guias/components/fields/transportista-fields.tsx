@@ -237,11 +237,13 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
             <FormControl>
               <Input
                 {...field}
+                value={field.value ?? ""}
                 readOnly={estadoEmpresa === "existente"}
-                className={
-                  estadoEmpresa === "existente" ? "bg-muted" : undefined
-                }
+                className={`uppercase ${
+                  estadoEmpresa === "existente" ? "bg-muted" : ""
+                }`}
                 placeholder="Razón social de la empresa"
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
               />
             </FormControl>
 
@@ -275,6 +277,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
                   estadoEmpresa === "existente" ? "bg-muted" : undefined
                 }
                 placeholder="Número de teléfono"
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
               />
             </FormControl>
 
@@ -304,10 +307,11 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
                 {...field}
                 value={field.value ?? ""}
                 readOnly={estadoEmpresa === "existente"}
-                className={
-                  estadoEmpresa === "existente" ? "bg-muted" : undefined
-                }
+                className={`uppercase ${
+                  estadoEmpresa === "existente" ? "bg-muted" : ""
+                }`}
                 placeholder="Nombre o contacto"
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
               />
             </FormControl>
 
@@ -341,6 +345,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
                   estadoEmpresa === "existente" ? "bg-muted" : undefined
                 }
                 placeholder="Nombre del encargado"
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
               />
             </FormControl>
 
@@ -419,7 +424,9 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
               <div className="relative">
                 <Input
                   {...field}
+                  className="uppercase"
                   placeholder="Ej: Q12345678"
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                   onBlur={(e) => {
                     field.onBlur()
                     handleBlurLicencia(e.target.value)
@@ -476,6 +483,7 @@ export function TransportistaFields({ prefix }: TransportistaFieldsProps) {
                   estadoConductor === "existente" ? "bg-muted" : undefined
                 }
                 placeholder="Nombre completo"
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
               />
             </FormControl>
 

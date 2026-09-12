@@ -139,8 +139,9 @@ export function ContenedorField() {
                 <Input
                   {...field}
                   readOnly={soloLectura}
-                  className={soloLectura ? "bg-muted" : undefined}
-                  placeholder="Ej: Maersk"
+                  className={soloLectura ? "bg-muted uppercase" : "uppercase"}
+                  placeholder="Ej: MAERSK"
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                 />
               </FormControl>
               <FormMessage />

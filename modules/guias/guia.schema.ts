@@ -37,6 +37,7 @@ const contenedorGuiaSchema = z.object({
   marca: z
     .string()
     .trim()
+    .toUpperCase()
     .min(1, "La marca del contenedor es obligatoria")
     .max(100, "La marca no puede superar los 100 caracteres"),
 
@@ -65,12 +66,14 @@ const transportistaGuiaSchema = z.object({
   empresaNombre: z
     .string()
     .trim()
+    .toUpperCase()
     .min(1, "El nombre de la empresa es obligatorio")
     .max(150, "El nombre de la empresa no puede superar los 150 caracteres"),
 
   telefono: z
     .string()
     .trim()
+    .toUpperCase()
     .max(20, "El teléfono no puede superar los 20 caracteres")
     .optional()
     .or(z.literal("")),
@@ -78,6 +81,7 @@ const transportistaGuiaSchema = z.object({
   contactoLogistico: z
     .string()
     .trim()
+    .toUpperCase()
     .max(150, "El contacto logístico no puede superar los 150 caracteres")
     .optional()
     .or(z.literal("")),
@@ -85,6 +89,7 @@ const transportistaGuiaSchema = z.object({
   nombreEncargado: z
     .string()
     .trim()
+    .toUpperCase()
     .max(150, "El nombre del encargado no puede superar los 150 caracteres")
     .optional()
     .or(z.literal("")),
@@ -103,16 +108,18 @@ const transportistaGuiaSchema = z.object({
   conductorNombre: z
     .string()
     .trim()
+    .toUpperCase()
     .min(3, "El nombre del conductor debe tener al menos 3 caracteres")
     .max(100, "El nombre del conductor no puede superar los 100 caracteres"),
 
   numeroLicencia: z
     .string()
     .trim()
+    .toUpperCase()
     .min(5, "El número de licencia no es válido")
     .max(30, "El número de licencia no puede superar los 30 caracteres")
     .regex(
-      /^[A-Za-z0-9-]+$/,
+      /^[A-Z0-9-]+$/,
       "El número de licencia solo puede contener letras, números y guiones"
     ),
 })
