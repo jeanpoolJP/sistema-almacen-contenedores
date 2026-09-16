@@ -1,3 +1,5 @@
+// components\admin\admin-sidebar.tsx
+
 "use client"
 
 import { logoutAction } from "@/modules/auth/actions/logout"
@@ -20,6 +22,7 @@ import {
   Sun,
   Moon,
   ClipboardCheck,
+  Box,
 } from "lucide-react"
 
 import {
@@ -76,6 +79,12 @@ const menuItems = [
     href: "/admin/conductores",
     icon: UsersRound,
   },
+  {
+    title: "Flat Racks",
+    href: "/admin/flat-racks",
+    icon: Box,
+  },
+
   /*   {
     title: "Pagos",
     href: "/admin/pagos",
