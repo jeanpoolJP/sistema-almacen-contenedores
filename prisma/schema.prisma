@@ -65,6 +65,7 @@ model Cliente {
   // Relaciones
   guiasInternamiento GuiaInternamiento[]
   pagos              Pago[]
+  guiasTrasegado GuiaTrasegado[]
 
   @@map("clientes")
 }
@@ -89,6 +90,9 @@ model EmpresaTransporte {
   guiasIngreso GuiaInternamiento[] @relation("EmpresaIngreso")
   guiasSalida  GuiaInternamiento[] @relation("EmpresaSalida")
 
+  ingresosTrasegado GuiaTrasegadoIngreso[]
+  salidasTrasegado GuiaTrasegadoSalida[]
+
   @@map("empresas_transporte")
 }
 
@@ -104,18 +108,27 @@ model Conductor {
   guiasIngreso GuiaInternamiento[] @relation("ConductorIngreso")
   guiasSalida  GuiaInternamiento[] @relation("ConductorSalida")
 
+  ingresosTrasegado GuiaTrasegadoIngreso[]
+  salidasTrasegado GuiaTrasegadoSalida[]
+
   @@map("conductores")
 }
 
 model Vehiculo {
   id        Int      @id @default(autoincrement())
   placa     String   @unique @db.VarChar(10)
+  tipo TipoVehiculo?
+  descripcion String? @db.VarChar(255)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
   // Relaciones
   guiasIngreso GuiaInternamiento[] @relation("VehiculoIngreso")
   guiasSalida  GuiaInternamiento[] @relation("VehiculoSalida")
+
+  ingresosTrasegado GuiaTrasegadoIngreso[]
+  salidasTrasegado GuiaTrasegadoSalida[]
 
   @@map("vehiculos")
 }
@@ -131,6 +144,7 @@ model Contenedor {
 
   // Relaciones
   guiasInternamiento GuiaInternamiento[]
+  elementosTrasegado GuiaTrasegadoElemento[]
 
   @@map("contenedores")
 }
@@ -372,4 +386,180 @@ model Pago {
   // Índices
   @@index([clienteId], map: "idx_pagos_cliente_id")
   @@map("pagos")
+}
+
+
+
+enum EstadoGuiaTrasegado {
+  EN_PROCESO
+  FINALIZADO
+}
+
+enum TipoElementoTrasegado {
+  CONTENEDOR
+  FLAT_RACK
+  MERCADERIA
+  MAQUINARIA
+  OTRO
+}
+
+enum TipoVehiculoTrasegado {
+  PORTA_CONTENEDORES
+  CAMA_BAJA
+  OTRO
+}
+
+enum TipoVehiculo {
+  PORTA_CONTENEDORES
+  CAMA_BAJA
+  OTRO
+}
+
+model GuiaTrasegado {
+  id Int @id @default(autoincrement())
+
+  numeroGuia String @unique @map("numero_guia") @db.VarChar(30)
+  descripcionServicio String? @map("descripcion_servicio") @db.VarChar(255)
+
+  clienteId Int? @map("cliente_id")
+
+  fechaIngreso DateTime @map("fecha_ingreso") @db.Timestamptz(3)
+
+  estado EstadoGuiaTrasegado @default(EN_PROCESO)
+
+  subtotal Decimal? @db.Decimal(10, 2)
+  porcentajeIGV Decimal? @map("porcentaje_igv") @db.Decimal(5, 2)
+  montoIGV Decimal? @map("monto_igv") @db.Decimal(10, 2)
+  totalPagar Decimal? @map("total_pagar") @db.Decimal(10, 2)
+
+  estadoPago EstadoPago @default(PENDIENTE) @map("estado_pago")
+  metodoPago MetodoPago? @map("metodo_pago")
+  numeroOperacion String? @map("numero_operacion") @db.VarChar(100)
+  fechaPago DateTime? @map("fecha_pago") @db.Timestamptz(3)
+
+  tratamientoIGV TratamientoIGV @default(SIN_IGV) @map("tratamiento_igv")
+
+  observaciones String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  cliente Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+
+  ingreso GuiaTrasegadoIngreso?
+  salidas GuiaTrasegadoSalida[]
+
+  @@index([clienteId])
+  @@index([estado])
+  @@index([estadoPago])
+  @@index([fechaIngreso])
+  @@map("guias_trasegado")
+}
+
+model GuiaTrasegadoIngreso {
+  id Int @id @default(autoincrement())
+
+  guiaTrasegadoId Int @unique @map("guia_trasegado_id")
+
+  empresaTransporteId Int @map("empresa_transporte_id")
+  vehiculoId Int @map("vehiculo_id")
+  conductorId Int @map("conductor_id")
+
+  guiaTrasegado GuiaTrasegado @relation(fields: [guiaTrasegadoId], references: [id], onDelete: Cascade)
+
+  empresaTransporte EmpresaTransporte @relation(fields: [empresaTransporteId], references: [id])
+  vehiculo Vehiculo @relation(fields: [vehiculoId], references: [id])
+  conductor Conductor @relation(fields: [conductorId], references: [id])
+
+  elementos GuiaTrasegadoElemento[]
+
+  @@index([empresaTransporteId])
+  @@index([vehiculoId])
+  @@index([conductorId])
+  @@map("guias_trasegado_ingresos")
+}
+
+model GuiaTrasegadoElemento {
+  id Int @id @default(autoincrement())
+
+  ingresoId Int @map("ingreso_id")
+
+  tipo TipoElementoTrasegado
+
+  contenedorId Int? @map("contenedor_id")
+  flatRackId Int? @map("flat_rack_id")
+
+  descripcion String? @db.VarChar(255)
+  numero String? @db.VarChar(50)
+  observaciones String? @db.Text
+
+  ingreso GuiaTrasegadoIngreso @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
+
+  contenedor Contenedor? @relation(fields: [contenedorId], references: [id])
+  flatRack FlatRack? @relation(fields: [flatRackId], references: [id])
+
+  salidas GuiaTrasegadoSalidaElemento[]
+
+  @@index([ingresoId])
+  @@index([contenedorId])
+  @@index([flatRackId])
+  @@map("guias_trasegado_elementos")
+}
+
+model GuiaTrasegadoSalida {
+  id Int @id @default(autoincrement())
+
+  guiaTrasegadoId Int @map("guia_trasegado_id")
+
+  fechaSalida DateTime @map("fecha_salida") @db.Timestamptz(3)
+
+  empresaTransporteId Int @map("empresa_transporte_id")
+  vehiculoId Int @map("vehiculo_id")
+  conductorId Int @map("conductor_id")
+
+  observaciones String? @db.Text
+
+  guiaTrasegado GuiaTrasegado @relation(fields: [guiaTrasegadoId], references: [id], onDelete: Cascade)
+
+  empresaTransporte EmpresaTransporte @relation(fields: [empresaTransporteId], references: [id])
+  vehiculo Vehiculo @relation(fields: [vehiculoId], references: [id])
+  conductor Conductor @relation(fields: [conductorId], references: [id])
+
+  elementos GuiaTrasegadoSalidaElemento[]
+
+  @@index([guiaTrasegadoId])
+  @@index([empresaTransporteId])
+  @@index([vehiculoId])
+  @@index([conductorId])
+  @@index([fechaSalida])
+  @@map("guias_trasegado_salidas")
+}
+
+model GuiaTrasegadoSalidaElemento {
+  id Int @id @default(autoincrement())
+
+  salidaId Int @map("salida_id")
+  elementoId Int @map("elemento_id")
+
+  salida GuiaTrasegadoSalida @relation(fields: [salidaId], references: [id], onDelete: Cascade)
+
+  elemento GuiaTrasegadoElemento @relation(fields: [elementoId], references: [id])
+
+  @@unique([salidaId, elementoId])
+  @@index([elementoId])
+  @@map("guias_trasegado_salida_elementos")
+}
+
+model FlatRack {
+  id Int @id @default(autoincrement())
+
+  numero String @unique @db.VarChar(20)
+  marca String @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  elementosTrasegado GuiaTrasegadoElemento[]
+
+  @@map("flat_racks")
 }
