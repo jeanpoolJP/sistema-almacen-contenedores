@@ -50,3 +50,19 @@ export function formatDateTime(date: Date): string {
 export function formatTime(date: Date): string {
   return formatInTimeZone(date, APP_TIMEZONE, "HH:mm")
 }
+
+/**
+ * Devuelve la fecha de Lima en formato YYYY-MM-DD
+ * ideal para `<input type="date">`.
+ */
+export function formatDateInput(date: Date): string {
+  return formatInTimeZone(date, APP_TIMEZONE, "yyyy-MM-dd")
+}
+
+/**
+ * Devuelve la hora de Lima en formato HH:mm
+ * ideal para `<input type="time">`.
+ */
+export function formatTimeInput(date: Date): string {
+  return formatInTimeZone(date, APP_TIMEZONE, "HH:mm")
+}

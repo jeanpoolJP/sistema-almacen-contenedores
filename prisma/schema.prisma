@@ -403,12 +403,6 @@ enum TipoElementoTrasegado {
   OTRO
 }
 
-enum TipoVehiculoTrasegado {
-  PORTA_CONTENEDORES
-  CAMA_BAJA
-  OTRO
-}
-
 enum TipoVehiculo {
   PORTA_CONTENEDORES
   CAMA_BAJA
