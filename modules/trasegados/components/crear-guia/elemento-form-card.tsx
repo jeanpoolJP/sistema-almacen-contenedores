@@ -49,7 +49,9 @@ export function ElementoFormCard({
             #{index + 1}
           </Badge>
           <Badge variant="outline" className="text-xs">
-            {ETIQUETAS_TIPO_ELEMENTO[tipo]}
+            {ETIQUETAS_TIPO_ELEMENTO[
+              tipo as keyof typeof ETIQUETAS_TIPO_ELEMENTO
+            ]}
           </Badge>
         </div>
 

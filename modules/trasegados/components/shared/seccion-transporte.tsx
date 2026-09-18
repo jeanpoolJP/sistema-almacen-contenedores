@@ -1,10 +1,10 @@
-// modules\trasegados\components\crear-guia\seccion-transporte.tsx
+// modules\trasegados\components\shared\seccion-transporte.tsx
 
 "use client"
 
 import { Loader2Icon, LockIcon, TruckIcon } from "lucide-react"
 import { useEffect } from "react"
-import type { UseFormReturn } from "react-hook-form"
+import type { FieldValues, Path, UseFormReturn } from "react-hook-form"
 
 import {
   FormControl,
@@ -23,8 +23,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
-import { FormSection } from "../shared"
-import { UppercaseInput } from "../shared/uppercase-input"
+import { FormSection } from "./form-section"
+import { UppercaseInput } from "./uppercase-input"
 import {
   buscarConductorAction,
   buscarEmpresaTransporteAction,
@@ -32,13 +32,25 @@ import {
 } from "../../actions/buscar-entidades.action"
 import { useEntidadLookup } from "../../hooks/use-entidad-lookup"
 import { ETIQUETAS_TIPO_VEHICULO } from "../../types"
-import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado.schema"
 
-interface SeccionTransporteProps {
-  form: UseFormReturn<CrearGuiaTrasegadoInput>
+/**
+ * Prefijo del path dentro del form.
+ * Ej: "ingreso" | "salida"
+ */
+type Prefijo = "ingreso" | "salida"
+
+interface SeccionTransporteProps<T extends FieldValues> {
+  form: UseFormReturn<T>
+  prefijo: Prefijo
 }
 
-export function SeccionTransporte({ form }: SeccionTransporteProps) {
+export function SeccionTransporte<T extends FieldValues>({
+  form,
+  prefijo,
+}: SeccionTransporteProps<T>) {
+  // Helper para construir el path tipado
+  const p = (suffix: string) => `${prefijo}.${suffix}` as Path<T>
+
   const empresaLookup = useEntidadLookup<
     string,
     {
@@ -72,10 +84,13 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   >(buscarConductorAction)
 
   // ---------- EMPRESA ----------
-  const rucValue = form.watch("ingreso.empresaTransporte.ruc")
+  const rucPath = p("empresaTransporte.ruc")
+  const rucValue = form.watch(rucPath)
+
   useEffect(() => {
     const t = setTimeout(() => {
-      if (rucValue && rucValue.length >= 8) empresaLookup.buscar(rucValue)
+      if (rucValue && String(rucValue).length >= 8)
+        empresaLookup.buscar(String(rucValue))
       else empresaLookup.reset()
     }, 500)
     return () => clearTimeout(t)
@@ -84,15 +99,18 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   useEffect(() => {
     if (empresaLookup.encontrada && empresaLookup.data) {
       const d = empresaLookup.data
-      form.setValue("ingreso.empresaTransporte.nombre", d.nombre)
-      form.setValue("ingreso.empresaTransporte.telefono", d.telefono ?? "")
+      form.setValue(p("empresaTransporte.nombre") as any, d.nombre as any)
       form.setValue(
-        "ingreso.empresaTransporte.contactoLogistico",
-        d.contactoLogistico ?? ""
+        p("empresaTransporte.telefono") as any,
+        (d.telefono ?? "") as any
       )
       form.setValue(
-        "ingreso.empresaTransporte.nombreEncargado",
-        d.nombreEncargado ?? ""
+        p("empresaTransporte.contactoLogistico") as any,
+        (d.contactoLogistico ?? "") as any
+      )
+      form.setValue(
+        p("empresaTransporte.nombreEncargado") as any,
+        (d.nombreEncargado ?? "") as any
       )
     }
   }, [empresaLookup.encontrada, empresaLookup.data, form])
@@ -100,11 +118,13 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   const empresaBloqueada = empresaLookup.encontrada && !!empresaLookup.data
 
   // ---------- VEHÍCULO ----------
-  const placaValue = form.watch("ingreso.vehiculo.placa")
+  const placaPath = p("vehiculo.placa")
+  const placaValue = form.watch(placaPath)
+
   useEffect(() => {
     const t = setTimeout(() => {
-      if (placaValue && placaValue.length >= 4)
-        vehiculoLookup.buscar(placaValue)
+      if (placaValue && String(placaValue).length >= 4)
+        vehiculoLookup.buscar(String(placaValue))
       else vehiculoLookup.reset()
     }, 500)
     return () => clearTimeout(t)
@@ -113,19 +133,24 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   useEffect(() => {
     if (vehiculoLookup.encontrada && vehiculoLookup.data) {
       const d = vehiculoLookup.data
-      form.setValue("ingreso.vehiculo.tipo", d.tipo)
-      form.setValue("ingreso.vehiculo.descripcion", d.descripcion ?? "")
+      form.setValue(p("vehiculo.tipo") as any, d.tipo as any)
+      form.setValue(
+        p("vehiculo.descripcion") as any,
+        (d.descripcion ?? "") as any
+      )
     }
   }, [vehiculoLookup.encontrada, vehiculoLookup.data, form])
 
   const vehiculoBloqueado = vehiculoLookup.encontrada && !!vehiculoLookup.data
 
   // ---------- CONDUCTOR ----------
-  const licenciaValue = form.watch("ingreso.conductor.numeroLicencia")
+  const licenciaPath = p("conductor.numeroLicencia")
+  const licenciaValue = form.watch(licenciaPath)
+
   useEffect(() => {
     const t = setTimeout(() => {
-      if (licenciaValue && licenciaValue.length >= 4)
-        conductorLookup.buscar(licenciaValue)
+      if (licenciaValue && String(licenciaValue).length >= 4)
+        conductorLookup.buscar(String(licenciaValue))
       else conductorLookup.reset()
     }, 500)
     return () => clearTimeout(t)
@@ -134,8 +159,11 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   useEffect(() => {
     if (conductorLookup.encontrada && conductorLookup.data) {
       const d = conductorLookup.data
-      form.setValue("ingreso.conductor.nombreCompleto", d.nombreCompleto)
-      form.setValue("ingreso.conductor.telefono", d.telefono ?? "")
+      form.setValue(
+        p("conductor.nombreCompleto") as any,
+        d.nombreCompleto as any
+      )
+      form.setValue(p("conductor.telefono") as any, (d.telefono ?? "") as any)
     }
   }, [conductorLookup.encontrada, conductorLookup.data, form])
 
@@ -145,7 +173,11 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
   return (
     <FormSection
       title="Información del transporte"
-      description="Empresa, vehículo y conductor responsables del ingreso."
+      description={
+        prefijo === "ingreso"
+          ? "Empresa, vehículo y conductor responsables del ingreso."
+          : "Empresa, vehículo y conductor responsables de la salida."
+      }
       icon={<TruckIcon className="size-4" />}
     >
       {/* EMPRESA */}
@@ -156,15 +188,12 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
         <div className="grid gap-5 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="ingreso.empresaTransporte.ruc"
+            name={p("empresaTransporte.ruc") as any}
             render={({ field }) => (
               <FormItem className="relative">
-                {/* Label limpio sin clases flex para que mantenga sus 14px de altura exactos */}
                 <FormLabel>
                   RUC <span className="text-destructive">*</span>
                 </FormLabel>
-
-                {/* Indicadores en un layer flotante con alineación vertical perfecta */}
                 <div className="pointer-events-none absolute top-0 right-0 flex items-center gap-1.5 text-xs">
                   {empresaLookup.buscando && (
                     <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
@@ -181,7 +210,6 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
                     </span>
                   )}
                 </div>
-
                 <FormControl>
                   <UppercaseInput
                     placeholder="20123456789"
@@ -196,7 +224,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.empresaTransporte.nombre"
+            name={p("empresaTransporte.nombre") as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
@@ -217,7 +245,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.empresaTransporte.telefono"
+            name={p("empresaTransporte.telefono") as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Teléfono</FormLabel>
@@ -237,7 +265,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.empresaTransporte.contactoLogistico"
+            name={p("empresaTransporte.contactoLogistico") as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Contacto logístico</FormLabel>
@@ -257,7 +285,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.empresaTransporte.nombreEncargado"
+            name={p("empresaTransporte.nombreEncargado") as any}
             render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Nombre del encargado</FormLabel>
@@ -287,13 +315,12 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
         <div className="grid gap-5 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="ingreso.vehiculo.placa"
+            name={p("vehiculo.placa") as any}
             render={({ field }) => (
               <FormItem className="relative">
                 <FormLabel>
                   Placa <span className="text-destructive">*</span>
                 </FormLabel>
-
                 <div className="pointer-events-none absolute top-0 right-0 flex items-center gap-1.5 text-xs">
                   {vehiculoLookup.buscando && (
                     <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
@@ -312,7 +339,6 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
                       </span>
                     )}
                 </div>
-
                 <FormControl>
                   <UppercaseInput placeholder="ABC-123" {...field} />
                 </FormControl>
@@ -323,7 +349,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.vehiculo.tipo"
+            name={p("vehiculo.tipo") as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo</FormLabel>
@@ -359,7 +385,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.vehiculo.descripcion"
+            name={p("vehiculo.descripcion") as any}
             render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Descripción</FormLabel>
@@ -389,13 +415,12 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
         <div className="grid gap-5 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="ingreso.conductor.numeroLicencia"
+            name={p("conductor.numeroLicencia") as any}
             render={({ field }) => (
               <FormItem className="relative">
                 <FormLabel>
                   Número de licencia <span className="text-destructive">*</span>
                 </FormLabel>
-
                 <div className="pointer-events-none absolute top-0 right-0 flex items-center gap-1.5 text-xs">
                   {conductorLookup.buscando && (
                     <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
@@ -414,7 +439,6 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
                       </span>
                     )}
                 </div>
-
                 <FormControl>
                   <UppercaseInput placeholder="Q12345678" {...field} />
                 </FormControl>
@@ -425,7 +449,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.conductor.nombreCompleto"
+            name={p("conductor.nombreCompleto") as any}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
@@ -446,7 +470,7 @@ export function SeccionTransporte({ form }: SeccionTransporteProps) {
 
           <FormField
             control={form.control}
-            name="ingreso.conductor.telefono"
+            name={p("conductor.telefono") as any}
             render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Teléfono</FormLabel>

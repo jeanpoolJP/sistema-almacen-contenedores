@@ -8,15 +8,12 @@ import { FormProvider } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 
 import { SeccionInfoGeneral } from "./seccion-info-general"
-import { SeccionTransporte } from "./seccion-transporte"
+import { SeccionTransporte } from "../shared/seccion-transporte" // 👈 cambia aquí
 import { SeccionElementos } from "./seccion-elementos"
 import { useCrearGuiaTrasegado } from "../../hooks/use-crear-guia-trasegado"
 
 /**
  * Formulario completo para crear una guía de trasegado.
- *
- * Compone las secciones de información general, transporte
- * y elementos transportados, y delega el submit al hook.
  */
 export function CrearGuiaTrasegadoForm() {
   const { form, onSubmit, isPending } = useCrearGuiaTrasegado()
@@ -30,9 +27,8 @@ export function CrearGuiaTrasegadoForm() {
         noValidate
       >
         <SeccionInfoGeneral form={form} />
-        <SeccionTransporte form={form} />
+        <SeccionTransporte form={form} prefijo="ingreso" />{" "}
         <SeccionElementos form={form} />
-
         <div className="flex items-center justify-end gap-3 border-t pt-6">
           <Button
             type="button"
