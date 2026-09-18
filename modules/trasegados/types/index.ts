@@ -1,12 +1,12 @@
 // modules\trasegados\types\index.ts
 
 import type { z } from "zod"
-import type { elementoTrasegadoSchema } from "../schemas/crear-guia-trasegado.schema"
+import type { ElementoTrasegadoInput } from "../schemas/shared/elemento.schema"
 
 /**
  * Tipo de elemento individual en el formulario.
  */
-export type ElementoTrasegadoFormValue = z.infer<typeof elementoTrasegadoSchema>
+export type ElementoTrasegadoFormValue = ElementoTrasegadoInput
 
 /**
  * Tipo discriminado para acceder a los campos según el tipo.

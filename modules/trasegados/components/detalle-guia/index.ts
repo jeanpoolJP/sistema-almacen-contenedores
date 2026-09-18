@@ -1,0 +1,7 @@
+export * from "./detalle-guia-trasegado-view"
+export * from "./detalle-header"
+export * from "./detalle-info-general"
+export * from "./detalle-ingreso"
+export * from "./detalle-elementos"
+export * from "./detalle-elemento-card"
+export * from "./detalle-salidas"
