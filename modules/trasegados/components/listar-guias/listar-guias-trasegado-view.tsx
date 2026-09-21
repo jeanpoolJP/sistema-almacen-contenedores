@@ -9,6 +9,17 @@ import { useState } from "react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import { FiltrosGuiasTrasegado } from "./filtros-guias-trasegado"
 import { TablaGuiasTrasegado } from "./tabla-guias-trasegado"
@@ -16,6 +27,14 @@ import { AsignarClienteModal } from "../asignar-cliente/asignar-cliente-modal"
 import { FinalizarGuiaModal } from "../finalizar-guia/finalizar-guia-modal"
 import { RegistrarSalidaModal } from "../registrar-salida/registrar-salida-modal"
 import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
+import { RegistrarPagoModal } from "../registrar-pago/registrar-pago-modal"
+import { revertirPagoAction } from "../../actions/registrar-pago.action"
+
+type ModalGuia = {
+  open: boolean
+  guiaId: number
+  numeroGuia: string
+}
 
 export function ListarGuiasTrasegadoView() {
   const router = useRouter()
@@ -55,6 +74,18 @@ export function ListarGuiasTrasegadoView() {
     finalizar: true,
   })
 
+  const [registrarPago, setRegistrarPago] = useState<ModalGuia>({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+  })
+
+  const [confirmarRevertir, setConfirmarRevertir] = useState<ModalGuia>({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+  })
+
   const handleVerDetalle = (id: number) => {
     router.push(`/admin/trasegados/${id}`)
   }
@@ -73,6 +104,17 @@ export function ListarGuiasTrasegadoView() {
 
   const handleAbrirReactivar = (id: number, numeroGuia: string) => {
     setCambiarEstado({ open: true, guiaId: id, numeroGuia, finalizar: false })
+  }
+
+  const handleRevertirPago = async () => {
+    const res = await revertirPagoAction(confirmarRevertir.guiaId)
+    if (res.success) {
+      toast.success(res.message)
+      refetch()
+    } else {
+      toast.error(res.message)
+    }
+    setConfirmarRevertir({ open: false, guiaId: 0, numeroGuia: "" })
   }
 
   return (
@@ -101,11 +143,35 @@ export function ListarGuiasTrasegadoView() {
       <TablaGuiasTrasegado
         result={result}
         isLoading={isPending && !result}
-        onVerDetalle={handleVerDetalle}
-        onAsignarCliente={handleAbrirAsignarCliente}
-        onRegistrarSalida={handleAbrirRegistrarSalida}
-        onFinalizar={handleAbrirFinalizar}
-        onReactivar={handleAbrirReactivar}
+        onVerDetalle={(id) => router.push(`/admin/trasegados/${id}`)}
+        onAsignarCliente={(id, numeroGuia) =>
+          setAsignarCliente({ open: true, guiaId: id, numeroGuia })
+        }
+        onRegistrarSalida={(id, numeroGuia) =>
+          setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
+        }
+        onFinalizar={(id, numeroGuia) =>
+          setCambiarEstado({
+            open: true,
+            guiaId: id,
+            numeroGuia,
+            finalizar: true,
+          })
+        }
+        onReactivar={(id, numeroGuia) =>
+          setCambiarEstado({
+            open: true,
+            guiaId: id,
+            numeroGuia,
+            finalizar: false,
+          })
+        }
+        onRegistrarPago={(id, numeroGuia) =>
+          setRegistrarPago({ open: true, guiaId: id, numeroGuia })
+        }
+        onRevertirPago={(id, numeroGuia) =>
+          setConfirmarRevertir({ open: true, guiaId: id, numeroGuia })
+        }
         onIrAPagina={irAPagina}
         onCambiarOrden={cambiarOrden}
         ordenActual={filtros.ordenarPor ?? "fechaIngreso"}
@@ -139,6 +205,44 @@ export function ListarGuiasTrasegadoView() {
         finalizar={cambiarEstado.finalizar}
         onSuccess={refetch}
       />
+
+      <RegistrarPagoModal
+        open={registrarPago.open}
+        onOpenChange={(open: boolean) =>
+          setRegistrarPago((prev: ModalGuia) => ({ ...prev, open }))
+        }
+        guiaId={registrarPago.guiaId}
+        numeroGuia={registrarPago.numeroGuia}
+        onSuccess={refetch}
+      />
+
+      {/* AlertDialog de confirmación para revertir pago */}
+      <AlertDialog
+        open={confirmarRevertir.open}
+        onOpenChange={(open: boolean) =>
+          setConfirmarRevertir((prev: ModalGuia) => ({ ...prev, open }))
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Revertir el pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              La guía{" "}
+              <span className="font-mono font-medium">
+                {confirmarRevertir.numeroGuia}
+              </span>{" "}
+              volverá al estado <strong>Pendiente de pago</strong>. Los montos
+              calculados se conservarán.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRevertirPago}>
+              Revertir pago
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

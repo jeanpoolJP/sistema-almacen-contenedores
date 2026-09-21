@@ -34,6 +34,8 @@ interface TablaGuiasTrasegadoProps {
   onRegistrarSalida: (id: number, numeroGuia: string) => void
   onFinalizar: (id: number, numeroGuia: string) => void
   onReactivar: (id: number, numeroGuia: string) => void
+  onRegistrarPago: (id: number, numeroGuia: string) => void
+  onRevertirPago: (id: number, numeroGuia: string) => void
   onIrAPagina: (page: number) => void
   onCambiarOrden: (ordenarPor: ListarGuiasTrasegadoInput["ordenarPor"]) => void
   ordenActual: ListarGuiasTrasegadoInput["ordenarPor"]
@@ -47,6 +49,8 @@ export function TablaGuiasTrasegado({
   onRegistrarSalida,
   onFinalizar,
   onReactivar,
+  onRegistrarPago,
+  onRevertirPago,
   onIrAPagina,
   onCambiarOrden,
   ordenActual,
@@ -159,6 +163,7 @@ export function TablaGuiasTrasegado({
                 <TableCell className="text-right">
                   <AccionesGuiaMenu
                     estado={g.estado}
+                    estadoPago={g.estadoPago}
                     onVerDetalle={() => onVerDetalle(g.id)}
                     onAsignarCliente={() =>
                       onAsignarCliente(g.id, g.numeroGuia)
@@ -168,6 +173,8 @@ export function TablaGuiasTrasegado({
                     }
                     onFinalizar={() => onFinalizar(g.id, g.numeroGuia)}
                     onReactivar={() => onReactivar(g.id, g.numeroGuia)}
+                    onRegistrarPago={() => onRegistrarPago(g.id, g.numeroGuia)}
+                    onRevertirPago={() => onRevertirPago(g.id, g.numeroGuia)}
                   />
                 </TableCell>
               </TableRow>

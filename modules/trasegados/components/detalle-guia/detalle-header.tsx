@@ -12,6 +12,9 @@ import {
 import Link from "next/link"
 import { useState } from "react"
 
+import { CreditCardIcon } from "lucide-react"
+import { RegistrarPagoModal } from "../registrar-pago"
+
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -36,6 +39,8 @@ export function DetalleHeader({
     open: false,
     finalizar: true,
   })
+
+  const [modalPago, setModalPago] = useState(false)
 
   const enProceso = guia.estado === "EN_PROCESO"
 
@@ -89,6 +94,15 @@ export function DetalleHeader({
           <Button
             type="button"
             variant="outline"
+            onClick={() => setModalPago(true)}
+          >
+            <CreditCardIcon className="mr-2 size-4" />
+            {guia.estadoPago === "PAGADO" ? "Editar pago" : "Registrar pago"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
             onClick={onExportar}
             disabled={exportando}
           >
@@ -113,6 +127,14 @@ export function DetalleHeader({
         guiaId={guia.id}
         numeroGuia={guia.numeroGuia}
         finalizar={modal.finalizar}
+        onSuccess={onUpdated}
+      />
+
+      <RegistrarPagoModal
+        open={modalPago}
+        onOpenChange={setModalPago}
+        guiaId={guia.id}
+        numeroGuia={guia.numeroGuia}
         onSuccess={onUpdated}
       />
     </>

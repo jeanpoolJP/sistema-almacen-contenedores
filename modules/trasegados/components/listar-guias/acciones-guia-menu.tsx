@@ -4,6 +4,7 @@
 
 import {
   CheckCircle2Icon,
+  CreditCardIcon,
   EyeIcon,
   MoreHorizontalIcon,
   PackageOpenIcon,
@@ -26,7 +27,10 @@ interface AccionesGuiaMenuProps {
   onRegistrarSalida: () => void
   onFinalizar: () => void
   onReactivar: () => void
+  onRegistrarPago: () => void
+  onRevertirPago: () => void
   estado: "EN_PROCESO" | "FINALIZADO"
+  estadoPago: "PENDIENTE" | "PAGADO"
 }
 
 export function AccionesGuiaMenu({
@@ -35,9 +39,13 @@ export function AccionesGuiaMenu({
   onRegistrarSalida,
   onFinalizar,
   onReactivar,
+  onRegistrarPago,
+  onRevertirPago,
   estado,
+  estadoPago,
 }: AccionesGuiaMenuProps) {
   const enProceso = estado === "EN_PROCESO"
+  const pagado = estadoPago === "PAGADO"
 
   return (
     <DropdownMenu>
@@ -91,6 +99,35 @@ export function AccionesGuiaMenu({
             <RotateCcwIcon className="mr-2 size-4" />
             Reactivar guía
           </DropdownMenuItem>
+        )}
+
+        <DropdownMenuSeparator />
+
+        {!pagado ? (
+          <DropdownMenuItem
+            onClick={onRegistrarPago}
+            className="cursor-pointer"
+          >
+            <CreditCardIcon className="mr-2 size-4" />
+            Registrar pago
+          </DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem
+              onClick={onRegistrarPago}
+              className="cursor-pointer"
+            >
+              <CreditCardIcon className="mr-2 size-4" />
+              Editar pago
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={onRevertirPago}
+              className="cursor-pointer text-rose-700 focus:text-rose-700"
+            >
+              <RotateCcwIcon className="mr-2 size-4" />
+              Revertir pago
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

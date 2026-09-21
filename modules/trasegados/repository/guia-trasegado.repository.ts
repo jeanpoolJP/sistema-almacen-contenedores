@@ -706,3 +706,89 @@ export async function cambiarEstadoGuiaRepository(
     },
   })
 }
+
+/**
+ * Obtiene los datos mínimos para operar sobre el pago
+ * de una guía (validaciones, precarga del modal).
+ */
+export async function obtenerEstadoPagoRepository(guiaTrasegadoId: number) {
+  return prisma.guiaTrasegado.findUnique({
+    where: { id: guiaTrasegadoId },
+    select: {
+      id: true,
+      numeroGuia: true,
+      estado: true,
+      estadoPago: true,
+      metodoPago: true,
+      numeroOperacion: true,
+      fechaPago: true,
+      subtotal: true,
+      porcentajeIGV: true,
+      montoIGV: true,
+      totalPagar: true,
+      tratamientoIGV: true,
+    },
+  })
+}
+
+/**
+ * Registra o actualiza el pago de una guía.
+ * Cambia el estado a PAGADO.
+ */
+export async function registrarPagoRepository(params: {
+  guiaTrasegadoId: number
+  subtotal: number
+  porcentajeIGV: number
+  montoIGV: number
+  totalPagar: number
+  tratamientoIGV: "SIN_IGV" | "CON_IGV"
+  metodoPago:
+    "EFECTIVO" | "YAPE" | "PLIN" | "TRANSFERENCIA" | "TARJETA" | "OTRO"
+  numeroOperacion: string | null
+  fechaPago: Date
+  observaciones: string | null
+}) {
+  return prisma.guiaTrasegado.update({
+    where: { id: params.guiaTrasegadoId },
+    data: {
+      subtotal: params.subtotal,
+      porcentajeIGV: params.porcentajeIGV,
+      montoIGV: params.montoIGV,
+      totalPagar: params.totalPagar,
+      tratamientoIGV: params.tratamientoIGV,
+      estadoPago: "PAGADO",
+      metodoPago: params.metodoPago,
+      numeroOperacion: params.numeroOperacion,
+      fechaPago: params.fechaPago,
+      observaciones: params.observaciones,
+    },
+    select: {
+      id: true,
+      numeroGuia: true,
+      estadoPago: true,
+      totalPagar: true,
+    },
+  })
+}
+
+/**
+ * Revierte el pago de una guía: pasa a PENDIENTE y limpia
+ * los campos de pago. Los montos se conservan para no perder
+ * el cálculo previo, salvo que el usuario los sobrescriba.
+ */
+export async function revertirPagoRepository(guiaTrasegadoId: number) {
+  return prisma.guiaTrasegado.update({
+    where: { id: guiaTrasegadoId },
+    data: {
+      estadoPago: "PENDIENTE",
+      metodoPago: null,
+      numeroOperacion: null,
+      fechaPago: null,
+    },
+    select: {
+      id: true,
+      numeroGuia: true,
+      estadoPago: true,
+    },
+  })
+}

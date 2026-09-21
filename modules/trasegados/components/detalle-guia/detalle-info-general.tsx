@@ -42,6 +42,46 @@ export function DetalleInfoGeneral({ guia }: DetalleInfoGeneralProps) {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Totales y pago</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <Row
+            label="Tratamiento IGV"
+            value={guia.tratamientoIGV === "CON_IGV" ? "Con IGV" : "Sin IGV"}
+          />
+          {guia.subtotal != null && (
+            <Row label="Subtotal" value={`S/ ${guia.subtotal.toFixed(2)}`} />
+          )}
+          {guia.porcentajeIGV != null && guia.tratamientoIGV === "CON_IGV" && (
+            <Row
+              label={`IGV (${guia.porcentajeIGV}%)`}
+              value={`S/ ${(guia.montoIGV ?? 0).toFixed(2)}`}
+            />
+          )}
+          {guia.totalPagar != null && (
+            <Row
+              label="Total a pagar"
+              value={`S/ ${guia.totalPagar.toFixed(2)}`}
+              bold
+            />
+          )}
+          <Separator />
+          <Row
+            label="Estado de pago"
+            value={guia.estadoPago === "PAGADO" ? "Pagado" : "Pendiente"}
+          />
+          {guia.metodoPago && <Row label="Método" value={guia.metodoPago} />}
+          {guia.numeroOperacion && (
+            <Row label="N° de operación" value={guia.numeroOperacion} />
+          )}
+          {guia.fechaPago && (
+            <Row label="Fecha de pago" value={formatDateTime(guia.fechaPago)} />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Cliente</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
@@ -75,11 +115,23 @@ export function DetalleInfoGeneral({ guia }: DetalleInfoGeneralProps) {
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({
+  label,
+  value,
+  bold = false,
+}: {
+  label: string
+  value: string
+  bold?: boolean
+}) {
   return (
     <div className="flex items-start justify-between gap-4">
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{value}</span>
+      <span
+        className={cn("text-right", bold ? "font-semibold" : "font-medium")}
+      >
+        {value}
+      </span>
     </div>
   )
 }
