@@ -219,7 +219,7 @@ export async function obtenerGuias({
       : {}),
   }
 
-  const [guias, total] = await prisma.$transaction([
+  const [guias, total] = await Promise.all([
     prisma.guiaInternamiento.findMany({
       where,
 
