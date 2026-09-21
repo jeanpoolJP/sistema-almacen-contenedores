@@ -7,14 +7,15 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import { FiltrosGuiasTrasegado } from "./filtros-guias-trasegado"
 import { TablaGuiasTrasegado } from "./tabla-guias-trasegado"
 import { AsignarClienteModal } from "../asignar-cliente/asignar-cliente-modal"
-import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
+import { FinalizarGuiaModal } from "../finalizar-guia/finalizar-guia-modal"
 import { RegistrarSalidaModal } from "../registrar-salida/registrar-salida-modal"
+import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
 
 export function ListarGuiasTrasegadoView() {
   const router = useRouter()
@@ -47,6 +48,13 @@ export function ListarGuiasTrasegadoView() {
     numeroGuia: "",
   })
 
+  const [cambiarEstado, setCambiarEstado] = useState({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+    finalizar: true,
+  })
+
   const handleVerDetalle = (id: number) => {
     router.push(`/admin/trasegados/${id}`)
   }
@@ -57,6 +65,14 @@ export function ListarGuiasTrasegadoView() {
 
   const handleAbrirRegistrarSalida = (id: number, numeroGuia: string) => {
     setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
+  }
+
+  const handleAbrirFinalizar = (id: number, numeroGuia: string) => {
+    setCambiarEstado({ open: true, guiaId: id, numeroGuia, finalizar: true })
+  }
+
+  const handleAbrirReactivar = (id: number, numeroGuia: string) => {
+    setCambiarEstado({ open: true, guiaId: id, numeroGuia, finalizar: false })
   }
 
   return (
@@ -88,6 +104,8 @@ export function ListarGuiasTrasegadoView() {
         onVerDetalle={handleVerDetalle}
         onAsignarCliente={handleAbrirAsignarCliente}
         onRegistrarSalida={handleAbrirRegistrarSalida}
+        onFinalizar={handleAbrirFinalizar}
+        onReactivar={handleAbrirReactivar}
         onIrAPagina={irAPagina}
         onCambiarOrden={cambiarOrden}
         ordenActual={filtros.ordenarPor ?? "fechaIngreso"}
@@ -110,6 +128,15 @@ export function ListarGuiasTrasegadoView() {
         }
         guiaId={registrarSalida.guiaId}
         numeroGuia={registrarSalida.numeroGuia}
+        onSuccess={refetch}
+      />
+
+      <FinalizarGuiaModal
+        open={cambiarEstado.open}
+        onOpenChange={(open) => setCambiarEstado((prev) => ({ ...prev, open }))}
+        guiaId={cambiarEstado.guiaId}
+        numeroGuia={cambiarEstado.numeroGuia}
+        finalizar={cambiarEstado.finalizar}
         onSuccess={refetch}
       />
     </div>

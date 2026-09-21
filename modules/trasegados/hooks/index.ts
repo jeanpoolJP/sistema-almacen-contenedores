@@ -1,1 +1,6 @@
 export * from "./use-crear-guia-trasegado"
+export * from "./use-listar-guias-trasegado"
+export * from "./use-asignar-cliente"
+export * from "./use-registrar-salida"
+export * from "./use-finalizar-guia"
+export * from "./use-entidad-lookup"

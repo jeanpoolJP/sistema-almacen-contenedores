@@ -74,6 +74,7 @@ export function DetalleGuiaTrasegadoView({
         guia={data}
         exportando={exportando}
         onExportar={handleExportar}
+        onUpdated={refetch}
       />
 
       <DetalleInfoGeneral guia={data} />

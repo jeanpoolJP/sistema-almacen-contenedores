@@ -3,9 +3,11 @@
 "use client"
 
 import {
+  CheckCircle2Icon,
   EyeIcon,
   MoreHorizontalIcon,
   PackageOpenIcon,
+  RotateCcwIcon,
   UserPlusIcon,
 } from "lucide-react"
 
@@ -14,6 +16,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
@@ -21,16 +24,21 @@ interface AccionesGuiaMenuProps {
   onVerDetalle: () => void
   onAsignarCliente: () => void
   onRegistrarSalida: () => void
-  /** Si la guía está finalizada, deshabilitamos la acción de salida. */
-  puedeRegistrarSalida: boolean
+  onFinalizar: () => void
+  onReactivar: () => void
+  estado: "EN_PROCESO" | "FINALIZADO"
 }
 
 export function AccionesGuiaMenu({
   onVerDetalle,
   onAsignarCliente,
   onRegistrarSalida,
-  puedeRegistrarSalida,
+  onFinalizar,
+  onReactivar,
+  estado,
 }: AccionesGuiaMenuProps) {
+  const enProceso = estado === "EN_PROCESO"
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -50,18 +58,40 @@ export function AccionesGuiaMenu({
           <EyeIcon className="mr-2 size-4" />
           Ver detalle
         </DropdownMenuItem>
+
         <DropdownMenuItem onClick={onAsignarCliente} className="cursor-pointer">
           <UserPlusIcon className="mr-2 size-4" />
           Asignar cliente
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
         <DropdownMenuItem
           onClick={onRegistrarSalida}
-          disabled={!puedeRegistrarSalida}
+          disabled={!enProceso}
           className="cursor-pointer"
         >
           <PackageOpenIcon className="mr-2 size-4" />
           Registrar salida
         </DropdownMenuItem>
+
+        {enProceso ? (
+          <DropdownMenuItem
+            onClick={onFinalizar}
+            className="cursor-pointer text-emerald-700 focus:text-emerald-700"
+          >
+            <CheckCircle2Icon className="mr-2 size-4" />
+            Finalizar guía
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            onClick={onReactivar}
+            className="cursor-pointer text-amber-700 focus:text-amber-700"
+          >
+            <RotateCcwIcon className="mr-2 size-4" />
+            Reactivar guía
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
