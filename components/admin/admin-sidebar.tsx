@@ -1,4 +1,4 @@
-// components\admin\admin-sidebar.tsx
+// components/admin/admin-sidebar.tsx
 
 "use client"
 
@@ -12,7 +12,6 @@ import {
   FileText,
   Container,
   Truck,
-  CreditCard,
   UsersRound,
   Building2,
   BarChart3,
@@ -23,6 +22,7 @@ import {
   Moon,
   ClipboardCheck,
   Box,
+  ArrowRightLeft,
 } from "lucide-react"
 
 import {
@@ -38,26 +38,58 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const menuItems = [
+// ============================================================
+// CONFIGURACIÓN DE GRUPOS
+// ============================================================
+
+/**
+ * Acceso principal: Dashboard.
+ * Se renderiza solo, sin grupo.
+ */
+const dashboardItem = {
+  title: "Dashboard",
+  href: "/admin",
+  icon: LayoutDashboard,
+}
+
+/**
+ * Operaciones del día a día.
+ * Lo que el usuario abre todos los días.
+ */
+const operacionesItems = [
   {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Clientes",
-    href: "/admin/clientes",
-    icon: Users,
-  },
-  {
-    title: "Guías",
+    title: "Guías de Internamiento",
     href: "/admin/guias",
     icon: FileText,
   },
   {
+    title: "Guías de Trasegados",
+    href: "/admin/trasegados",
+    icon: ArrowRightLeft,
+  },
+]
+
+/**
+ * Inventario: proceso periódico (mensual).
+ * Se separa para que sea visible cuando toque hacerlo.
+ */
+const inventarioItems = [
+  {
     title: "Inventario",
     href: "/admin/inventario",
     icon: ClipboardCheck,
+  },
+]
+
+/**
+ * Datos maestros: soporte para las operaciones.
+ * Se consultan/editan esporádicamente.
+ */
+const maestrosItems = [
+  {
+    title: "Clientes",
+    href: "/admin/clientes",
+    icon: Users,
   },
   {
     title: "Contenedores",
@@ -84,29 +116,27 @@ const menuItems = [
     href: "/admin/flat-racks",
     icon: Box,
   },
-
-  /*   {
-    title: "Pagos",
-    href: "/admin/pagos",
-    icon: CreditCard,
-  }, */
 ]
 
-const reportItems = [
-  {
+/**
+ * Sistema: administración y análisis.
+ */
+const sistemaItems = [
+/*   {
     title: "Reportes",
     href: "/admin/reportes",
     icon: BarChart3,
-  },
-]
-
-const systemItems = [
+  }, */
   {
     title: "Configuración",
     href: "/admin/configuracion",
     icon: Settings,
   },
 ]
+
+// ============================================================
+// COMPONENTE
+// ============================================================
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -131,6 +161,32 @@ export function AdminSidebar() {
     setTheme(isDark ? "light" : "dark")
   }
 
+  /**
+   * Renderiza un item individual del sidebar.
+   * Se usa desde todos los grupos para evitar duplicación.
+   */
+  function renderItem(item: {
+    title: string
+    href: string
+    icon: React.ComponentType<{ className?: string }>
+  }) {
+    const Icon = item.icon
+    const active = isActive(item.href)
+
+    return (
+      <SidebarMenuItem key={item.href}>
+        <SidebarMenuButton
+          isActive={active}
+          tooltip={item.title}
+          onClick={() => navigateTo(item.href)}
+        >
+          <Icon />
+          <span>{item.title}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
+
   return (
     <Sidebar collapsible="icon">
       {/* =====================================================
@@ -151,7 +207,6 @@ export function AdminSidebar() {
 
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Almacén</span>
-
                 <span className="truncate text-xs text-muted-foreground">
                   Contenedores
                 </span>
@@ -166,61 +221,42 @@ export function AdminSidebar() {
       ====================================================== */}
 
       <SidebarContent>
-        {/* PRINCIPAL */}
-
+        {/* DASHBOARD (sin grupo, primero) */}
         <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
-
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href)
+            <SidebarMenu>{renderItem(dashboardItem)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={active}
-                      tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
-                    >
-                      <Icon />
+        {/* OPERACIONES */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Operaciones</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{operacionesItems.map(renderItem)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
+        {/* INVENTARIO */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Inventario</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{inventarioItems.map(renderItem)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* MAESTROS */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Maestros</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{maestrosItems.map(renderItem)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* SISTEMA */}
-
         <SidebarGroup>
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
-
           <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href)
-
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={active}
-                      tooltip={item.title}
-                      onClick={() => navigateTo(item.href)}
-                    >
-                      <Icon />
-
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
+            <SidebarMenu>{sistemaItems.map(renderItem)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -245,7 +281,6 @@ export function AdminSidebar() {
               ) : (
                 <Moon className="size-4" />
               )}
-
               <span>{isDark ? "Modo claro" : "Modo oscuro"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -257,13 +292,11 @@ export function AdminSidebar() {
               tooltip="Cerrar sesión"
               onClick={async () => {
                 await logoutAction()
-
                 router.replace("/")
                 router.refresh()
               }}
             >
               <LogOut className="size-4" />
-
               <span>Cerrar sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
