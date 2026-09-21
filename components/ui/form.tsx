@@ -141,6 +141,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 export {
+  Form,
   FormControl,
   FormDescription,
   FormField,

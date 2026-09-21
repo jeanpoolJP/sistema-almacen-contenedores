@@ -29,31 +29,44 @@ export async function obtenerGuiaTrasegadoService(input: {
 
   // ------------------ ELEMENTOS ------------------
   const elementos: GuiaTrasegadoElementoDetalle[] =
-    guia.ingreso?.elementos.map((el) => ({
-      id: el.id,
-      tipo: el.tipo,
-      numero: el.numero,
-      descripcion: el.descripcion,
-      observaciones: el.observaciones,
-      contenedor: el.contenedor
-        ? {
-            id: el.contenedor.id,
-            numeroContenedor: el.contenedor.numeroContenedor,
-            marca: el.contenedor.marca,
-            medida: el.contenedor.medida,
-            tipo: el.contenedor.tipo,
-          }
-        : null,
-      flatRack: el.flatRack
-        ? {
-            id: el.flatRack.id,
-            numero: el.flatRack.numero,
-            marca: el.flatRack.marca,
-          }
-        : null,
-      // Si tiene al menos una salida asociada, ya fue retirado
-      retirado: el.salidas.length > 0,
-    })) ?? []
+    guia.ingreso?.elementos.map((el) => {
+      const vecesRetirado = el.salidas.length
+      const esMercaderia = el.tipo === "MERCADERIA" || el.tipo === "OTRO"
+
+      // Regla de "retirado":
+      // - Identificables: ya salieron al menos una vez.
+      // - Mercadería: el usuario lo marcó como completado.
+      const retirado = esMercaderia
+        ? el.mercaderiaCompletada
+        : vecesRetirado > 0
+
+      return {
+        id: el.id,
+        tipo: el.tipo,
+        numero: el.numero,
+        descripcion: el.descripcion,
+        observaciones: el.observaciones,
+        contenedor: el.contenedor
+          ? {
+              id: el.contenedor.id,
+              numeroContenedor: el.contenedor.numeroContenedor,
+              marca: el.contenedor.marca,
+              medida: el.contenedor.medida,
+              tipo: el.contenedor.tipo,
+            }
+          : null,
+        flatRack: el.flatRack
+          ? {
+              id: el.flatRack.id,
+              numero: el.flatRack.numero,
+              marca: el.flatRack.marca,
+            }
+          : null,
+        mercaderiaCompletada: el.mercaderiaCompletada,
+        vecesRetirado,
+        retirado,
+      }
+    }) ?? []
 
   // ------------------ SALIDAS ------------------
   const salidas: GuiaTrasegadoSalidaDetalle[] = guia.salidas.map((s) => ({

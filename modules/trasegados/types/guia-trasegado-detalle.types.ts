@@ -82,7 +82,24 @@ export interface GuiaTrasegadoElementoDetalle {
     marca: string
   } | null
 
-  // Si ya fue retirado en alguna salida, se marca
+  /**
+   * Para mercadería: el usuario confirma manualmente que ya salió toda.
+   * Para contenedor/flat rack/maquinaria: se calcula por salidas.
+   */
+  mercaderiaCompletada: boolean
+
+  /**
+   * Cantidad de salidas en las que aparece este elemento.
+   * Útil para mostrar "retirado en 3 salidas" en la UI.
+   */
+  vecesRetirado: number
+
+  /**
+   * ¿El elemento ya no puede volver a salir?
+   *
+   * - Contenedor/Flat Rack/Maquinaria: true si tiene al menos una salida.
+   * - Mercadería/Otro: true si el usuario marcó `mercaderiaCompletada`.
+   */
   retirado: boolean
 }
 

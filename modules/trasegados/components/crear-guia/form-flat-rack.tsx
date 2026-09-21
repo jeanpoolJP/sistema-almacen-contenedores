@@ -41,7 +41,7 @@ export function FormFlatRack({ form, index }: FormFlatRackProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (numeroValue && numeroValue.length >= 2) {
+      if (numeroValue && numeroValue.length >= 7) {
         buscar(numeroValue)
       } else {
         reset()

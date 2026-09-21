@@ -9,9 +9,15 @@ import type { GuiaTrasegadoElementoDetalle } from "../../types/guia-trasegado-de
 
 interface DetalleElementosProps {
   elementos: GuiaTrasegadoElementoDetalle[]
+  guiaTrasegadoId: number
+  onUpdated?: () => void
 }
 
-export function DetalleElementos({ elementos }: DetalleElementosProps) {
+export function DetalleElementos({
+  elementos,
+  guiaTrasegadoId,
+  onUpdated,
+}: DetalleElementosProps) {
   if (elementos.length === 0) return null
 
   const pendientes = elementos.filter((e) => !e.retirado).length
@@ -28,7 +34,13 @@ export function DetalleElementos({ elementos }: DetalleElementosProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         {elementos.map((el, i) => (
-          <DetalleElementoCard key={el.id} elemento={el} index={i} />
+          <DetalleElementoCard
+            key={el.id}
+            elemento={el}
+            guiaTrasegadoId={guiaTrasegadoId}
+            index={i}
+            onUpdated={onUpdated}
+          />
         ))}
       </CardContent>
     </Card>

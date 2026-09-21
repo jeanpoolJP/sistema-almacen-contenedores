@@ -61,7 +61,7 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
   // Debounce simple: buscar cuando el número cambia
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (numeroValue && numeroValue.length >= 4) {
+      if (numeroValue && numeroValue.length >= 7) {
         buscar(numeroValue)
       } else {
         reset()

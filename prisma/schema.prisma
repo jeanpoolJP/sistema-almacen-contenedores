@@ -487,6 +487,8 @@ model GuiaTrasegadoElemento {
   numero String? @db.VarChar(50)
   observaciones String? @db.Text
 
+  mercaderiaCompletada Boolean @default(false) @map("mercaderia_completada")
+
   ingreso GuiaTrasegadoIngreso @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
 
   contenedor Contenedor? @relation(fields: [contenedorId], references: [id])

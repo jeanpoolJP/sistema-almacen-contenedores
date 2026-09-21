@@ -14,6 +14,7 @@ import { FiltrosGuiasTrasegado } from "./filtros-guias-trasegado"
 import { TablaGuiasTrasegado } from "./tabla-guias-trasegado"
 import { AsignarClienteModal } from "../asignar-cliente/asignar-cliente-modal"
 import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
+import { RegistrarSalidaModal } from "../registrar-salida/registrar-salida-modal"
 
 export function ListarGuiasTrasegadoView() {
   const router = useRouter()
@@ -40,12 +41,22 @@ export function ListarGuiasTrasegadoView() {
     numeroGuia: "",
   })
 
+  const [registrarSalida, setRegistrarSalida] = useState({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+  })
+
   const handleVerDetalle = (id: number) => {
     router.push(`/admin/trasegados/${id}`)
   }
 
   const handleAbrirAsignarCliente = (id: number, numeroGuia: string) => {
     setAsignarCliente({ open: true, guiaId: id, numeroGuia })
+  }
+
+  const handleAbrirRegistrarSalida = (id: number, numeroGuia: string) => {
+    setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
   }
 
   return (
@@ -76,6 +87,7 @@ export function ListarGuiasTrasegadoView() {
         isLoading={isPending && !result}
         onVerDetalle={handleVerDetalle}
         onAsignarCliente={handleAbrirAsignarCliente}
+        onRegistrarSalida={handleAbrirRegistrarSalida}
         onIrAPagina={irAPagina}
         onCambiarOrden={cambiarOrden}
         ordenActual={filtros.ordenarPor ?? "fechaIngreso"}
@@ -88,6 +100,16 @@ export function ListarGuiasTrasegadoView() {
         }
         guiaId={asignarCliente.guiaId}
         numeroGuia={asignarCliente.numeroGuia}
+        onSuccess={refetch}
+      />
+
+      <RegistrarSalidaModal
+        open={registrarSalida.open}
+        onOpenChange={(open) =>
+          setRegistrarSalida((prev) => ({ ...prev, open }))
+        }
+        guiaId={registrarSalida.guiaId}
+        numeroGuia={registrarSalida.numeroGuia}
         onSuccess={refetch}
       />
     </div>

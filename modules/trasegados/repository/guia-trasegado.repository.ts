@@ -492,3 +492,217 @@ export async function existeGuiaTrasegadoRepository(id: number) {
   })
   return !!guia
 }
+
+/**
+ * Devuelve los elementos del ingreso de una guía que aún
+ * pueden ser retirados.
+ *
+ * Reglas de negocio:
+ * - CONTENEDOR, FLAT_RACK y MAQUINARIA son identificables
+ *   individualmente: solo pueden salir UNA vez.
+ *   → están pendientes si no tienen ninguna salida asociada.
+ * - MERCADERIA se puede retirar por partes en múltiples salidas.
+ *   → están pendientes mientras `mercaderiaCompletada = false`,
+ *     sin importar cuántas salidas previas tenga.
+ * - OTRO: tratamos igual que la mercadería (por seguridad).
+ */
+export async function listarElementosPendientesRepository(
+  guiaTrasegadoId: number
+) {
+  return prisma.guiaTrasegadoElemento.findMany({
+    where: {
+      ingreso: {
+        guiaTrasegadoId,
+      },
+      OR: [
+        // Identificables: sin salidas
+        {
+          tipo: { in: ["CONTENEDOR", "FLAT_RACK", "MAQUINARIA"] },
+          salidas: { none: {} },
+        },
+        // No cuantificables: aún no completados por el usuario
+        {
+          tipo: { in: ["MERCADERIA", "OTRO"] },
+          mercaderiaCompletada: false,
+        },
+      ],
+    },
+    include: {
+      contenedor: true,
+      flatRack: true,
+    },
+    orderBy: { id: "asc" },
+  })
+}
+
+/**
+ * Devuelve el número de guía + estado para validaciones.
+ */
+export async function obtenerResumenGuiaRepository(guiaTrasegadoId: number) {
+  return prisma.guiaTrasegado.findUnique({
+    where: { id: guiaTrasegadoId },
+    select: {
+      id: true,
+      numeroGuia: true,
+      estado: true,
+    },
+  })
+}
+
+/**
+ * Crea una nueva salida con sus elementos asociados.
+ * Toda la operación se hace en una transacción.
+ */
+export async function crearSalidaRepository(params: {
+  guiaTrasegadoId: number
+  fechaSalida: Date
+  empresaTransporteId: number
+  vehiculoId: number
+  conductorId: number
+  observaciones: string | null
+  elementosIds: number[]
+}) {
+  return prisma.guiaTrasegadoSalida.create({
+    data: {
+      guiaTrasegadoId: params.guiaTrasegadoId,
+      fechaSalida: params.fechaSalida,
+      empresaTransporteId: params.empresaTransporteId,
+      vehiculoId: params.vehiculoId,
+      conductorId: params.conductorId,
+      observaciones: params.observaciones,
+      elementos: {
+        create: params.elementosIds.map((elementoId) => ({
+          elementoId,
+        })),
+      },
+    },
+    include: {
+      empresaTransporte: true,
+      vehiculo: true,
+      conductor: true,
+      elementos: {
+        include: {
+          elemento: true,
+        },
+      },
+    },
+  })
+}
+
+/**
+ * Verifica que TODOS los IDs de elementos:
+ * - Pertenezcan al ingreso de la guía.
+ * - Estén pendientes de retiro según su tipo.
+ *
+ * Devuelve los IDs que NO cumplen (inválidos).
+ */
+export async function validarElementosPertenecenAGuiaRepository(
+  guiaTrasegadoId: number,
+  elementosIds: number[]
+) {
+  const validos = await prisma.guiaTrasegadoElemento.findMany({
+    where: {
+      id: { in: elementosIds },
+      ingreso: {
+        guiaTrasegadoId,
+      },
+      OR: [
+        {
+          tipo: { in: ["CONTENEDOR", "FLAT_RACK", "MAQUINARIA"] },
+          salidas: { none: {} },
+        },
+        {
+          tipo: { in: ["MERCADERIA", "OTRO"] },
+          mercaderiaCompletada: false,
+        },
+      ],
+    },
+    select: { id: true },
+  })
+
+  const validosSet = new Set(validos.map((v) => v.id))
+
+  return elementosIds.filter((id) => !validosSet.has(id))
+}
+
+/**
+ * Marca o desmarca la mercadería de un elemento como completada.
+ * Solo aplica a tipo MERCADERIA / OTRO.
+ *
+ * Uso:
+ * - true  → el usuario confirma que ya no queda mercadería por retirar.
+ * - false → reactivar el elemento para futuras salidas.
+ */
+export async function marcarMercaderiaCompletadaRepository(
+  elementoId: number,
+  completada: boolean
+) {
+  return prisma.guiaTrasegadoElemento.update({
+    where: { id: elementoId },
+    data: { mercaderiaCompletada: completada },
+  })
+}
+
+/**
+ * Devuelve los elementos del ingreso de una guía que NO cumplen
+ * con la condición de "listo para finalizar":
+ *
+ * - CONTENEDOR / FLAT_RACK / MAQUINARIA: sin salidas asociadas.
+ * - MERCADERIA / OTRO: `mercaderiaCompletada = false`.
+ *
+ * Si esta lista está vacía, la guía se puede finalizar.
+ */
+export async function listarElementosPendientesParaFinalizarRepository(
+  guiaTrasegadoId: number
+) {
+  return prisma.guiaTrasegadoElemento.findMany({
+    where: {
+      ingreso: {
+        guiaTrasegadoId,
+      },
+      OR: [
+        {
+          tipo: { in: ["CONTENEDOR", "FLAT_RACK", "MAQUINARIA"] },
+          salidas: { none: {} },
+        },
+        {
+          tipo: { in: ["MERCADERIA", "OTRO"] },
+          mercaderiaCompletada: false,
+        },
+      ],
+    },
+    include: {
+      contenedor: true,
+      flatRack: true,
+    },
+    orderBy: { id: "asc" },
+  })
+}
+
+/**
+ * Cambia el estado de una guía de trasegado.
+ */
+export async function cambiarEstadoGuiaRepository(
+  guiaTrasegadoId: number,
+  nuevoEstado: "EN_PROCESO" | "FINALIZADO",
+  observaciones: string | null
+) {
+  return prisma.guiaTrasegado.update({
+    where: { id: guiaTrasegadoId },
+    data: {
+      estado: nuevoEstado,
+      // Concatenamos observaciones si ya existían
+      ...(observaciones
+        ? {
+            observaciones: observaciones,
+          }
+        : {}),
+    },
+    select: {
+      id: true,
+      numeroGuia: true,
+      estado: true,
+      observaciones: true,
+    },
+  })
+}

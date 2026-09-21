@@ -31,6 +31,7 @@ interface TablaGuiasTrasegadoProps {
   isLoading: boolean
   onVerDetalle: (id: number) => void
   onAsignarCliente: (id: number, numeroGuia: string) => void
+  onRegistrarSalida: (id: number, numeroGuia: string) => void
   onIrAPagina: (page: number) => void
   onCambiarOrden: (ordenarPor: ListarGuiasTrasegadoInput["ordenarPor"]) => void
   ordenActual: ListarGuiasTrasegadoInput["ordenarPor"]
@@ -41,6 +42,7 @@ export function TablaGuiasTrasegado({
   isLoading,
   onVerDetalle,
   onAsignarCliente,
+  onRegistrarSalida,
   onIrAPagina,
   onCambiarOrden,
   ordenActual,
@@ -156,6 +158,10 @@ export function TablaGuiasTrasegado({
                     onAsignarCliente={() =>
                       onAsignarCliente(g.id, g.numeroGuia)
                     }
+                    onRegistrarSalida={() =>
+                      onRegistrarSalida(g.id, g.numeroGuia)
+                    }
+                    puedeRegistrarSalida={g.estado === "EN_PROCESO"}
                   />
                 </TableCell>
               </TableRow>

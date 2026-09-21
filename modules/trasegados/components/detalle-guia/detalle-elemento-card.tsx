@@ -2,17 +2,30 @@
 
 "use client"
 
-import { BoxIcon, ContainerIcon, PackageIcon, WrenchIcon } from "lucide-react"
+import {
+  BoxIcon,
+  CheckCircle2Icon,
+  ContainerIcon,
+  PackageIcon,
+  RotateCcwIcon,
+  WrenchIcon,
+} from "lucide-react"
+import { useTransition } from "react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
+import { marcarMercaderiaCompletadaAction } from "../../actions/marcar-mercaderia-completada.action"
 import type { GuiaTrasegadoElementoDetalle } from "../../types/guia-trasegado-detalle.types"
 
 interface DetalleElementoCardProps {
   elemento: GuiaTrasegadoElementoDetalle
+  guiaTrasegadoId: number
   index: number
+  onUpdated?: () => void
 }
 
 const ICONOS: Record<GuiaTrasegadoElementoDetalle["tipo"], React.ReactNode> = {
@@ -33,8 +46,32 @@ const ETIQUETAS: Record<GuiaTrasegadoElementoDetalle["tipo"], string> = {
 
 export function DetalleElementoCard({
   elemento,
+  guiaTrasegadoId,
   index,
+  onUpdated,
 }: DetalleElementoCardProps) {
+  const [isPending, startTransition] = useTransition()
+
+  const esMercaderia =
+    elemento.tipo === "MERCADERIA" || elemento.tipo === "OTRO"
+
+  const handleToggleCompletada = () => {
+    startTransition(async () => {
+      const res = await marcarMercaderiaCompletadaAction(
+        elemento.id,
+        guiaTrasegadoId,
+        !elemento.mercaderiaCompletada
+      )
+
+      if (res.success) {
+        toast.success(res.message)
+        onUpdated?.()
+      } else {
+        toast.error(res.message)
+      }
+    })
+  }
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="border-b bg-muted/30 py-3">
@@ -64,6 +101,23 @@ export function DetalleElementoCard({
             )}
           >
             {elemento.retirado ? "Retirado" : "Pendiente"}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={cn(
+              "font-medium",
+              elemento.retirado
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+            )}
+          >
+            {elemento.tipo === "MERCADERIA"
+              ? elemento.retirado
+                ? "Completada"
+                : "Pendiente"
+              : elemento.retirado
+                ? "Retirado"
+                : "Pendiente"}
           </Badge>
         </div>
       </CardHeader>
@@ -108,6 +162,42 @@ export function DetalleElementoCard({
             {elemento.descripcion && (
               <Field label="Descripción" value={elemento.descripcion} />
             )}
+          </div>
+        )}
+
+        {esMercaderia && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/20 p-3">
+            <div className="text-xs">
+              <p className="font-medium">
+                Retirado en {elemento.vecesRetirado}{" "}
+                {elemento.vecesRetirado === 1 ? "salida" : "salidas"}
+              </p>
+              <p className="text-muted-foreground">
+                {elemento.mercaderiaCompletada
+                  ? "El usuario confirmó que ya no queda por retirar."
+                  : "Aún puede seguir saliendo en nuevas salidas."}
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              size="sm"
+              variant={elemento.mercaderiaCompletada ? "outline" : "default"}
+              disabled={isPending}
+              onClick={handleToggleCompletada}
+            >
+              {elemento.mercaderiaCompletada ? (
+                <>
+                  <RotateCcwIcon className="mr-2 size-4" />
+                  Reactivar
+                </>
+              ) : (
+                <>
+                  <CheckCircle2Icon className="mr-2 size-4" />
+                  Marcar completada
+                </>
+              )}
+            </Button>
           </div>
         )}
 

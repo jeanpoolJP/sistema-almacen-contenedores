@@ -35,21 +35,22 @@ import { ETIQUETAS_TIPO_VEHICULO } from "../../types"
 
 /**
  * Prefijo del path dentro del form.
- * Ej: "ingreso" | "salida"
+ * Ej: "ingreso" | "salida" o vacío para campos raíces.
  */
-type Prefijo = "ingreso" | "salida"
+type Prefijo = "ingreso" | "salida" | ""
 
 interface SeccionTransporteProps<T extends FieldValues> {
   form: UseFormReturn<T>
-  prefijo: Prefijo
+  prefijo?: Prefijo
 }
 
 export function SeccionTransporte<T extends FieldValues>({
   form,
-  prefijo,
+  prefijo = "",
 }: SeccionTransporteProps<T>) {
   // Helper para construir el path tipado
-  const p = (suffix: string) => `${prefijo}.${suffix}` as Path<T>
+  const p = (suffix: string) =>
+    `${prefijo ? `${prefijo}.` : ""}${suffix}` as Path<T>
 
   const empresaLookup = useEntidadLookup<
     string,
@@ -123,7 +124,7 @@ export function SeccionTransporte<T extends FieldValues>({
 
   useEffect(() => {
     const t = setTimeout(() => {
-      if (placaValue && String(placaValue).length >= 4)
+      if (placaValue && String(placaValue).length >= 7)
         vehiculoLookup.buscar(String(placaValue))
       else vehiculoLookup.reset()
     }, 500)
@@ -149,7 +150,7 @@ export function SeccionTransporte<T extends FieldValues>({
 
   useEffect(() => {
     const t = setTimeout(() => {
-      if (licenciaValue && String(licenciaValue).length >= 4)
+      if (licenciaValue && String(licenciaValue).length >= 9)
         conductorLookup.buscar(String(licenciaValue))
       else conductorLookup.reset()
     }, 500)

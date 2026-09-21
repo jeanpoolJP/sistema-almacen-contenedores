@@ -2,7 +2,12 @@
 
 "use client"
 
-import { EyeIcon, MoreHorizontalIcon, UserPlusIcon } from "lucide-react"
+import {
+  EyeIcon,
+  MoreHorizontalIcon,
+  PackageOpenIcon,
+  UserPlusIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,18 +20,16 @@ import {
 interface AccionesGuiaMenuProps {
   onVerDetalle: () => void
   onAsignarCliente: () => void
+  onRegistrarSalida: () => void
+  /** Si la guía está finalizada, deshabilitamos la acción de salida. */
+  puedeRegistrarSalida: boolean
 }
 
-/**
- * Menú de acciones por fila del listado.
- *
- * En Base UI, el DropdownMenuTrigger ya es un <button>.
- * Le pasamos `render` para usar nuestro Button de shadcn sin
- * anidar dos buttons.
- */
 export function AccionesGuiaMenu({
   onVerDetalle,
   onAsignarCliente,
+  onRegistrarSalida,
+  puedeRegistrarSalida,
 }: AccionesGuiaMenuProps) {
   return (
     <DropdownMenu>
@@ -42,7 +45,7 @@ export function AccionesGuiaMenu({
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem onClick={onVerDetalle} className="cursor-pointer">
           <EyeIcon className="mr-2 size-4" />
           Ver detalle
@@ -50,6 +53,14 @@ export function AccionesGuiaMenu({
         <DropdownMenuItem onClick={onAsignarCliente} className="cursor-pointer">
           <UserPlusIcon className="mr-2 size-4" />
           Asignar cliente
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={onRegistrarSalida}
+          disabled={!puedeRegistrarSalida}
+          className="cursor-pointer"
+        >
+          <PackageOpenIcon className="mr-2 size-4" />
+          Registrar salida
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -27,7 +27,7 @@ export function DetalleGuiaTrasegadoView({
 }: DetalleGuiaTrasegadoViewProps) {
   const [exportando, setExportando] = useState(false)
 
-  const { data, isLoading, error } = useQuery<GuiaTrasegadoDetalle>({
+  const { data, isLoading, error, refetch } = useQuery<GuiaTrasegadoDetalle>({
     queryKey: ["guia-trasegado", guiaId],
     queryFn: async () => {
       const res = await obtenerGuiaTrasegadoAction(guiaId)
@@ -80,7 +80,13 @@ export function DetalleGuiaTrasegadoView({
 
       <DetalleIngreso guia={data} />
 
-      {data.ingreso && <DetalleElementos elementos={data.ingreso.elementos} />}
+      {data.ingreso && (
+        <DetalleElementos
+          elementos={data.ingreso.elementos}
+          guiaTrasegadoId={data.id}
+          onUpdated={refetch}
+        />
+      )}
 
       <DetalleSalidas salidas={data.salidas} />
     </div>
