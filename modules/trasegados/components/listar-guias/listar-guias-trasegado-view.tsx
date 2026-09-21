@@ -2,14 +2,17 @@
 
 "use client"
 
-import { useRouter } from "next/navigation"
-
-import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 import { FiltrosGuiasTrasegado } from "./filtros-guias-trasegado"
 import { TablaGuiasTrasegado } from "./tabla-guias-trasegado"
+import { AsignarClienteModal } from "../asignar-cliente/asignar-cliente-modal"
 import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
 
 export function ListarGuiasTrasegadoView() {
@@ -23,10 +26,26 @@ export function ListarGuiasTrasegadoView() {
     limpiarFiltros,
     irAPagina,
     cambiarOrden,
+    refetch,
   } = useListarGuiasTrasegado()
+
+  // Estado del modal de asignar cliente
+  const [asignarCliente, setAsignarCliente] = useState<{
+    open: boolean
+    guiaId: number
+    numeroGuia: string
+  }>({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+  })
 
   const handleVerDetalle = (id: number) => {
     router.push(`/admin/trasegados/${id}`)
+  }
+
+  const handleAbrirAsignarCliente = (id: number, numeroGuia: string) => {
+    setAsignarCliente({ open: true, guiaId: id, numeroGuia })
   }
 
   return (
@@ -40,12 +59,10 @@ export function ListarGuiasTrasegadoView() {
             Administra y consulta las guías registradas en el almacén.
           </p>
         </div>
-        <Button>
-          <Link href="/admin/trasegados/crear">
-            <PlusIcon className="mr-2 size-4" />
-            Nueva guía
-          </Link>
-        </Button>
+        <Link href="/admin/trasegados/crear" className={cn(buttonVariants())}>
+          <PlusIcon className="mr-2 size-4" />
+          Nueva guía
+        </Link>
       </div>
 
       <FiltrosGuiasTrasegado
@@ -58,9 +75,20 @@ export function ListarGuiasTrasegadoView() {
         result={result}
         isLoading={isPending && !result}
         onVerDetalle={handleVerDetalle}
+        onAsignarCliente={handleAbrirAsignarCliente}
         onIrAPagina={irAPagina}
         onCambiarOrden={cambiarOrden}
         ordenActual={filtros.ordenarPor ?? "fechaIngreso"}
+      />
+
+      <AsignarClienteModal
+        open={asignarCliente.open}
+        onOpenChange={(open: boolean) =>
+          setAsignarCliente((prev) => ({ ...prev, open }))
+        }
+        guiaId={asignarCliente.guiaId}
+        numeroGuia={asignarCliente.numeroGuia}
+        onSuccess={refetch}
       />
     </div>
   )

@@ -6,7 +6,9 @@ import {
   type ControllerProps,
   type FieldPath,
   type FieldValues,
+  FormProvider,
   useFormContext,
+  type UseFormReturn,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -14,6 +16,25 @@ import { cn } from "@/lib/utils"
 const FormFieldContext = React.createContext<{
   name: string
 } | null>(null)
+
+type FormProps<
+  TFieldValues extends FieldValues,
+  TContext = any,
+  TTransformedValues = TFieldValues,
+> = UseFormReturn<TFieldValues, TContext, TTransformedValues> & {
+  children: React.ReactNode
+}
+
+function Form<
+  TFieldValues extends FieldValues,
+  TContext = any,
+  TTransformedValues = TFieldValues,
+>({
+  children,
+  ...formMethods
+}: FormProps<TFieldValues, TContext, TTransformedValues>) {
+  return <FormProvider {...formMethods}>{children}</FormProvider>
+}
 
 function FormField<
   TFieldValues extends FieldValues = FieldValues,
@@ -51,7 +72,12 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const { id } = useFormField()
 
   return (
-    <div data-slot="form-item" id={id} className={cn("space-y-2", className)} {...props} />
+    <div
+      data-slot="form-item"
+      id={id}
+      className={cn("space-y-2", className)}
+      {...props}
+    />
   )
 }
 
@@ -71,13 +97,29 @@ function FormLabel({ className, ...props }: React.ComponentProps<"label">) {
 function FormControl({ children }: { children: React.ReactElement }) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
-  return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-    id: formItemId,
-    "aria-describedby": error
-      ? `${formDescriptionId} ${formMessageId}`
-      : formDescriptionId,
-    "aria-invalid": Boolean(error),
-  })
+  return React.cloneElement(
+    children as React.ReactElement<Record<string, unknown>>,
+    {
+      id: formItemId,
+      "aria-describedby": error
+        ? `${formDescriptionId} ${formMessageId}`
+        : formDescriptionId,
+      "aria-invalid": Boolean(error),
+    }
+  )
+}
+
+function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
+  const { formDescriptionId } = useFormField()
+
+  return (
+    <p
+      data-slot="form-description"
+      id={formDescriptionId}
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
 }
 
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
@@ -98,4 +140,12 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
-export { FormControl, FormField, FormItem, FormLabel, FormMessage, useFormField }
+export {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  useFormField,
+}

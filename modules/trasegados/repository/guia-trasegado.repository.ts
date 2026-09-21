@@ -464,3 +464,31 @@ export async function obtenerGuiaTrasegadoPorIdRepository(id: number) {
     },
   })
 }
+
+/**
+ * Asigna (o quita) un cliente a una guía de trasegado.
+ * Devuelve la guía actualizada con el cliente incluido.
+ */
+export async function asignarClienteAGuiaRepository(
+  guiaTrasegadoId: number,
+  clienteId: number | null
+) {
+  return prisma.guiaTrasegado.update({
+    where: { id: guiaTrasegadoId },
+    data: { clienteId },
+    include: {
+      cliente: true,
+    },
+  })
+}
+
+/**
+ * Verifica si una guía existe. Uso interno del service.
+ */
+export async function existeGuiaTrasegadoRepository(id: number) {
+  const guia = await prisma.guiaTrasegado.findUnique({
+    where: { id },
+    select: { id: true },
+  })
+  return !!guia
+}

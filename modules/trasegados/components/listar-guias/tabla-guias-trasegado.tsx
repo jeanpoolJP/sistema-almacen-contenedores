@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDateTime } from "@/lib/date/format"
 
+import { AccionesGuiaMenu } from "./acciones-guia-menu"
 import { EstadoBadge, EstadoPagoBadge } from "./estado-badge"
 import type { ListarGuiasTrasegadoResult } from "../../types/guia-trasegado-listado.types"
 import type { ListarGuiasTrasegadoInput } from "../../schemas/listar-guias-trasegado.schema"
@@ -29,6 +30,7 @@ interface TablaGuiasTrasegadoProps {
   result: ListarGuiasTrasegadoResult | null
   isLoading: boolean
   onVerDetalle: (id: number) => void
+  onAsignarCliente: (id: number, numeroGuia: string) => void
   onIrAPagina: (page: number) => void
   onCambiarOrden: (ordenarPor: ListarGuiasTrasegadoInput["ordenarPor"]) => void
   ordenActual: ListarGuiasTrasegadoInput["ordenarPor"]
@@ -38,6 +40,7 @@ export function TablaGuiasTrasegado({
   result,
   isLoading,
   onVerDetalle,
+  onAsignarCliente,
   onIrAPagina,
   onCambiarOrden,
   ordenActual,
@@ -148,14 +151,12 @@ export function TablaGuiasTrasegado({
                   {g.totalPagar != null ? `S/ ${g.totalPagar.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onVerDetalle(g.id)}
-                  >
-                    <EyeIcon className="mr-2 size-4" />
-                    Ver
-                  </Button>
+                  <AccionesGuiaMenu
+                    onVerDetalle={() => onVerDetalle(g.id)}
+                    onAsignarCliente={() =>
+                      onAsignarCliente(g.id, g.numeroGuia)
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ))}

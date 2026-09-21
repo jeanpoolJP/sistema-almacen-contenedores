@@ -1,3 +1,5 @@
+// modules\trasegados\actions\buscar-entidades.action.ts
+
 "use server"
 
 import { prisma } from "@/lib/prisma"
@@ -6,6 +8,45 @@ import { prisma } from "@/lib/prisma"
  * Resultado genérico de una búsqueda de entidad.
  */
 export type BuscarEntidadResult<T> = { found: true; data: T } | { found: false }
+
+/**
+ * Busca un cliente por número de documento (DNI/RUC).
+ * Si existe y está activo, devuelve sus datos para autocompletar.
+ */
+export async function buscarClienteAction(numeroDocumento: string): Promise<
+  BuscarEntidadResult<{
+    id: number
+    tipoDocumento: string
+    numeroDocumento: string
+    nombreCompleto: string | null
+    telefono: string | null
+    observaciones: string | null
+    activo: boolean
+  }>
+> {
+  const docNormalizado = numeroDocumento.trim()
+
+  if (!docNormalizado) return { found: false }
+
+  const cliente = await prisma.cliente.findUnique({
+    where: {
+      numeroDocumento: docNormalizado,
+    },
+    select: {
+      id: true,
+      tipoDocumento: true,
+      numeroDocumento: true,
+      nombreCompleto: true,
+      telefono: true,
+      observaciones: true,
+      activo: true,
+    },
+  })
+
+  if (!cliente || !cliente.activo) return { found: false }
+
+  return { found: true, data: cliente }
+}
 
 /**
  * Busca un contenedor por número.
