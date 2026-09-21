@@ -22,7 +22,7 @@ if (AUTH_SECRET.length < 12) {
 
 const secret = new TextEncoder().encode(AUTH_SECRET)
 
-const SESSION_DURATION = 60 * 60 * 8 // 8 horas
+const SESSION_DURATION = 60 * 60 * 20 // 20 horas
 
 /**
  * ============================================================
