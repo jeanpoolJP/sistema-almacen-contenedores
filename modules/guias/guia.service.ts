@@ -11,6 +11,8 @@ import {
   registrarPagoGuia,
   asignarClienteAGuiasEspacioAlquilado,
   obtenerGuiasEspacioAlquiladoPorIds,
+  asignarClienteAGuia,
+  crearYAsignarClienteAGuia,
 } from "./guia.repository"
 
 import { findClienteById } from "@/modules/clientes/cliente.repository"
@@ -20,7 +22,12 @@ import {
   registrarPagoGuiaSchema,
   registrarSalidaGuiaSchema,
 } from "./guia.schema"
+import {
+  asignarClienteGuiaSchema,
+  type AsignarClienteGuiaInput,
+} from "./guia.schema"
 
+import { clienteSchema } from "@/modules/clientes/cliente.schema"
 import type {
   CrearGuiaInput,
   RegistrarSalidaGuiaInput,
@@ -35,7 +42,10 @@ import { serializarGuia } from "./utils/serializar-guia"
 
 import { obtenerConfiguracionPrecioService } from "@/modules/configuracion/configuracion.service"
 
-import { obtenerOCrearCliente } from "@/modules/clientes/cliente.service"
+import {
+  obtenerClientePorId,
+  obtenerOCrearCliente,
+} from "@/modules/clientes/cliente.service"
 
 import { obtenerOCrearContenedor } from "@/modules/contenedores/contenedores.service"
 
@@ -55,6 +65,8 @@ import {
   calcularMontoEspacioAlquilado,
   calcularPrecioMovimientos,
 } from "./utils/calcular-monto-espacio-alquilado"
+
+import { Prisma } from "@/lib/generated/prisma/client"
 
 /**
  * Crea una guía de internamiento.
@@ -816,5 +828,90 @@ export async function asignarClienteMasivoService({
     cantidadActualizada: resultado.count,
     guiasConCliente: guiasConCliente.length,
     cliente,
+  }
+}
+
+export async function asignarClienteAGuiaService(
+  guiaId: number,
+  clienteId: number
+) {
+  const guia = await obtenerGuiaPorId(guiaId)
+
+  if (!guia) {
+    throw new Error("La guía no existe")
+  }
+
+  const cliente = await findClienteById(clienteId)
+
+  if (!cliente || !cliente.activo) {
+    throw new Error("El cliente no existe o está inactivo")
+  }
+
+  return asignarClienteAGuia(guiaId, clienteId)
+}
+
+/**
+ * Asigna o cambia el cliente de una guía.
+ *
+ * Escenarios:
+ * 1. Cliente existente: conecta su ID con la guía.
+ * 2. Cliente nuevo: lo crea y lo conecta en una
+ *    única transacción.
+ *
+ * Esta es la función pública que debe utilizar
+ * la Server Action del modal.
+ */
+export async function asignarOActualizarClienteGuiaService(
+  input: AsignarClienteGuiaInput
+) {
+  const datos = asignarClienteGuiaSchema.parse(input)
+
+  // --------------------------------------------------
+  // ESCENARIO 1: CLIENTE EXISTENTE
+  // --------------------------------------------------
+
+  if (datos.clienteId !== undefined) {
+    const cliente = await findClienteById(datos.clienteId)
+
+    if (!cliente || !cliente.activo) {
+      throw new Error("El cliente no existe o está inactivo")
+    }
+
+    return asignarClienteAGuia(datos.guiaId, cliente.id)
+  }
+
+  // --------------------------------------------------
+  // ESCENARIO 2: CLIENTE NUEVO
+  // --------------------------------------------------
+
+  if (!datos.nuevoCliente) {
+    throw new Error("Debes seleccionar o registrar un cliente")
+  }
+
+  const clienteValidado = clienteSchema.parse({
+    ...datos.nuevoCliente,
+    activo: true,
+  })
+
+  try {
+    return await crearYAsignarClienteAGuia(datos.guiaId, {
+      tipoDocumento: clienteValidado.tipoDocumento,
+      numeroDocumento: clienteValidado.numeroDocumento,
+      nombreCompleto: clienteValidado.nombreCompleto,
+      telefono: clienteValidado.telefono || null,
+      observaciones: clienteValidado.observaciones || null,
+      activo: true,
+    })
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new Error(
+        "Ya existe un cliente con ese número de documento. Búscalo y selecciónalo."
+      )
+    }
+
+    throw error
   }
 }

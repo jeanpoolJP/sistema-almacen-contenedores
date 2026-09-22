@@ -3,6 +3,10 @@
 import { prisma } from "@/lib/prisma"
 
 import type { CrearGuiaRepositoryInput } from "./guia.types"
+import {
+  createClienteTx,
+  findClienteByDocumentoTx,
+} from "@/modules/clientes/cliente.repository"
 
 import {
   EstadoGuia,
@@ -411,5 +415,94 @@ export async function asignarClienteAGuiasEspacioAlquilado(
     data: {
       clienteId,
     },
+  })
+}
+
+/**
+ * Asigna un cliente
+ */
+export async function asignarClienteAGuia(guiaId: number, clienteId: number) {
+  return prisma.guiaInternamiento.update({
+    where: {
+      id: guiaId,
+    },
+
+    data: {
+      cliente: {
+        connect: {
+          id: clienteId,
+        },
+      },
+    },
+
+    select: {
+      id: true,
+      clienteId: true,
+      cliente: {
+        select: {
+          id: true,
+          tipoDocumento: true,
+          numeroDocumento: true,
+          nombreCompleto: true,
+        },
+      },
+    },
+  })
+}
+
+/**
+ * Crea un cliente y lo asigna a una guía
+ * dentro de una única transacción.
+ *
+ * Si falla la creación o la actualización
+ * de la guía, se revierte toda la operación.
+ */
+export async function crearYAsignarClienteAGuia(
+  guiaId: number,
+  clienteData: Prisma.ClienteCreateInput
+) {
+  return prisma.$transaction(async (tx) => {
+    const clienteExistente = await findClienteByDocumentoTx(
+      tx,
+      clienteData.numeroDocumento
+    )
+
+    if (clienteExistente) {
+      throw new Error("Ya existe un cliente con este número de documento")
+    }
+
+    const cliente = await createClienteTx(tx, clienteData)
+
+    const guia = await tx.guiaInternamiento.update({
+      where: {
+        id: guiaId,
+      },
+
+      data: {
+        cliente: {
+          connect: {
+            id: cliente.id,
+          },
+        },
+      },
+
+      select: {
+        id: true,
+        clienteId: true,
+        cliente: {
+          select: {
+            id: true,
+            tipoDocumento: true,
+            numeroDocumento: true,
+            nombreCompleto: true,
+          },
+        },
+      },
+    })
+
+    return {
+      cliente,
+      guia,
+    }
   })
 }

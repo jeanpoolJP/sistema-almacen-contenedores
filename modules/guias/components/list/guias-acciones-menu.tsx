@@ -2,10 +2,19 @@
 
 "use client"
 
-import { Ban, CreditCard, Eye, LogOut, MoreHorizontal } from "lucide-react"
+import {
+  Ban,
+  CreditCard,
+  Eye,
+  LogOut,
+  MoreHorizontal,
+  UserPlus,
+  UserRoundPen,
+} from "lucide-react"
+
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +22,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { AsignarClienteDialog } from "../asignar-cliente/asignar-cliente-dialog"
+
 import type { GuiaConRelaciones } from "../guia-con-relaciones.type"
 
 type GuiasAccionesMenuProps = {
   guia: GuiaConRelaciones
+
   onVerDetalle: (guia: GuiaConRelaciones) => void
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
   onAnular: (guia: GuiaConRelaciones) => void
+
+  onCambio: () => void
 }
 
 export function GuiasAccionesMenu({
@@ -29,11 +43,13 @@ export function GuiasAccionesMenu({
   onRegistrarSalida,
   onRegistrarPago,
   onAnular,
+  onCambio,
 }: GuiasAccionesMenuProps) {
   const puedeRegistrarSalida = guia.estado === "ALMACENADO"
   const puedeRegistrarPago =
     guia.estado === "RETIRADO" && guia.estadoPago === "PENDIENTE"
   const puedeAnular = guia.estado === "ALMACENADO"
+  const [asignarClienteAbierto, setAsignarClienteAbierto] = useState(false)
 
   return (
     <DropdownMenu>
@@ -47,6 +63,15 @@ export function GuiasAccionesMenu({
         <DropdownMenuItem onClick={() => onVerDetalle(guia)}>
           <Eye className="mr-2 size-4" />
           Ver detalles
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={() => setAsignarClienteAbierto(true)}>
+          {guia.cliente ? (
+            <UserRoundPen className="mr-2 size-4" />
+          ) : (
+            <UserPlus className="mr-2 size-4" />
+          )}
+          {guia.cliente ? "Cambiar cliente" : "Asignar cliente"}
         </DropdownMenuItem>
 
         {puedeRegistrarSalida && (
@@ -73,6 +98,15 @@ export function GuiasAccionesMenu({
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
+
+      <AsignarClienteDialog
+        guiaId={guia.id}
+        numeroGuia={guia.numeroGuia}
+        clienteActual={guia.cliente}
+        open={asignarClienteAbierto}
+        onOpenChange={setAsignarClienteAbierto}
+        onAsignada={onCambio}
+      />
     </DropdownMenu>
   )
 }

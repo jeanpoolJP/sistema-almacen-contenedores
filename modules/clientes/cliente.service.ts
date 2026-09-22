@@ -1,9 +1,6 @@
 // modules/clientes/cliente.service.ts
 
-import {
-  clienteBuscarDocumentoSchema,
-  clienteSchema,
-} from "./cliente.schema";
+import { clienteBuscarDocumentoSchema, clienteSchema } from "./cliente.schema"
 
 import {
   createCliente,
@@ -13,9 +10,10 @@ import {
   findClientes,
   updateCliente,
   countClientes,
-} from "./cliente.repository";
+  findClientesFrecuentes,
+} from "./cliente.repository"
 
-import type { ClienteFormData } from "./cliente.types";
+import type { ClienteFormData } from "./cliente.types"
 
 /**
  * Busca un cliente por su número de documento.
@@ -26,20 +24,18 @@ import type { ClienteFormData } from "./cliente.types";
  * Esta función puede ser utilizada por el módulo
  * de Guías al momento de registrar una nueva guía.
  */
-export async function obtenerOCrearCliente(
-  data: ClienteFormData,
-) {
+export async function obtenerOCrearCliente(data: ClienteFormData) {
   // 1. Validar los datos del cliente
-  const datosValidados = clienteSchema.parse(data);
+  const datosValidados = clienteSchema.parse(data)
 
   // 2. Buscar si ya existe por número de documento
   const clienteExistente = await findClienteByDocumento(
-    datosValidados.numeroDocumento,
-  );
+    datosValidados.numeroDocumento
+  )
 
   // 3. Si existe, devolverlo
   if (clienteExistente) {
-    return clienteExistente;
+    return clienteExistente
   }
 
   // 4. Si no existe, crearlo
@@ -50,7 +46,7 @@ export async function obtenerOCrearCliente(
     telefono: datosValidados.telefono || null,
     observaciones: datosValidados.observaciones || null,
     activo: datosValidados.activo,
-  });
+  })
 }
 
 /**
@@ -60,15 +56,13 @@ export async function obtenerOCrearCliente(
  * - DNI: 8 dígitos
  * - RUC: 11 dígitos
  */
-export async function obtenerClientePorDocumento(
-  numeroDocumento: string,
-) {
+export async function obtenerClientePorDocumento(numeroDocumento: string) {
   const { numeroDocumento: documentoValido } =
     clienteBuscarDocumentoSchema.parse({
       numeroDocumento,
-    });
+    })
 
-  return findClienteByDocumento(documentoValido);
+  return findClienteByDocumento(documentoValido)
 }
 
 /**
@@ -76,30 +70,24 @@ export async function obtenerClientePorDocumento(
  */
 export async function obtenerClientePorId(id: number) {
   if (!Number.isInteger(id) || id <= 0) {
-    throw new Error("El ID del cliente no es válido");
+    throw new Error("El ID del cliente no es válido")
   }
 
-  return findClienteById(id);
+  return findClienteById(id)
 }
 
 /**
  * Obtiene una página de clientes.
  */
-export async function obtenerClientes(
-  page: number = 1,
-  pageSize: number = 10,
-) {
-  return findClientes(
-    page,
-    pageSize,
-  );
+export async function obtenerClientes(page: number = 1, pageSize: number = 10) {
+  return findClientes(page, pageSize)
 }
 
 /**
  * Obtiene la cantidad total de clientes.
  */
 export async function contarClientes() {
-  return countClientes();
+  return countClientes()
 }
 /**
  * Registra un nuevo cliente.
@@ -108,19 +96,17 @@ export async function contarClientes() {
  * - El documento debe ser un DNI o RUC válido.
  * - No puede existir otro cliente con el mismo documento.
  */
-export async function registrarCliente(
-  data: ClienteFormData,
-) {
-  const datosValidados = clienteSchema.parse(data);
+export async function registrarCliente(data: ClienteFormData) {
+  const datosValidados = clienteSchema.parse(data)
 
   const clienteExistente = await findClienteByDocumento(
-    datosValidados.numeroDocumento,
-  );
+    datosValidados.numeroDocumento
+  )
 
   if (clienteExistente) {
     throw new Error(
-      `Ya existe un cliente registrado con este ${datosValidados.tipoDocumento}.`,
-    );
+      `Ya existe un cliente registrado con este ${datosValidados.tipoDocumento}.`
+    )
   }
 
   return createCliente({
@@ -130,7 +116,7 @@ export async function registrarCliente(
     telefono: datosValidados.telefono || null,
     observaciones: datosValidados.observaciones || null,
     activo: datosValidados.activo,
-  });
+  })
 }
 
 /**
@@ -139,29 +125,23 @@ export async function registrarCliente(
  * Verifica que el documento no pertenezca
  * a otro cliente.
  */
-export async function actualizarCliente(
-  id: number,
-  data: ClienteFormData,
-) {
-  const datosValidados = clienteSchema.parse(data);
+export async function actualizarCliente(id: number, data: ClienteFormData) {
+  const datosValidados = clienteSchema.parse(data)
 
-  const cliente = await findClienteById(id);
+  const cliente = await findClienteById(id)
 
   if (!cliente) {
-    throw new Error("El cliente no existe");
+    throw new Error("El cliente no existe")
   }
 
   const clienteExistente = await findClienteByDocumento(
-    datosValidados.numeroDocumento,
-  );
+    datosValidados.numeroDocumento
+  )
 
-  if (
-    clienteExistente &&
-    clienteExistente.id !== id
-  ) {
+  if (clienteExistente && clienteExistente.id !== id) {
     throw new Error(
-      `Ya existe otro cliente registrado con este ${datosValidados.tipoDocumento}.`,
-    );
+      `Ya existe otro cliente registrado con este ${datosValidados.tipoDocumento}.`
+    )
   }
 
   return updateCliente(id, {
@@ -171,7 +151,7 @@ export async function actualizarCliente(
     telefono: datosValidados.telefono || null,
     observaciones: datosValidados.observaciones || null,
     activo: datosValidados.activo,
-  });
+  })
 }
 
 /**
@@ -180,15 +160,23 @@ export async function actualizarCliente(
  * No elimina físicamente el registro.
  */
 export async function desactivarCliente(id: number) {
-  const cliente = await findClienteById(id);
+  const cliente = await findClienteById(id)
 
   if (!cliente) {
-    throw new Error("El cliente no existe");
+    throw new Error("El cliente no existe")
   }
 
   if (!cliente.activo) {
-    throw new Error("El cliente ya está desactivado");
+    throw new Error("El cliente ya está desactivado")
   }
 
-  return deactivateCliente(id);
+  return deactivateCliente(id)
+}
+
+/**
+ * Obtiene los clientes frecuentes
+ * para el modal de asignación.
+ */
+export async function obtenerClientesFrecuentes() {
+  return findClientesFrecuentes(10)
 }

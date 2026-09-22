@@ -25,6 +25,7 @@ type GuiasTablaProps = {
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
   onAnular: (guia: GuiaConRelaciones) => void
+  onCambio: () => void
 }
 
 export function GuiasTabla({
@@ -33,6 +34,7 @@ export function GuiasTabla({
   onRegistrarSalida,
   onRegistrarPago,
   onAnular,
+  onCambio,
 }: GuiasTablaProps) {
   return (
     <div className="rounded-lg border">
@@ -123,6 +125,7 @@ export function GuiasTabla({
                   onRegistrarSalida={onRegistrarSalida}
                   onRegistrarPago={onRegistrarPago}
                   onAnular={onAnular}
+                  onCambio={onCambio}
                 />
               </TableCell>
             </TableRow>

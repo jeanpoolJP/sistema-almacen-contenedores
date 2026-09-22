@@ -336,3 +336,49 @@ export const registrarPagoGuiaSchema = z
   })
 
 export type RegistrarPagoGuiaSchema = z.infer<typeof registrarPagoGuiaSchema>
+
+/* 
+  Asignar o actualizar cliente a guia 
+*/
+const documentoSchema = z.object({
+  tipoDocumento: z.enum(["DNI", "RUC"]),
+
+  numeroDocumento: z
+    .string()
+    .trim()
+    .min(1, "El documento es obligatorio")
+    .max(11, "El documento no puede superar 11 caracteres"),
+
+  nombreCompleto: z
+    .string()
+    .trim()
+    .min(1, "El nombre o razón social es obligatorio")
+    .max(150, "El nombre no puede superar 150 caracteres"),
+
+  telefono: z
+    .string()
+    .trim()
+    .max(20, "El teléfono no puede superar 20 caracteres")
+    .optional()
+    .or(z.literal("")),
+
+  observaciones: z.string().trim().optional().or(z.literal("")),
+})
+
+export const asignarClienteGuiaSchema = z
+  .object({
+    guiaId: z.number().int().positive(),
+
+    clienteId: z.number().int().positive().optional(),
+
+    nuevoCliente: documentoSchema.optional(),
+  })
+  .refine(
+    (data) =>
+      (data.clienteId !== undefined) !== (data.nuevoCliente !== undefined),
+    {
+      message: "Debes seleccionar un cliente existente o registrar uno nuevo",
+    }
+  )
+
+export type AsignarClienteGuiaInput = z.infer<typeof asignarClienteGuiaSchema>

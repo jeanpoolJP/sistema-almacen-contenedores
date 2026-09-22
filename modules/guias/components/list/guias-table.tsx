@@ -79,6 +79,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
         onRegistrarSalida={setGuiaSalida}
         onRegistrarPago={setGuiaPago}
         onAnular={setGuiaAnular}
+        onCambio={refrescarTrasAccion}
       />
 
       <GuiasPaginacion

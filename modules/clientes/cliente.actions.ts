@@ -1,9 +1,9 @@
 // modules\clientes\cliente.actions.ts
 
-"use server";
+"use server"
 
-import { Prisma } from "@/lib/generated/prisma/client";
-import { ZodError } from "zod";
+import { Prisma } from "@/lib/generated/prisma/client"
+import { ZodError } from "zod"
 
 import {
   actualizarCliente as actualizarClienteService,
@@ -13,22 +13,23 @@ import {
   obtenerClientes,
   registrarCliente,
   contarClientes,
-} from "./cliente.service";
+  obtenerClientesFrecuentes,
+} from "./cliente.service"
 
-import type { ClienteFormData } from "./cliente.types";
+import type { ClienteFormData } from "./cliente.types"
 
 /**
  * Resultado estándar de las Server Actions.
  */
 type ActionResult<T> =
   | {
-      success: true;
-      data: T;
+      success: true
+      data: T
     }
   | {
-      success: false;
-      error: string;
-    };
+      success: false
+      error: string
+    }
 
 /**
  * ============================================================
@@ -43,39 +44,32 @@ type ActionResult<T> =
  * La validación del documento se realiza en el service.
  */
 export async function buscarClientePorDocumento(
-  numeroDocumento: string,
+  numeroDocumento: string
 ): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof obtenerClientePorDocumento>>
-  >
+  ActionResult<Awaited<ReturnType<typeof obtenerClientePorDocumento>>>
 > {
   try {
-    const cliente =
-      await obtenerClientePorDocumento(numeroDocumento);
+    const cliente = await obtenerClientePorDocumento(numeroDocumento)
 
     return {
       success: true,
       data: cliente,
-    };
+    }
   } catch (error) {
     if (error instanceof ZodError) {
       return {
         success: false,
         error:
-          error.issues[0]?.message ??
-          "El número de documento no es válido",
-      };
+          error.issues[0]?.message ?? "El número de documento no es válido",
+      }
     }
 
-    console.error(
-      "Error al buscar cliente por documento:",
-      error,
-    );
+    console.error("Error al buscar cliente por documento:", error)
 
     return {
       success: false,
       error: "No se pudo buscar el cliente",
-    };
+    }
   }
 }
 
@@ -85,43 +79,36 @@ export async function buscarClientePorDocumento(
  * ============================================================
  */
 export async function buscarClientePorId(
-  id: number,
-): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof obtenerClientePorId>>
-  >
-> {
+  id: number
+): Promise<ActionResult<Awaited<ReturnType<typeof obtenerClientePorId>>>> {
   try {
     if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del cliente no es válido",
-      };
+      }
     }
 
-    const cliente = await obtenerClientePorId(id);
+    const cliente = await obtenerClientePorId(id)
 
     if (!cliente) {
       return {
         success: false,
         error: "Cliente no encontrado",
-      };
+      }
     }
 
     return {
       success: true,
       data: cliente,
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al buscar cliente por ID:",
-      error,
-    );
+    console.error("Error al buscar cliente por ID:", error)
 
     return {
       success: false,
       error: "No se pudo obtener el cliente",
-    };
+    }
   }
 }
 
@@ -132,33 +119,23 @@ export async function buscarClientePorId(
  */
 export async function listarClientes(
   page: number = 1,
-  pageSize: number = 10,
+  pageSize: number = 10
 ): Promise<
   ActionResult<{
-    data: Awaited<
-      ReturnType<typeof obtenerClientes>
-    >;
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
+    data: Awaited<ReturnType<typeof obtenerClientes>>
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
   }>
 > {
   try {
-    const [
-      clientes,
-      total,
-    ] = await Promise.all([
-      obtenerClientes(
-        page,
-        pageSize,
-      ),
+    const [clientes, total] = await Promise.all([
+      obtenerClientes(page, pageSize),
       contarClientes(),
-    ]);
+    ])
 
-    const totalPages = Math.ceil(
-      total / pageSize,
-    );
+    const totalPages = Math.ceil(total / pageSize)
 
     return {
       success: true,
@@ -170,18 +147,14 @@ export async function listarClientes(
         pageSize,
         totalPages,
       },
-    };
+    }
   } catch (error) {
-    console.error(
-      "Error al listar clientes:",
-      error,
-    );
+    console.error("Error al listar clientes:", error)
 
     return {
       success: false,
-      error:
-        "No se pudieron obtener los clientes",
-    };
+      error: "No se pudieron obtener los clientes",
+    }
   }
 }
 
@@ -191,19 +164,15 @@ export async function listarClientes(
  * ============================================================
  */
 export async function crearCliente(
-  data: ClienteFormData,
-): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof registrarCliente>>
-  >
-> {
+  data: ClienteFormData
+): Promise<ActionResult<Awaited<ReturnType<typeof registrarCliente>>>> {
   try {
-    const cliente = await registrarCliente(data);
+    const cliente = await registrarCliente(data)
 
     return {
       success: true,
       data: cliente,
-    };
+    }
   } catch (error) {
     /**
      * Error de validación de Zod.
@@ -212,9 +181,8 @@ export async function crearCliente(
       return {
         success: false,
         error:
-          error.issues[0]?.message ??
-          "Los datos proporcionados no son válidos",
-      };
+          error.issues[0]?.message ?? "Los datos proporcionados no son válidos",
+      }
     }
 
     /**
@@ -228,9 +196,8 @@ export async function crearCliente(
     ) {
       return {
         success: false,
-        error:
-          "Ya existe un cliente registrado con este número de documento",
-      };
+        error: "Ya existe un cliente registrado con este número de documento",
+      }
     }
 
     /**
@@ -240,18 +207,15 @@ export async function crearCliente(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al crear cliente:",
-      error,
-    );
+    console.error("Error al crear cliente:", error)
 
     return {
       success: false,
       error: "No se pudo crear el cliente",
-    };
+    }
   }
 }
 
@@ -262,27 +226,22 @@ export async function crearCliente(
  */
 export async function editarCliente(
   id: number,
-  data: ClienteFormData,
-): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof actualizarClienteService>>
-  >
-> {
+  data: ClienteFormData
+): Promise<ActionResult<Awaited<ReturnType<typeof actualizarClienteService>>>> {
   try {
     if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del cliente no es válido",
-      };
+      }
     }
 
-    const cliente =
-      await actualizarClienteService(id, data);
+    const cliente = await actualizarClienteService(id, data)
 
     return {
       success: true,
       data: cliente,
-    };
+    }
   } catch (error) {
     /**
      * Error de validación de Zod.
@@ -291,17 +250,14 @@ export async function editarCliente(
       return {
         success: false,
         error:
-          error.issues[0]?.message ??
-          "Los datos proporcionados no son válidos",
-      };
+          error.issues[0]?.message ?? "Los datos proporcionados no son válidos",
+      }
     }
 
     /**
      * Errores conocidos de Prisma.
      */
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError
-    ) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
       /**
        * Documento duplicado.
        */
@@ -310,7 +266,7 @@ export async function editarCliente(
           success: false,
           error:
             "Ya existe otro cliente registrado con este número de documento",
-        };
+        }
       }
 
       /**
@@ -320,7 +276,7 @@ export async function editarCliente(
         return {
           success: false,
           error: "El cliente no existe",
-        };
+        }
       }
     }
 
@@ -331,18 +287,15 @@ export async function editarCliente(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al actualizar cliente:",
-      error,
-    );
+    console.error("Error al actualizar cliente:", error)
 
     return {
       success: false,
       error: "No se pudo actualizar el cliente",
-    };
+    }
   }
 }
 
@@ -352,27 +305,22 @@ export async function editarCliente(
  * ============================================================
  */
 export async function desactivarCliente(
-  id: number,
-): Promise<
-  ActionResult<
-    Awaited<ReturnType<typeof desactivarClienteService>>
-  >
-> {
+  id: number
+): Promise<ActionResult<Awaited<ReturnType<typeof desactivarClienteService>>>> {
   try {
     if (!Number.isInteger(id) || id <= 0) {
       return {
         success: false,
         error: "El ID del cliente no es válido",
-      };
+      }
     }
 
-    const cliente =
-      await desactivarClienteService(id);
+    const cliente = await desactivarClienteService(id)
 
     return {
       success: true,
       data: cliente,
-    };
+    }
   } catch (error) {
     /**
      * Cliente no encontrado.
@@ -384,7 +332,7 @@ export async function desactivarCliente(
       return {
         success: false,
         error: "El cliente no existe",
-      };
+      }
     }
 
     /**
@@ -394,17 +342,54 @@ export async function desactivarCliente(
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
-    console.error(
-      "Error al desactivar cliente:",
-      error,
-    );
+    console.error("Error al desactivar cliente:", error)
 
     return {
       success: false,
       error: "No se pudo desactivar el cliente",
-    };
+    }
+  }
+}
+
+export async function buscarClientePorDocumentoAction(numeroDocumento: string) {
+  try {
+    const cliente = await obtenerClientePorDocumento(numeroDocumento)
+
+    if (!cliente) {
+      return {
+        success: true,
+        data: null,
+      }
+    }
+
+    return {
+      success: true,
+      data: cliente,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "No se pudo buscar el cliente",
+    }
+  }
+}
+
+export async function obtenerClientesFrecuentesAction() {
+  try {
+    const clientes = await obtenerClientesFrecuentes()
+
+    return {
+      success: true,
+      data: clientes,
+    }
+  } catch {
+    return {
+      success: false,
+      error: "No se pudieron obtener los clientes frecuentes",
+    }
   }
 }

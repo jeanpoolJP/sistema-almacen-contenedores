@@ -12,6 +12,7 @@ import {
   anularGuiaService,
   registrarPagoGuiaService,
   asignarClienteMasivoService,
+  asignarOActualizarClienteGuiaService,
 } from "./guia.service"
 
 import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
@@ -22,7 +23,7 @@ import type {
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 
-import { registrarPagoGuiaSchema } from "./guia.schema"
+import { registrarPagoGuiaSchema, AsignarClienteGuiaInput } from "./guia.schema"
 
 /**
  * ============================================================
@@ -366,6 +367,27 @@ export async function asignarClienteMasivoAction({
         error instanceof Error
           ? error.message
           : "Ocurrió un error al asignar el cliente a las guías.",
+    }
+  }
+}
+
+export async function asignarOActualizarClienteGuiaAction(
+  input: AsignarClienteGuiaInput
+) {
+  try {
+    const resultado = await asignarOActualizarClienteGuiaService(input)
+
+    return {
+      success: true,
+      data: resultado,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "No se pudo asignar el cliente",
     }
   }
 }
