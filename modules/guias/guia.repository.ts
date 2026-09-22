@@ -278,7 +278,7 @@ export async function obtenerGuias({
       },
 
       orderBy: {
-        createdAt: "desc",
+        updatedAt: "desc",
       },
 
       skip: (pagina - 1) * limite,
