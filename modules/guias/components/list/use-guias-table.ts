@@ -22,6 +22,16 @@ import type { GuiasData, GuiasFiltros } from "./types"
 
 import { mapearGuiasParaExcel } from "./guias-utils"
 
+function fechaArchivoActual() {
+  const ahora = new Date()
+
+  return [
+    ahora.getFullYear(),
+    String(ahora.getMonth() + 1).padStart(2, "0"),
+    String(ahora.getDate()).padStart(2, "0"),
+  ].join("-")
+}
+
 /**
  * ============================================================
  * ESTADO INICIAL DE FILTROS
@@ -255,8 +265,11 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
 
       exportarExcel({
         datos: datosExcel,
-        nombreArchivo: `guias-${new Date().toISOString().slice(0, 10)}`,
-        nombreHoja: "Guías",
+        nombreArchivo: `guias-de-internamiento-${fechaArchivoActual()}`,
+        nombreHoja: "Guías de internamiento",
+        titulo: "GUÍAS DE INTERNAMIENTO",
+        subtitulo: `Reporte generado el ${fechaArchivoActual()} · ${datosExcel.length} registros`,
+        anchos: [17, 28, 22, 23, 10, 17, 17, 17, 16, 16, 20, 23, 22, 16, 16],
       })
 
       toast.success(

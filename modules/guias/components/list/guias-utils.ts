@@ -26,6 +26,17 @@ export function formatFechaNegocio(fecha: Date | string | null | undefined) {
   })
 }
 
+export function formatHoraNegocio(hora: Date | string | null | undefined) {
+  if (!hora) return "—"
+
+  const horaDate = typeof hora === "string" ? new Date(hora) : hora
+
+  return [
+    String(horaDate.getUTCHours()).padStart(2, "0"),
+    String(horaDate.getUTCMinutes()).padStart(2, "0"),
+  ].join(":")
+}
+
 /**
  * ============================================================
  * MAPEAR GUÍAS PARA EXPORTACIÓN A EXCEL
@@ -33,74 +44,20 @@ export function formatFechaNegocio(fecha: Date | string | null | undefined) {
  */
 export function mapearGuiasParaExcel(guias: GuiaConRelaciones[]) {
   return guias.map((guia) => ({
-    "N° Guía": guia.numeroGuia,
-
+    "Número de guía": guia.numeroGuia,
     Cliente: guia.cliente?.nombreCompleto ?? "Sin cliente",
-
-    "Tipo documento": guia.cliente?.tipoDocumento ?? "",
-
-    "Documento cliente": guia.cliente?.numeroDocumento ?? "",
-
-    Contenedor: guia.contenedor.numeroContenedor,
-
-    "Marca contenedor": guia.contenedor.marca,
-
-    Medida: guia.contenedor.medida,
-
-    "Tipo contenedor": guia.contenedor.tipo,
-
-    "Empresa transporte ingreso": guia.empresaTransporteIngreso?.nombre ?? "",
-
-    "Vehículo ingreso": guia.vehiculoIngreso?.placa ?? "",
-
-    "Conductor ingreso": guia.conductorIngreso?.nombreCompleto ?? "",
-
-    "Licencia ingreso": guia.conductorIngreso?.numeroLicencia ?? "",
-
-    "Fecha ingreso": formatFechaNegocio(guia.fechaIngreso),
-
-    "Empresa transporte salida": guia.empresaTransporteSalida?.nombre ?? "",
-
-    "Vehículo salida": guia.vehiculoSalida?.placa ?? "",
-
-    "Conductor salida": guia.conductorSalida?.nombreCompleto ?? "",
-
-    "Licencia salida": guia.conductorSalida?.numeroLicencia ?? "",
-
-    "Fecha salida": formatFechaNegocio(guia.fechaSalida),
-
-    "Días almacenamiento": guia.diasAlmacenamiento ?? "",
-
-    "Tipo precio": guia.tipoPrecio,
-
-    "Precio primer día": guia.precioPrimerDia ?? "",
-
-    "Precio día adicional": guia.precioDiaAdicional ?? "",
-
-    "Precio ingreso / salida": guia.precioIngresoSalida ?? "",
-
-    "Cantidad movimientos": guia.cantidadMovimientos ?? "",
-
-    "Precio por movimiento": guia.precioMovimiento ?? "",
-
+    "Marca de contenedor": guia.contenedor.marca,
+    "Número de contenedor": guia.contenedor.numeroContenedor,
+    Medida: `${guia.contenedor.medida}'`,
+    "Hora de ingreso": formatHoraNegocio(guia.horaIngreso),
+    "Fecha de ingreso": formatFechaNegocio(guia.fechaIngreso),
+    "Fecha de salida": formatFechaNegocio(guia.fechaSalida),
+    "Hora de salida": formatHoraNegocio(guia.horaSalida),
+    "Días almacenados": guia.diasAlmacenamiento ?? "",
+    "Precio ingreso salida": guia.precioIngresoSalida ?? "",
+    "Cantidad de movimientos": guia.cantidadMovimientos ?? "",
     "Subtotal movimientos": guia.subtotalMovimientos ?? "",
-
-    Subtotal: guia.subtotal ?? "",
-
-    "IGV %": guia.porcentajeIGV ?? "",
-
-    "Monto IGV": guia.montoIGV ?? "",
-
     "Monto total": guia.montoTotal ?? "",
-
-    "Tratamiento IGV": guia.tratamientoIGV,
-
     Estado: guia.estado,
-
-    "Estado de pago": guia.estadoPago,
-
-    Observaciones: guia.observaciones ?? "",
-
-    "Fecha creación": formatFechaNegocio(guia.createdAt),
   }))
 }
