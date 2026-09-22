@@ -28,45 +28,74 @@ export async function obtenerGuiaTrasegadoService(input: {
   }
 
   // ------------------ ELEMENTOS ------------------
-  const elementos: GuiaTrasegadoElementoDetalle[] =
-    guia.ingreso?.elementos.map((el) => {
-      const vecesRetirado = el.salidas.length
-      const esMercaderia = el.tipo === "MERCADERIA" || el.tipo === "OTRO"
+  const elementos: GuiaTrasegadoElementoDetalle[] = guia.ingresos.flatMap(
+    (ingreso) =>
+      ingreso.elementos.map((el) => {
+        const vecesRetirado = el.salidas.length
+        const esMercaderia = el.tipo === "MERCADERIA" || el.tipo === "OTRO"
 
-      // Regla de "retirado":
-      // - Identificables: ya salieron al menos una vez.
-      // - Mercadería: el usuario lo marcó como completado.
-      const retirado = esMercaderia
-        ? el.mercaderiaCompletada
-        : vecesRetirado > 0
+        // Regla de "retirado":
+        // - Identificables: ya salieron al menos una vez.
+        // - Mercadería: el usuario lo marcó como completado.
+        const retirado = esMercaderia
+          ? el.mercaderiaCompletada
+          : vecesRetirado > 0
 
-      return {
-        id: el.id,
-        tipo: el.tipo,
-        numero: el.numero,
-        descripcion: el.descripcion,
-        observaciones: el.observaciones,
-        contenedor: el.contenedor
-          ? {
-              id: el.contenedor.id,
-              numeroContenedor: el.contenedor.numeroContenedor,
-              marca: el.contenedor.marca,
-              medida: el.contenedor.medida,
-              tipo: el.contenedor.tipo,
-            }
-          : null,
-        flatRack: el.flatRack
-          ? {
-              id: el.flatRack.id,
-              numero: el.flatRack.numero,
-              marca: el.flatRack.marca,
-            }
-          : null,
-        mercaderiaCompletada: el.mercaderiaCompletada,
-        vecesRetirado,
-        retirado,
-      }
-    }) ?? []
+        return {
+          id: el.id,
+          tipo: el.tipo,
+          numero: el.numero,
+          descripcion: el.descripcion,
+          observaciones: el.observaciones,
+          contenedor: el.contenedor
+            ? {
+                id: el.contenedor.id,
+                numeroContenedor: el.contenedor.numeroContenedor,
+                marca: el.contenedor.marca,
+                medida: el.contenedor.medida,
+                tipo: el.contenedor.tipo,
+              }
+            : null,
+          flatRack: el.flatRack
+            ? {
+                id: el.flatRack.id,
+                numero: el.flatRack.numero,
+                marca: el.flatRack.marca,
+              }
+            : null,
+          mercaderiaCompletada: el.mercaderiaCompletada,
+          vecesRetirado,
+          retirado,
+        }
+      })
+  )
+
+  const ingresos = guia.ingresos.map((ingreso) => ({
+    id: ingreso.id,
+    empresaTransporte: {
+      id: ingreso.empresaTransporte.id,
+      ruc: ingreso.empresaTransporte.ruc,
+      nombre: ingreso.empresaTransporte.nombre,
+      telefono: ingreso.empresaTransporte.telefono,
+      contactoLogistico: ingreso.empresaTransporte.contactoLogistico,
+      nombreEncargado: ingreso.empresaTransporte.nombreEncargado,
+    },
+    vehiculo: {
+      id: ingreso.vehiculo.id,
+      placa: ingreso.vehiculo.placa,
+      tipo: ingreso.vehiculo.tipo,
+      descripcion: ingreso.vehiculo.descripcion,
+    },
+    conductor: {
+      id: ingreso.conductor.id,
+      numeroLicencia: ingreso.conductor.numeroLicencia,
+      nombreCompleto: ingreso.conductor.nombreCompleto,
+      telefono: ingreso.conductor.telefono,
+    },
+    elementos: ingreso.elementos.map((el) =>
+      elementos.find((elemento) => elemento.id === el.id)!
+    ),
+  }))
 
   // ------------------ SALIDAS ------------------
   const salidas: GuiaTrasegadoSalidaDetalle[] = guia.salidas.map((s) => ({
@@ -121,32 +150,7 @@ export async function obtenerGuiaTrasegadoService(input: {
           observaciones: guia.cliente.observaciones,
         }
       : null,
-    ingreso: guia.ingreso
-      ? {
-          id: guia.ingreso.id,
-          empresaTransporte: {
-            id: guia.ingreso.empresaTransporte.id,
-            ruc: guia.ingreso.empresaTransporte.ruc,
-            nombre: guia.ingreso.empresaTransporte.nombre,
-            telefono: guia.ingreso.empresaTransporte.telefono,
-            contactoLogistico: guia.ingreso.empresaTransporte.contactoLogistico,
-            nombreEncargado: guia.ingreso.empresaTransporte.nombreEncargado,
-          },
-          vehiculo: {
-            id: guia.ingreso.vehiculo.id,
-            placa: guia.ingreso.vehiculo.placa,
-            tipo: guia.ingreso.vehiculo.tipo,
-            descripcion: guia.ingreso.vehiculo.descripcion,
-          },
-          conductor: {
-            id: guia.ingreso.conductor.id,
-            numeroLicencia: guia.ingreso.conductor.numeroLicencia,
-            nombreCompleto: guia.ingreso.conductor.nombreCompleto,
-            telefono: guia.ingreso.conductor.telefono,
-          },
-          elementos,
-        }
-      : null,
+    ingresos,
     salidas,
   }
 }

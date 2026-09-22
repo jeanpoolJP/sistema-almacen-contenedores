@@ -18,14 +18,19 @@ import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado
 interface FormMercaderiaProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
   index: number
+  ingresoIndex: number
 }
 
-export function FormMercaderia({ form, index }: FormMercaderiaProps) {
+export function FormMercaderia({
+  form,
+  index,
+  ingresoIndex,
+}: FormMercaderiaProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.numero`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.numero`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -46,7 +51,7 @@ export function FormMercaderia({ form, index }: FormMercaderiaProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.descripcion`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.descripcion`}
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel>

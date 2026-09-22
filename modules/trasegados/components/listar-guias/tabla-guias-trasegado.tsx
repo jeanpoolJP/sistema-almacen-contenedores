@@ -32,6 +32,7 @@ interface TablaGuiasTrasegadoProps {
   onVerDetalle: (id: number) => void
   onAsignarCliente: (id: number, numeroGuia: string) => void
   onRegistrarSalida: (id: number, numeroGuia: string) => void
+  onRegistrarIngreso: (id: number, numeroGuia: string) => void
   onFinalizar: (id: number, numeroGuia: string) => void
   onReactivar: (id: number, numeroGuia: string) => void
   onRegistrarPago: (id: number, numeroGuia: string) => void
@@ -47,6 +48,7 @@ export function TablaGuiasTrasegado({
   onVerDetalle,
   onAsignarCliente,
   onRegistrarSalida,
+  onRegistrarIngreso,
   onFinalizar,
   onReactivar,
   onRegistrarPago,
@@ -170,6 +172,9 @@ export function TablaGuiasTrasegado({
                     }
                     onRegistrarSalida={() =>
                       onRegistrarSalida(g.id, g.numeroGuia)
+                    }
+                    onRegistrarIngreso={() =>
+                      onRegistrarIngreso(g.id, g.numeroGuia)
                     }
                     onFinalizar={() => onFinalizar(g.id, g.numeroGuia)}
                     onReactivar={() => onReactivar(g.id, g.numeroGuia)}

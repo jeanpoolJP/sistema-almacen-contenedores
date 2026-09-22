@@ -221,15 +221,6 @@ function Field({
   )
 }
 
-function InfoLine({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ marginBottom: 2 }}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.valueNormal}>{value}</Text>
-    </View>
-  )
-}
-
 const ETIQUETAS: Record<GuiaTrasegadoElementoDetalle["tipo"], string> = {
   CONTENEDOR: "Contenedor",
   FLAT_RACK: "Flat Rack",
@@ -353,9 +344,9 @@ interface DetalleGuiaPDFDocumentProps {
 }
 
 export function DetalleGuiaPDFDocument({ guia }: DetalleGuiaPDFDocumentProps) {
-  const totalElementos = guia.ingreso?.elementos.length ?? 0
-  const pendientes =
-    guia.ingreso?.elementos.filter((e) => !e.retirado).length ?? 0
+  const elementos = guia.ingresos.flatMap((ingreso) => ingreso.elementos)
+  const totalElementos = elementos.length
+  const pendientes = elementos.filter((e) => !e.retirado).length
 
   return (
     <Document
@@ -447,75 +438,73 @@ export function DetalleGuiaPDFDocument({ guia }: DetalleGuiaPDFDocumentProps) {
         </View>
 
         {/* INGRESO */}
-        {guia.ingreso && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingreso</Text>
+        {guia.ingresos.map((ingreso, ingresoIndex) => (
+          <View key={ingreso.id} style={styles.section}>
+            <Text style={styles.sectionTitle}>Ingreso {ingresoIndex + 1}</Text>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.label}>Empresa</Text>
                 <Text style={styles.value}>
-                  {guia.ingreso.empresaTransporte.nombre}
+                  {ingreso.empresaTransporte.nombre}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  RUC: {guia.ingreso.empresaTransporte.ruc}
+                  RUC: {ingreso.empresaTransporte.ruc}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  Tel: {guia.ingreso.empresaTransporte.telefono ?? "—"}
+                  Tel: {ingreso.empresaTransporte.telefono ?? "—"}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  Contacto:{" "}
-                  {guia.ingreso.empresaTransporte.contactoLogistico ?? "—"}
+                  Contacto: {ingreso.empresaTransporte.contactoLogistico ?? "—"}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  Encargado:{" "}
-                  {guia.ingreso.empresaTransporte.nombreEncargado ?? "—"}
+                  Encargado: {ingreso.empresaTransporte.nombreEncargado ?? "—"}
                 </Text>
               </View>
               <View style={styles.col}>
                 <Text style={styles.label}>Vehículo</Text>
                 <Text style={[styles.value, styles.mono]}>
-                  {guia.ingreso.vehiculo.placa}
+                  {ingreso.vehiculo.placa}
                 </Text>
                 <Text style={styles.valueNormal}>
                   Tipo:{" "}
-                  {guia.ingreso.vehiculo.tipo === "PORTA_CONTENEDORES"
+                  {ingreso.vehiculo.tipo === "PORTA_CONTENEDORES"
                     ? "Porta-contenedores"
-                    : guia.ingreso.vehiculo.tipo === "CAMA_BAJA"
+                    : ingreso.vehiculo.tipo === "CAMA_BAJA"
                       ? "Cama baja"
-                      : guia.ingreso.vehiculo.tipo === "OTRO"
+                      : ingreso.vehiculo.tipo === "OTRO"
                         ? "Otro"
                         : "—"}
                 </Text>
-                {guia.ingreso.vehiculo.descripcion && (
+                {ingreso.vehiculo.descripcion && (
                   <Text style={styles.valueNormal}>
-                    {guia.ingreso.vehiculo.descripcion}
+                    {ingreso.vehiculo.descripcion}
                   </Text>
                 )}
               </View>
               <View style={styles.col}>
                 <Text style={styles.label}>Conductor</Text>
                 <Text style={styles.value}>
-                  {guia.ingreso.conductor.nombreCompleto}
+                  {ingreso.conductor.nombreCompleto}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  Lic: {guia.ingreso.conductor.numeroLicencia}
+                  Lic: {ingreso.conductor.numeroLicencia}
                 </Text>
                 <Text style={styles.valueNormal}>
-                  Tel: {guia.ingreso.conductor.telefono ?? "—"}
+                  Tel: {ingreso.conductor.telefono ?? "—"}
                 </Text>
               </View>
             </View>
           </View>
-        )}
+        ))}
 
         {/* ELEMENTOS */}
-        {guia.ingreso && guia.ingreso.elementos.length > 0 && (
+        {elementos.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               Elementos transportados ({totalElementos} · {pendientes}{" "}
               pendientes)
             </Text>
-            {guia.ingreso.elementos.map((el, i) => (
+            {elementos.map((el, i) => (
               <ElementoPDF key={el.id} elemento={el} index={i} />
             ))}
           </View>

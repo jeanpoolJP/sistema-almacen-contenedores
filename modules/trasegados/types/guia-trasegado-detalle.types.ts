@@ -33,7 +33,7 @@ export interface GuiaTrasegadoDetalle {
     observaciones: string | null
   } | null
 
-  ingreso: {
+  ingresos: Array<{
     id: number
     empresaTransporte: {
       id: number
@@ -56,7 +56,7 @@ export interface GuiaTrasegadoDetalle {
       telefono: string | null
     }
     elementos: GuiaTrasegadoElementoDetalle[]
-  } | null
+  }>
 
   salidas: GuiaTrasegadoSalidaDetalle[]
 }

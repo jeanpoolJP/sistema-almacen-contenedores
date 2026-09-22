@@ -13,16 +13,20 @@ import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado
 
 interface SeccionElementosProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
+  ingresoIndex: number
 }
 
 /**
  * Sección dinámica que permite agregar/eliminar elementos
  * transportados (contenedores, flat racks, mercadería, maquinaria).
  */
-export function SeccionElementos({ form }: SeccionElementosProps) {
+export function SeccionElementos({
+  form,
+  ingresoIndex,
+}: SeccionElementosProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "ingreso.elementos",
+    name: `ingresos.${ingresoIndex}.elementos`,
     // Necesario cuando el array puede empezar vacío y usar
     // discriminated unions. Evita conflictos con el `id` de RHF.
     keyName: "_key",
@@ -33,7 +37,8 @@ export function SeccionElementos({ form }: SeccionElementosProps) {
   }
 
   // Error general del array (validación Zod)
-  const errorElementos = form.formState.errors.ingreso?.elementos
+  const errorElementos =
+    form.formState.errors.ingresos?.[ingresoIndex]?.elementos
   const mensajeError = errorElementos?.message ?? errorElementos?.root?.message
 
   return (
@@ -59,6 +64,7 @@ export function SeccionElementos({ form }: SeccionElementosProps) {
               key={field._key}
               form={form}
               index={index}
+              ingresoIndex={ingresoIndex}
               tipo={field.tipo}
               onRemove={() => remove(index)}
               puedeEliminar={fields.length > 1}

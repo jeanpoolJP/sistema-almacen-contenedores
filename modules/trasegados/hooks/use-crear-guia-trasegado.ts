@@ -13,6 +13,7 @@ import {
   crearGuiaTrasegadoSchema,
   type CrearGuiaTrasegadoInput,
 } from "../schemas/crear-guia-trasegado.schema"
+import { crearIngresoVacio } from "../utils/form-defaults"
 
 /**
  * Hook que encapsula el ciclo de vida del formulario de creación
@@ -37,27 +38,7 @@ export function useCrearGuiaTrasegado() {
       clienteId: null,
       fechaIngreso: new Date(),
       observaciones: "",
-      ingreso: {
-        empresaTransporte: {
-          ruc: "",
-          nombre: "",
-          telefono: "",
-          contactoLogistico: "",
-          nombreEncargado: "",
-        },
-        vehiculo: {
-          placa: "",
-          tipo: null,
-          descripcion: "",
-        },
-        conductor: {
-          numeroLicencia: "",
-          nombreCompleto: "",
-          telefono: "",
-        },
-        // Sin elementos: el usuario elige el primero.
-        elementos: [],
-      },
+      ingresos: [crearIngresoVacio()],
     },
     mode: "onBlur",
   })

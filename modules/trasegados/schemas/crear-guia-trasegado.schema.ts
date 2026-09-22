@@ -7,9 +7,18 @@ import { vehiculoInputSchema } from "./shared/vehiculo.schema"
 import { conductorInputSchema } from "./shared/conductor.schema"
 import { elementoTrasegadoSchema } from "./shared/elemento.schema"
 
-/**
- * Schema principal para crear una guía de trasegado.
- */
+export const ingresoTrasegadoSchema = z.object({
+  empresaTransporte: empresaTransporteInputSchema,
+  vehiculo: vehiculoInputSchema,
+  conductor: conductorInputSchema,
+  elementos: z
+    .array(elementoTrasegadoSchema)
+    .min(1, "Debe registrar al menos un elemento."),
+})
+
+export type IngresoTrasegadoInput = z.infer<typeof ingresoTrasegadoSchema>
+
+/** Schema principal para crear una guía de trasegado. */
 export const crearGuiaTrasegadoSchema = z.object({
   numeroGuia: z
     .string()
@@ -24,14 +33,9 @@ export const crearGuiaTrasegadoSchema = z.object({
     error: "La fecha y hora de ingreso son obligatorias.",
   }),
   observaciones: optionalUpperString(500),
-  ingreso: z.object({
-    empresaTransporte: empresaTransporteInputSchema,
-    vehiculo: vehiculoInputSchema,
-    conductor: conductorInputSchema,
-    elementos: z
-      .array(elementoTrasegadoSchema)
-      .min(1, "Debe registrar al menos un elemento."),
-  }),
+  ingresos: z
+    .array(ingresoTrasegadoSchema)
+    .min(1, "Debe registrar al menos un ingreso."),
 })
 
 export type CrearGuiaTrasegadoInput = z.infer<typeof crearGuiaTrasegadoSchema>

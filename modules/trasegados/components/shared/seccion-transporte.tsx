@@ -37,7 +37,7 @@ import { ETIQUETAS_TIPO_VEHICULO } from "../../types"
  * Prefijo del path dentro del form.
  * Ej: "ingreso" | "salida" o vacío para campos raíces.
  */
-type Prefijo = "ingreso" | "salida" | ""
+type Prefijo = string
 
 interface SeccionTransporteProps<T extends FieldValues> {
   form: UseFormReturn<T>

@@ -13,7 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -31,6 +30,7 @@ import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado
 interface FormContenedorProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
   index: number
+  ingresoIndex: number
 }
 
 type ContenedorData = {
@@ -48,14 +48,18 @@ type ContenedorData = {
  * - Si existe: se rellenan marca/medida/tipo y se bloquean.
  * - Si no existe: el usuario completa los campos para crearlo.
  */
-export function FormContenedor({ form, index }: FormContenedorProps) {
+export function FormContenedor({
+  form,
+  index,
+  ingresoIndex,
+}: FormContenedorProps) {
   const { encontrada, data, buscando, buscar, reset } = useEntidadLookup<
     string,
     ContenedorData
   >(buscarContenedorAction)
 
   const numeroValue = form.watch(
-    `ingreso.elementos.${index}.contenedor.numeroContenedor`
+    `ingresos.${ingresoIndex}.elementos.${index}.contenedor.numeroContenedor`
   )
 
   // Debounce simple: buscar cuando el número cambia
@@ -74,19 +78,27 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
   // Cuando se encuentra, autocompletar
   useEffect(() => {
     if (encontrada && data) {
-      form.setValue(`ingreso.elementos.${index}.contenedor.marca`, data.marca, {
-        shouldValidate: false,
-      })
       form.setValue(
-        `ingreso.elementos.${index}.contenedor.medida`,
+        `ingresos.${ingresoIndex}.elementos.${index}.contenedor.marca`,
+        data.marca,
+        {
+          shouldValidate: false,
+        }
+      )
+      form.setValue(
+        `ingresos.${ingresoIndex}.elementos.${index}.contenedor.medida`,
         data.medida,
         { shouldValidate: false }
       )
-      form.setValue(`ingreso.elementos.${index}.contenedor.tipo`, data.tipo, {
-        shouldValidate: false,
-      })
+      form.setValue(
+        `ingresos.${ingresoIndex}.elementos.${index}.contenedor.tipo`,
+        data.tipo,
+        {
+          shouldValidate: false,
+        }
+      )
     }
-  }, [encontrada, data, form, index])
+  }, [encontrada, data, form, index, ingresoIndex])
 
   const bloqueado = encontrada && !!data
 
@@ -94,7 +106,7 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
     <div className="grid gap-4 md:grid-cols-2">
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.contenedor.numeroContenedor`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.contenedor.numeroContenedor`}
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel className="flex items-center gap-2">
@@ -128,7 +140,7 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.contenedor.marca`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.contenedor.marca`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -149,7 +161,7 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.contenedor.medida`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.contenedor.medida`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -177,7 +189,7 @@ export function FormContenedor({ form, index }: FormContenedorProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.contenedor.tipo`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.contenedor.tipo`}
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel>

@@ -26,6 +26,7 @@ import type { ElementoTrasegadoFormValue } from "../../types"
 interface ElementoFormCardProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
   index: number
+  ingresoIndex: number
   tipo: ElementoTrasegadoFormValue["tipo"]
   onRemove: () => void
   puedeEliminar: boolean
@@ -37,6 +38,7 @@ interface ElementoFormCardProps {
 export function ElementoFormCard({
   form,
   index,
+  ingresoIndex,
   tipo,
   onRemove,
   puedeEliminar,
@@ -49,9 +51,11 @@ export function ElementoFormCard({
             #{index + 1}
           </Badge>
           <Badge variant="outline" className="text-xs">
-            {ETIQUETAS_TIPO_ELEMENTO[
-              tipo as keyof typeof ETIQUETAS_TIPO_ELEMENTO
-            ]}
+            {
+              ETIQUETAS_TIPO_ELEMENTO[
+                tipo as keyof typeof ETIQUETAS_TIPO_ELEMENTO
+              ]
+            }
           </Badge>
         </div>
 
@@ -69,15 +73,23 @@ export function ElementoFormCard({
         )}
       </div>
 
-      {tipo === "CONTENEDOR" && <FormContenedor form={form} index={index} />}
-      {tipo === "FLAT_RACK" && <FormFlatRack form={form} index={index} />}
-      {tipo === "MERCADERIA" && <FormMercaderia form={form} index={index} />}
-      {tipo === "MAQUINARIA" && <FormMaquinaria form={form} index={index} />}
+      {tipo === "CONTENEDOR" && (
+        <FormContenedor form={form} index={index} ingresoIndex={ingresoIndex} />
+      )}
+      {tipo === "FLAT_RACK" && (
+        <FormFlatRack form={form} index={index} ingresoIndex={ingresoIndex} />
+      )}
+      {tipo === "MERCADERIA" && (
+        <FormMercaderia form={form} index={index} ingresoIndex={ingresoIndex} />
+      )}
+      {tipo === "MAQUINARIA" && (
+        <FormMaquinaria form={form} index={index} ingresoIndex={ingresoIndex} />
+      )}
 
       <div className="mt-4">
         <FormField
           control={form.control}
-          name={`ingreso.elementos.${index}.observaciones`}
+          name={`ingresos.${ingresoIndex}.elementos.${index}.observaciones`}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs">Observaciones</FormLabel>

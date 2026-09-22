@@ -11,7 +11,7 @@ export type CrearGuiaTrasegadoRepositoryInput = {
   fechaIngreso: Date
   observaciones?: string
 
-  ingreso: {
+  ingresos: Array<{
     empresaTransporteId: number
     vehiculoId: number
     conductorId: number
@@ -26,7 +26,7 @@ export type CrearGuiaTrasegadoRepositoryInput = {
       descripcion?: string
       observaciones?: string
     }>
-  }
+  }>
 }
 
 /**
@@ -50,32 +50,29 @@ export async function createGuiaTrasegado(
       fechaIngreso: data.fechaIngreso,
       observaciones: data.observaciones || null,
 
-      ingreso: {
-        create: {
-          empresaTransporteId: data.ingreso.empresaTransporteId,
-          vehiculoId: data.ingreso.vehiculoId,
-          conductorId: data.ingreso.conductorId,
-
+      ingresos: {
+        create: data.ingresos.map((ingreso) => ({
+          empresaTransporteId: ingreso.empresaTransporteId,
+          vehiculoId: ingreso.vehiculoId,
+          conductorId: ingreso.conductorId,
           elementos: {
-            create: data.ingreso.elementos.map((elemento) => ({
+            create: ingreso.elementos.map((elemento) => ({
               tipo: elemento.tipo,
-
               contenedorId: elemento.contenedorId ?? null,
               flatRackId: elemento.flatRackId ?? null,
-
               numero: elemento.numero,
               descripcion: elemento.descripcion || null,
               observaciones: elemento.observaciones || null,
             })),
           },
-        },
+        })),
       },
     },
 
     include: {
       cliente: true,
 
-      ingreso: {
+      ingresos: {
         include: {
           empresaTransporte: true,
           vehiculo: true,
@@ -135,7 +132,7 @@ export async function findGuiaTrasegadoById(id: number) {
     include: {
       cliente: true,
 
-      ingreso: {
+      ingresos: {
         include: {
           empresaTransporte: true,
           vehiculo: true,
@@ -196,7 +193,7 @@ export async function findGuiaTrasegadoByNumero(numeroGuia: string) {
     include: {
       cliente: true,
 
-      ingreso: {
+      ingresos: {
         include: {
           empresaTransporte: true,
           vehiculo: true,
@@ -268,13 +265,15 @@ function construirWhere(
 
   // ------------------ ELEMENTO POR NÚMERO DE CONTENEDOR ------------------
   if (filtros.numeroContenedor) {
-    where.ingreso = {
-      elementos: {
-        some: {
-          contenedor: {
-            numeroContenedor: {
-              contains: filtros.numeroContenedor.toUpperCase(),
-              mode: "insensitive",
+    where.ingresos = {
+      some: {
+        elementos: {
+          some: {
+            contenedor: {
+              numeroContenedor: {
+                contains: filtros.numeroContenedor.toUpperCase(),
+                mode: "insensitive",
+              },
             },
           },
         },
@@ -399,7 +398,7 @@ export async function listarGuiasTrasegadoRepository(
             salidas: true,
           },
         },
-        ingreso: {
+        ingresos: {
           select: {
             _count: {
               select: {
@@ -425,7 +424,7 @@ export async function obtenerGuiaTrasegadoPorIdRepository(id: number) {
     where: { id },
     include: {
       cliente: true,
-      ingreso: {
+      ingresos: {
         include: {
           empresaTransporte: true,
           vehiculo: true,
@@ -479,6 +478,50 @@ export async function asignarClienteAGuiaRepository(
     include: {
       cliente: true,
     },
+  })
+}
+
+export async function existeGuiaTrasegadoConEstadoRepository(
+  guiaTrasegadoId: number
+) {
+  return prisma.guiaTrasegado.findUnique({
+    where: { id: guiaTrasegadoId },
+    select: { id: true, numeroGuia: true, estado: true },
+  })
+}
+
+export async function crearIngresoRepository(params: {
+  guiaTrasegadoId: number
+  empresaTransporteId: number
+  vehiculoId: number
+  conductorId: number
+  elementos: Array<{
+    tipo: TipoElementoTrasegado
+    contenedorId?: number | null
+    flatRackId?: number | null
+    numero: string
+    descripcion?: string | null
+    observaciones?: string | null
+  }>
+}) {
+  return prisma.guiaTrasegadoIngreso.create({
+    data: {
+      guiaTrasegadoId: params.guiaTrasegadoId,
+      empresaTransporteId: params.empresaTransporteId,
+      vehiculoId: params.vehiculoId,
+      conductorId: params.conductorId,
+      elementos: {
+        create: params.elementos.map((elemento) => ({
+          tipo: elemento.tipo,
+          contenedorId: elemento.contenedorId ?? null,
+          flatRackId: elemento.flatRackId ?? null,
+          numero: elemento.numero,
+          descripcion: elemento.descripcion ?? null,
+          observaciones: elemento.observaciones ?? null,
+        })),
+      },
+    },
+    select: { id: true, guiaTrasegadoId: true },
   })
 }
 

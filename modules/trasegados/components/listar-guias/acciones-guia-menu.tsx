@@ -8,6 +8,7 @@ import {
   EyeIcon,
   MoreHorizontalIcon,
   PackageOpenIcon,
+  TruckIcon,
   RotateCcwIcon,
   UserPlusIcon,
 } from "lucide-react"
@@ -25,6 +26,7 @@ interface AccionesGuiaMenuProps {
   onVerDetalle: () => void
   onAsignarCliente: () => void
   onRegistrarSalida: () => void
+  onRegistrarIngreso: () => void
   onFinalizar: () => void
   onReactivar: () => void
   onRegistrarPago: () => void
@@ -37,6 +39,7 @@ export function AccionesGuiaMenu({
   onVerDetalle,
   onAsignarCliente,
   onRegistrarSalida,
+  onRegistrarIngreso,
   onFinalizar,
   onReactivar,
   onRegistrarPago,
@@ -73,6 +76,15 @@ export function AccionesGuiaMenu({
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={onRegistrarIngreso}
+          disabled={!enProceso}
+          className="cursor-pointer"
+        >
+          <TruckIcon className="mr-2 size-4" />
+          Registrar nuevo ingreso
+        </DropdownMenuItem>
 
         <DropdownMenuItem
           onClick={onRegistrarSalida}

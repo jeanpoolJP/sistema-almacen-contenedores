@@ -36,7 +36,10 @@ export async function listarGuiasTrasegadoService(
     estadoPago: g.estadoPago,
     totalPagar: g.totalPagar != null ? Number(g.totalPagar) : null,
     cliente: g.cliente,
-    totalElementos: g.ingreso?._count.elementos ?? 0,
+    totalElementos: g.ingresos.reduce(
+      (total, ingreso) => total + ingreso._count.elementos,
+      0
+    ),
     totalSalidas: g._count.salidas,
   }))
 

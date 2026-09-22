@@ -18,14 +18,19 @@ import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado
 interface FormMaquinariaProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
   index: number
+  ingresoIndex: number
 }
 
-export function FormMaquinaria({ form, index }: FormMaquinariaProps) {
+export function FormMaquinaria({
+  form,
+  index,
+  ingresoIndex,
+}: FormMaquinariaProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.numero`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.numero`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -46,7 +51,7 @@ export function FormMaquinaria({ form, index }: FormMaquinariaProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.descripcion`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.descripcion`}
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel>

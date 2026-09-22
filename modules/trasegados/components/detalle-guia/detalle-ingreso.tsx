@@ -12,66 +12,73 @@ interface DetalleIngresoProps {
 }
 
 export function DetalleIngreso({ guia }: DetalleIngresoProps) {
-  if (!guia.ingreso) return null
-
-  const { ingreso } = guia
+  if (guia.ingresos.length === 0) return null
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Información del ingreso</CardTitle>
+        <CardTitle className="text-base">
+          Información de ingresos ({guia.ingresos.length})
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Transporte */}
-        <div className="grid gap-5 md:grid-cols-3">
-          <InfoBlock title="Empresa de transporte">
-            <InfoLine label="RUC" value={ingreso.empresaTransporte.ruc} />
-            <InfoLine label="Nombre" value={ingreso.empresaTransporte.nombre} />
-            <InfoLine
-              label="Teléfono"
-              value={ingreso.empresaTransporte.telefono ?? "—"}
-            />
-            <InfoLine
-              label="Contacto logístico"
-              value={ingreso.empresaTransporte.contactoLogistico ?? "—"}
-            />
-            <InfoLine
-              label="Encargado"
-              value={ingreso.empresaTransporte.nombreEncargado ?? "—"}
-            />
-          </InfoBlock>
-
-          <InfoBlock title="Vehículo">
-            <InfoLine label="Placa" value={ingreso.vehiculo.placa} mono />
-            <InfoLine
-              label="Tipo"
-              value={
-                ingreso.vehiculo.tipo
-                  ? etiquetaTipoVehiculo(ingreso.vehiculo.tipo)
-                  : "—"
-              }
-            />
-            <InfoLine
-              label="Descripción"
-              value={ingreso.vehiculo.descripcion ?? "—"}
-            />
-          </InfoBlock>
-
-          <InfoBlock title="Conductor">
-            <InfoLine label="Nombre" value={ingreso.conductor.nombreCompleto} />
-            <InfoLine
-              label="Licencia"
-              value={ingreso.conductor.numeroLicencia}
-              mono
-            />
-            <InfoLine
-              label="Teléfono"
-              value={ingreso.conductor.telefono ?? "—"}
-            />
-          </InfoBlock>
-        </div>
-
-        <Separator />
+        {guia.ingresos.map((ingreso, index) => (
+          <div key={ingreso.id} className="space-y-5">
+            <h3 className="text-sm font-semibold">Ingreso {index + 1}</h3>
+            <div className="grid gap-5 md:grid-cols-3">
+              <InfoBlock title="Empresa de transporte">
+                <InfoLine label="RUC" value={ingreso.empresaTransporte.ruc} />
+                <InfoLine
+                  label="Nombre"
+                  value={ingreso.empresaTransporte.nombre}
+                />
+                <InfoLine
+                  label="Teléfono"
+                  value={ingreso.empresaTransporte.telefono ?? "—"}
+                />
+                <InfoLine
+                  label="Contacto logístico"
+                  value={ingreso.empresaTransporte.contactoLogistico ?? "—"}
+                />
+                <InfoLine
+                  label="Encargado"
+                  value={ingreso.empresaTransporte.nombreEncargado ?? "—"}
+                />
+              </InfoBlock>
+              <InfoBlock title="Vehículo">
+                <InfoLine label="Placa" value={ingreso.vehiculo.placa} mono />
+                <InfoLine
+                  label="Tipo"
+                  value={
+                    ingreso.vehiculo.tipo
+                      ? etiquetaTipoVehiculo(ingreso.vehiculo.tipo)
+                      : "—"
+                  }
+                />
+                <InfoLine
+                  label="Descripción"
+                  value={ingreso.vehiculo.descripcion ?? "—"}
+                />
+              </InfoBlock>
+              <InfoBlock title="Conductor">
+                <InfoLine
+                  label="Nombre"
+                  value={ingreso.conductor.nombreCompleto}
+                />
+                <InfoLine
+                  label="Licencia"
+                  value={ingreso.conductor.numeroLicencia}
+                  mono
+                />
+                <InfoLine
+                  label="Teléfono"
+                  value={ingreso.conductor.telefono ?? "—"}
+                />
+              </InfoBlock>
+            </div>
+            {index < guia.ingresos.length - 1 && <Separator />}
+          </div>
+        ))}
       </CardContent>
     </Card>
   )

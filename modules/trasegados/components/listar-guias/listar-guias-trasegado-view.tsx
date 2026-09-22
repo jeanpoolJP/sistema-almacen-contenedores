@@ -28,6 +28,7 @@ import { FinalizarGuiaModal } from "../finalizar-guia/finalizar-guia-modal"
 import { RegistrarSalidaModal } from "../registrar-salida/registrar-salida-modal"
 import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
 import { RegistrarPagoModal } from "../registrar-pago/registrar-pago-modal"
+import { RegistrarIngresoModal } from "../registrar-ingreso/registrar-ingreso-modal"
 import { revertirPagoAction } from "../../actions/registrar-pago.action"
 
 type ModalGuia = {
@@ -62,6 +63,12 @@ export function ListarGuiasTrasegadoView() {
   })
 
   const [registrarSalida, setRegistrarSalida] = useState({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+  })
+
+  const [registrarIngreso, setRegistrarIngreso] = useState({
     open: false,
     guiaId: 0,
     numeroGuia: "",
@@ -150,6 +157,9 @@ export function ListarGuiasTrasegadoView() {
         onRegistrarSalida={(id, numeroGuia) =>
           setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
         }
+        onRegistrarIngreso={(id, numeroGuia) =>
+          setRegistrarIngreso({ open: true, guiaId: id, numeroGuia })
+        }
         onFinalizar={(id, numeroGuia) =>
           setCambiarEstado({
             open: true,
@@ -194,6 +204,16 @@ export function ListarGuiasTrasegadoView() {
         }
         guiaId={registrarSalida.guiaId}
         numeroGuia={registrarSalida.numeroGuia}
+        onSuccess={refetch}
+      />
+
+      <RegistrarIngresoModal
+        open={registrarIngreso.open}
+        onOpenChange={(open) =>
+          setRegistrarIngreso((prev) => ({ ...prev, open }))
+        }
+        guiaId={registrarIngreso.guiaId}
+        numeroGuia={registrarIngreso.numeroGuia}
         onSuccess={refetch}
       />
 

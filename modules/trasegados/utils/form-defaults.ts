@@ -1,5 +1,28 @@
 import type { ElementoTrasegadoFormValue } from "../types"
 
+export function crearIngresoVacio() {
+  return {
+    empresaTransporte: {
+      ruc: "",
+      nombre: "",
+      telefono: "",
+      contactoLogistico: "",
+      nombreEncargado: "",
+    },
+    vehiculo: {
+      placa: "",
+      tipo: null,
+      descripcion: "",
+    },
+    conductor: {
+      numeroLicencia: "",
+      nombreCompleto: "",
+      telefono: "",
+    },
+    elementos: [],
+  }
+}
+
 /**
  * Valores por defecto para una nueva guía de trasegado.
  * Nota: `fechaIngreso` se resuelve en el hook para usar la fecha actual.

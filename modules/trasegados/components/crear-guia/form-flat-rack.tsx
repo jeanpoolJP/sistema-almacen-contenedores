@@ -23,6 +23,7 @@ import type { CrearGuiaTrasegadoInput } from "../../schemas/crear-guia-trasegado
 interface FormFlatRackProps {
   form: UseFormReturn<CrearGuiaTrasegadoInput>
   index: number
+  ingresoIndex: number
 }
 
 type FlatRackData = {
@@ -31,13 +32,15 @@ type FlatRackData = {
   marca: string
 }
 
-export function FormFlatRack({ form, index }: FormFlatRackProps) {
+export function FormFlatRack({ form, index, ingresoIndex }: FormFlatRackProps) {
   const { encontrada, data, buscando, buscar, reset } = useEntidadLookup<
     string,
     FlatRackData
   >(buscarFlatRackAction)
 
-  const numeroValue = form.watch(`ingreso.elementos.${index}.flatRack.numero`)
+  const numeroValue = form.watch(
+    `ingresos.${ingresoIndex}.elementos.${index}.flatRack.numero`
+  )
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,11 +55,15 @@ export function FormFlatRack({ form, index }: FormFlatRackProps) {
 
   useEffect(() => {
     if (encontrada && data) {
-      form.setValue(`ingreso.elementos.${index}.flatRack.marca`, data.marca, {
-        shouldValidate: false,
-      })
+      form.setValue(
+        `ingresos.${ingresoIndex}.elementos.${index}.flatRack.marca`,
+        data.marca,
+        {
+          shouldValidate: false,
+        }
+      )
     }
-  }, [encontrada, data, form, index])
+  }, [encontrada, data, form, index, ingresoIndex])
 
   const bloqueado = encontrada && !!data
 
@@ -64,7 +71,7 @@ export function FormFlatRack({ form, index }: FormFlatRackProps) {
     <div className="grid gap-4 md:grid-cols-2">
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.flatRack.numero`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.flatRack.numero`}
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
@@ -94,7 +101,7 @@ export function FormFlatRack({ form, index }: FormFlatRackProps) {
 
       <FormField
         control={form.control}
-        name={`ingreso.elementos.${index}.flatRack.marca`}
+        name={`ingresos.${ingresoIndex}.elementos.${index}.flatRack.marca`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Marca</FormLabel>

@@ -52,7 +52,7 @@ export async function crearGuiaTrasegadoService(
   const observaciones = datos.observaciones?.trim() || null
 
   // ============================================================
-  // 3. RESOLVER ENTIDADES DEL INGRESO
+  // 3. RESOLVER ENTIDADES DE TODOS LOS INGRESOS
   // ============================================================
   //
   // Estas funciones son responsabilidad de sus respectivos
@@ -62,84 +62,85 @@ export async function crearGuiaTrasegadoService(
   //
   // ============================================================
 
-  const empresaTransporte = await obtenerOCrearEmpresaTransporte(
-    datos.ingreso.empresaTransporte
-  )
+  const ingresosResueltos = await Promise.all(
+    datos.ingresos.map(async (ingreso) => {
+      const empresaTransporte = await obtenerOCrearEmpresaTransporte(
+        ingreso.empresaTransporte
+      )
+      const vehiculo = await obtenerOCrearVehiculo(ingreso.vehiculo)
+      const conductor = await obtenerOCrearConductor(ingreso.conductor)
 
-  const vehiculo = await obtenerOCrearVehiculo(datos.ingreso.vehiculo)
+      const elementos = await Promise.all(
+        ingreso.elementos.map(async (elemento) => {
+          // ----------------------------------------------------------
+          // CONTENEDOR
+          // ----------------------------------------------------------
 
-  const conductor = await obtenerOCrearConductor(datos.ingreso.conductor)
+          if (elemento.tipo === "CONTENEDOR") {
+            const contenedor = await obtenerOCrearContenedor(
+              elemento.contenedor
+            )
 
-  // ============================================================
-  // 4. RESOLVER ELEMENTOS IDENTIFICABLES
-  // ============================================================
-  //
-  // Primero resolvemos los contenedores y Flat Racks.
-  //
-  // Mercadería y maquinaria no utilizan tablas maestras.
-  //
-  // ============================================================
+            return {
+              tipo: elemento.tipo,
 
-  const elementosResueltos = await Promise.all(
-    datos.ingreso.elementos.map(async (elemento) => {
-      // ----------------------------------------------------------
-      // CONTENEDOR
-      // ----------------------------------------------------------
+              contenedorId: contenedor.id,
+              flatRackId: null,
 
-      if (elemento.tipo === "CONTENEDOR") {
-        const contenedor = await obtenerOCrearContenedor(elemento.contenedor)
+              numero: contenedor.numeroContenedor,
 
-        return {
-          tipo: elemento.tipo,
+              observaciones: elemento.observaciones?.trim() || null,
+            }
+          }
 
-          contenedorId: contenedor.id,
-          flatRackId: null,
+          // ----------------------------------------------------------
+          // FLAT RACK
+          // ----------------------------------------------------------
 
-          numero: contenedor.numeroContenedor,
+          if (elemento.tipo === "FLAT_RACK") {
+            const flatRack = await findOrCreateFlatRackService(
+              elemento.flatRack.numero,
+              elemento.flatRack.marca
+            )
 
-          observaciones: elemento.observaciones?.trim() || null,
-        }
-      }
+            return {
+              tipo: elemento.tipo,
 
-      // ----------------------------------------------------------
-      // FLAT RACK
-      // ----------------------------------------------------------
+              contenedorId: null,
+              flatRackId: flatRack.id,
 
-      if (elemento.tipo === "FLAT_RACK") {
-        const flatRack = await findOrCreateFlatRackService(
-          elemento.flatRack.numero,
-          elemento.flatRack.marca
-        )
+              numero: flatRack.numero,
 
-        return {
-          tipo: elemento.tipo,
+              observaciones: elemento.observaciones?.trim() || null,
+            }
+          }
 
-          contenedorId: null,
-          flatRackId: flatRack.id,
+          return {
+            tipo: elemento.tipo,
 
-          numero: flatRack.numero,
+            contenedorId: null,
+            flatRackId: null,
 
-          observaciones: elemento.observaciones?.trim() || null,
-        }
-      }
+            numero: elemento.numero.trim().toUpperCase(),
 
-      // ----------------------------------------------------------
-      // MERCADERÍA / MAQUINARIA
-      // ----------------------------------------------------------
+            descripcion: elemento.descripcion?.trim() || null,
+
+            observaciones: elemento.observaciones?.trim() || null,
+          }
+        })
+      )
 
       return {
-        tipo: elemento.tipo,
-
-        contenedorId: null,
-        flatRackId: null,
-
-        numero: elemento.numero.trim().toUpperCase(),
-
-        descripcion: elemento.descripcion?.trim() || null,
-
-        observaciones: elemento.observaciones?.trim() || null,
+        empresaTransporteId: empresaTransporte.id,
+        vehiculoId: vehiculo.id,
+        conductorId: conductor.id,
+        elementos,
       }
     })
+  )
+
+  const elementosResueltos = ingresosResueltos.flatMap(
+    (ingreso) => ingreso.elementos
   )
 
   // ============================================================
@@ -326,37 +327,29 @@ export async function crearGuiaTrasegadoService(
         // INGRESO
         // ======================================================
 
-        ingreso: {
-          create: {
-            empresaTransporteId: empresaTransporte.id,
-
-            vehiculoId: vehiculo.id,
-
-            conductorId: conductor.id,
-
+        ingresos: {
+          create: ingresosResueltos.map((ingreso) => ({
+            empresaTransporteId: ingreso.empresaTransporteId,
+            vehiculoId: ingreso.vehiculoId,
+            conductorId: ingreso.conductorId,
             elementos: {
-              create: elementosResueltos.map((elemento) => ({
+              create: ingreso.elementos.map((elemento) => ({
                 tipo: elemento.tipo,
-
                 contenedorId: elemento.contenedorId,
-
                 flatRackId: elemento.flatRackId,
-
                 numero: elemento.numero,
-
                 descripcion: elemento.descripcion,
-
                 observaciones: elemento.observaciones,
               })),
             },
-          },
+          })),
         },
       },
 
       include: {
         cliente: true,
 
-        ingreso: {
+        ingresos: {
           include: {
             empresaTransporte: true,
             vehiculo: true,

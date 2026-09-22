@@ -440,7 +440,7 @@ model GuiaTrasegado {
 
   cliente Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
 
-  ingreso GuiaTrasegadoIngreso?
+  ingresos GuiaTrasegadoIngreso[]
   salidas GuiaTrasegadoSalida[]
 
   @@index([clienteId])
@@ -453,7 +453,7 @@ model GuiaTrasegado {
 model GuiaTrasegadoIngreso {
   id Int @id @default(autoincrement())
 
-  guiaTrasegadoId Int @unique @map("guia_trasegado_id")
+  guiaTrasegadoId Int @map("guia_trasegado_id")
 
   empresaTransporteId Int @map("empresa_transporte_id")
   vehiculoId Int @map("vehiculo_id")

@@ -7,8 +7,6 @@ import { Loader2Icon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-import { Separator } from "@/components/ui/separator"
-
 import { DetalleHeader } from "./detalle-header"
 import { DetalleInfoGeneral } from "./detalle-info-general"
 import { DetalleIngreso } from "./detalle-ingreso"
@@ -81,9 +79,9 @@ export function DetalleGuiaTrasegadoView({
 
       <DetalleIngreso guia={data} />
 
-      {data.ingreso && (
+      {data.ingresos.length > 0 && (
         <DetalleElementos
-          elementos={data.ingreso.elementos}
+          elementos={data.ingresos.flatMap((ingreso) => ingreso.elementos)}
           guiaTrasegadoId={data.id}
           onUpdated={refetch}
         />

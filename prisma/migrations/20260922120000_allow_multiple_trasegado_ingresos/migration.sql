@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "guias_trasegado_ingresos_guia_trasegado_id_key";
