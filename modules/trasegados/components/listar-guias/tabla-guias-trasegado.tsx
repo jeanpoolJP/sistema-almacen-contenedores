@@ -3,7 +3,6 @@
 "use client"
 
 import {
-  EyeIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowUpDownIcon,
@@ -74,11 +73,11 @@ export function TablaGuiasTrasegado({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border bg-card">
-        <Table>
+      <div className="overflow-hidden rounded-lg border bg-card">
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>
+              <TableHead className="w-[6.5rem]">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("numeroGuia")}
@@ -90,8 +89,10 @@ export function TablaGuiasTrasegado({
                   )}
                 </button>
               </TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>
+              <TableHead className="w-[clamp(9rem,22vw,15rem)]">
+                Cliente
+              </TableHead>
+              <TableHead className="w-[7.5rem]">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("fechaIngreso")}
@@ -104,10 +105,12 @@ export function TablaGuiasTrasegado({
                 </button>
               </TableHead>
               <TableHead className="text-center">Elementos</TableHead>
-              <TableHead className="text-center">Salidas</TableHead>
+              <TableHead className="hidden text-center lg:table-cell">
+                Salidas
+              </TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Pago</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="hidden xl:table-cell">Pago</TableHead>
+              <TableHead className="hidden text-right xl:table-cell">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("totalPagar")}
@@ -128,13 +131,16 @@ export function TablaGuiasTrasegado({
                 <TableCell className="text-xs font-medium">
                   {g.numeroGuia}
                 </TableCell>
-                <TableCell>
+                <TableCell className="max-w-0">
                   {g.cliente ? (
-                    <div className="flex flex-col">
-                      <span className="text-sm">
+                    <div
+                      className="min-w-0"
+                      title={g.cliente.nombreCompleto ?? "Sin nombre"}
+                    >
+                      <span className="block truncate text-sm font-medium">
                         {g.cliente.nombreCompleto ?? "—"}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="block truncate text-xs text-muted-foreground">
                         {g.cliente.tipoDocumento}: {g.cliente.numeroDocumento}
                       </span>
                     </div>
@@ -150,16 +156,16 @@ export function TablaGuiasTrasegado({
                 <TableCell className="text-center text-sm">
                   {g.totalElementos}
                 </TableCell>
-                <TableCell className="text-center text-sm">
+                <TableCell className="hidden text-center text-sm lg:table-cell">
                   {g.totalSalidas}
                 </TableCell>
                 <TableCell>
                   <EstadoBadge estado={g.estado} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden xl:table-cell">
                   <EstadoPagoBadge estadoPago={g.estadoPago} />
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums">
+                <TableCell className="hidden text-right text-sm tabular-nums xl:table-cell">
                   {g.totalPagar != null ? `S/ ${g.totalPagar.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell className="text-right">
