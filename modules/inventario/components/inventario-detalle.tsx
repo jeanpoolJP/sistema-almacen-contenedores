@@ -70,11 +70,13 @@ type InventarioDetalleProps = {
  * Formatea una fecha para mostrarla en el idioma del usuario.
  */
 function formatearFecha(fecha: Date) {
-  return new Intl.DateTimeFormat("es-PE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(fecha))
+  const valor = new Date(fecha)
+
+  return [
+    String(valor.getUTCDate()).padStart(2, "0"),
+    String(valor.getUTCMonth() + 1).padStart(2, "0"),
+    valor.getUTCFullYear(),
+  ].join("/")
 }
 
 /**
@@ -283,7 +285,7 @@ export function InventarioDetalle({
                           variant="outline"
                           className="min-w-[48px] justify-center font-semibold"
                         >
-                          {detalle.guia.contenedor.medida}'
+                          {detalle.guia.contenedor.medida}&apos;
                         </Badge>
                       </TableCell>
 

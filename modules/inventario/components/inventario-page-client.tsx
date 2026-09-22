@@ -27,7 +27,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 type Inventario = {
@@ -78,20 +77,29 @@ type InventarioPageClientProps = {
   totalPages: number
 }
 
+function obtenerFechaLocalActual() {
+  const ahora = new Date()
+
+  return [
+    ahora.getFullYear(),
+    String(ahora.getMonth() + 1).padStart(2, "0"),
+    String(ahora.getDate()).padStart(2, "0"),
+  ].join("-")
+}
+
 export function InventarioPageClient({
   inventarios,
   page,
   total,
   totalPages,
 }: InventarioPageClientProps) {
-
   const [inventarioSeleccionado, setInventarioSeleccionado] =
     useState<InventarioCompleto | null>(null)
 
   const [dialogNuevo, setDialogNuevo] = useState(false)
   const [dialogDetalle, setDialogDetalle] = useState(false)
 
-  const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0])
+  const [fecha, setFecha] = useState(obtenerFechaLocalActual)
 
   const [observaciones, setObservaciones] = useState("")
 
@@ -113,7 +121,7 @@ export function InventarioPageClient({
 
         setDialogNuevo(false)
 
-        setFecha(new Date().toISOString().split("T")[0])
+        setFecha(obtenerFechaLocalActual())
 
         setObservaciones("")
 
@@ -205,7 +213,6 @@ export function InventarioPageClient({
         )
 
         setInventarioSeleccionado(inventarioActualizado as InventarioCompleto)
-
       } catch (error) {
         console.error("Error al finalizar inventario:", error)
 

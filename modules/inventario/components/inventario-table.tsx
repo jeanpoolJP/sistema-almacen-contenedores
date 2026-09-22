@@ -32,11 +32,13 @@ type InventarioTableProps = {
 }
 
 function formatearFecha(fecha: Date) {
-  return new Intl.DateTimeFormat("es-PE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(fecha))
+  const valor = new Date(fecha)
+
+  return [
+    String(valor.getUTCDate()).padStart(2, "0"),
+    String(valor.getUTCMonth() + 1).padStart(2, "0"),
+    valor.getUTCFullYear(),
+  ].join("/")
 }
 
 function obtenerEstadoBadge(estado: Inventario["estado"]) {
