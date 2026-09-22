@@ -582,6 +582,10 @@ type ObtenerGuiasServiceParams = {
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
 
+  fechaIngresoDesde?: string
+  fechaIngresoHasta?: string
+  fechaSalidaDesde?: string
+  fechaSalidaHasta?: string
   fechaDesde?: Date
   fechaHasta?: Date
 }
@@ -596,6 +600,10 @@ export async function obtenerGuiasService({
   estado,
   estadoPago,
   tratamientoIGV,
+  fechaIngresoDesde,
+  fechaIngresoHasta,
+  fechaSalidaDesde,
+  fechaSalidaHasta,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasServiceParams) {
@@ -609,6 +617,10 @@ export async function obtenerGuiasService({
     estado,
     estadoPago,
     tratamientoIGV,
+    fechaIngresoDesde,
+    fechaIngresoHasta,
+    fechaSalidaDesde,
+    fechaSalidaHasta,
     fechaDesde,
     fechaHasta,
   })

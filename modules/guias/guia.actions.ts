@@ -180,6 +180,12 @@ type ObtenerGuiasActionParams = {
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
 
+  fechaIngresoDesde?: string
+  fechaIngresoHasta?: string
+  fechaSalidaDesde?: string
+  fechaSalidaHasta?: string
+
+  /** Compatibilidad con el filtro anterior de ingreso. */
   fechaDesde?: Date
   fechaHasta?: Date
 }
@@ -197,6 +203,10 @@ export async function obtenerGuiasAction({
   estadoPago,
   tratamientoIGV,
 
+  fechaIngresoDesde,
+  fechaIngresoHasta,
+  fechaSalidaDesde,
+  fechaSalidaHasta,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasActionParams = {}) {
@@ -214,6 +224,10 @@ export async function obtenerGuiasAction({
       estadoPago,
       tratamientoIGV,
 
+      fechaIngresoDesde,
+      fechaIngresoHasta,
+      fechaSalidaDesde,
+      fechaSalidaHasta,
       fechaDesde,
       fechaHasta,
     })

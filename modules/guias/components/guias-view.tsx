@@ -46,7 +46,7 @@ export function GuiasView({ data }: GuiasViewProps) {
           </div>
         </div>
 
-        <GuiasTable data={data} onCambio={() => router.refresh()} />
+        <GuiasTable data={data} />
       </div>
     </div>
   )

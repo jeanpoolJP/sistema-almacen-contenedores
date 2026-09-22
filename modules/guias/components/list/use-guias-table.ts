@@ -35,8 +35,20 @@ const FILTROS_INICIALES: GuiasFiltros = {
   estado: undefined,
   estadoPago: undefined,
   tratamientoIGV: undefined,
-  fechaDesde: "",
-  fechaHasta: "",
+  fechaIngresoDesde: "",
+  fechaIngresoHasta: "",
+  fechaSalidaDesde: "",
+  fechaSalidaHasta: "",
+}
+
+function contarFiltrosActivos(filtros: GuiasFiltros) {
+  return Object.entries(filtros).filter(([campo, valor]) =>
+    campo === "sinCliente" ? valor === true : Boolean(valor)
+  ).length
+}
+
+function filtrosIguales(primero: GuiasFiltros, segundo: GuiasFiltros) {
+  return JSON.stringify(primero) === JSON.stringify(segundo)
 }
 
 /**
@@ -58,6 +70,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
    * FILTROS
    */
   const [filtros, setFiltros] = useState<GuiasFiltros>(FILTROS_INICIALES)
+  const [filtrosAplicados, setFiltrosAplicados] =
+    useState<GuiasFiltros>(FILTROS_INICIALES)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
   /**
@@ -73,6 +87,7 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
   /**
    * DIALOGS
    */
+
   const [guiaDetalle, setGuiaDetalle] = useState<GuiaConRelaciones | null>(null)
   const [guiaSalida, setGuiaSalida] = useState<GuiaConRelaciones | null>(null)
   const [guiaPago, setGuiaPago] = useState<GuiaConRelaciones | null>(null)
@@ -83,32 +98,37 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
    * SINCRONIZAR DATOS CON EL SERVIDOR
    */
   useEffect(() => {
+    if (contarFiltrosActivos(filtrosAplicados) > 0) {
+      buscarGuias(pagina, limite, filtrosAplicados)
+      return
+    }
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setGuias(data.guias)
     setTotal(data.total)
     setPagina(data.pagina)
     setLimite(data.limite)
     setTotalPaginas(data.totalPaginas)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
   /**
    * CONSTRUIR FILTROS PARA LA ACTION
    */
-  function obtenerFiltros() {
+  function obtenerFiltros(filtrosConsulta: GuiasFiltros = filtrosAplicados) {
     return {
-      numeroGuia: filtros.numeroGuia.trim() || undefined,
-      numeroContenedor: filtros.numeroContenedor.trim() || undefined,
-      documentoCliente: filtros.documentoCliente.trim() || undefined,
-      sinCliente: filtros.sinCliente,
-      estado: filtros.estado as EstadoGuia | undefined,
-      estadoPago: filtros.estadoPago as EstadoPago | undefined,
-      tratamientoIGV: filtros.tratamientoIGV as TratamientoIGV | undefined,
-      fechaDesde: filtros.fechaDesde
-        ? new Date(`${filtros.fechaDesde}T00:00:00`)
-        : undefined,
-      fechaHasta: filtros.fechaHasta
-        ? new Date(`${filtros.fechaHasta}T23:59:59`)
-        : undefined,
+      numeroGuia: filtrosConsulta.numeroGuia.trim() || undefined,
+      numeroContenedor: filtrosConsulta.numeroContenedor.trim() || undefined,
+      documentoCliente: filtrosConsulta.documentoCliente.trim() || undefined,
+      sinCliente: filtrosConsulta.sinCliente,
+      estado: filtrosConsulta.estado as EstadoGuia | undefined,
+      estadoPago: filtrosConsulta.estadoPago as EstadoPago | undefined,
+      tratamientoIGV: filtrosConsulta.tratamientoIGV as
+        TratamientoIGV | undefined,
+      fechaIngresoDesde: filtrosConsulta.fechaIngresoDesde || undefined,
+      fechaIngresoHasta: filtrosConsulta.fechaIngresoHasta || undefined,
+      fechaSalidaDesde: filtrosConsulta.fechaSalidaDesde || undefined,
+      fechaSalidaHasta: filtrosConsulta.fechaSalidaHasta || undefined,
     }
   }
 
@@ -132,12 +152,16 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
   /**
    * BUSCAR GUÍAS
    */
-  function buscarGuias(nuevaPagina = 1, nuevoLimite = limite) {
+  function buscarGuias(
+    nuevaPagina = 1,
+    nuevoLimite = limite,
+    filtrosConsulta = filtrosAplicados
+  ) {
     startTransition(async () => {
       const resultado = await obtenerGuiasAction({
         pagina: nuevaPagina,
         limite: nuevoLimite,
-        ...obtenerFiltros(),
+        ...obtenerFiltros(filtrosConsulta),
       })
 
       if (!resultado.success) {
@@ -153,7 +177,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
    * APLICAR FILTROS
    */
   function aplicarFiltros() {
-    buscarGuias(1, limite)
+    setFiltrosAplicados(filtros)
+    buscarGuias(1, limite, filtros)
   }
 
   /**
@@ -161,6 +186,7 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
    */
   function limpiarFiltros() {
     setFiltros(FILTROS_INICIALES)
+    setFiltrosAplicados(FILTROS_INICIALES)
 
     startTransition(async () => {
       const resultado = await obtenerGuiasAction({
@@ -289,6 +315,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     // filtros
     filtros,
     setFiltros,
+    filtrosActivos: contarFiltrosActivos(filtrosAplicados),
+    filtrosPendientes: !filtrosIguales(filtros, filtrosAplicados),
     filtrosAbiertos,
     setFiltrosAbiertos,
 

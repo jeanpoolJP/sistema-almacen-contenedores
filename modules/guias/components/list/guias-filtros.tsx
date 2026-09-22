@@ -2,7 +2,7 @@
 
 "use client"
 
-import { ChevronDown, Download, Loader2, Search, X } from "lucide-react"
+import { Check, ChevronDown, Download, Loader2, Search, X } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,8 @@ type GuiasFiltrosProps = {
   onAplicar: () => void
   onLimpiar: () => void
   onExportar: () => void
+  filtrosActivos: number
+  filtrosPendientes: boolean
   isPending: boolean
   exportando: boolean
   total: number
@@ -50,6 +52,8 @@ export function GuiasFiltros({
   onAplicar,
   onLimpiar,
   onExportar,
+  filtrosActivos,
+  filtrosPendientes,
   isPending,
   exportando,
   total,
@@ -70,11 +74,29 @@ export function GuiasFiltros({
       className="rounded-lg border"
     >
       <div className="flex items-center justify-between p-4">
-        <div>
-          <h3 className="text-sm font-semibold">Filtros de búsqueda</h3>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold">Filtros de búsqueda</h3>
+
+            {filtrosActivos > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <Check className="size-3" />
+                {filtrosActivos} {filtrosActivos === 1 ? "activo" : "activos"}
+              </span>
+            )}
+          </div>
+
           <p className="text-xs text-muted-foreground">
-            Filtra las guías por número, cliente, estado o fecha.
+            {filtrosActivos > 0
+              ? "La tabla muestra solo resultados que cumplen estos filtros."
+              : "Filtra las guías por número, cliente, estado o fecha."}
           </p>
+
+          {filtrosPendientes && (
+            <p className="mt-1 text-xs font-medium text-amber-600">
+              Hay cambios sin aplicar. Presiona Buscar para actualizar la tabla.
+            </p>
+          )}
         </div>
 
         <CollapsibleTrigger
@@ -196,6 +218,30 @@ export function GuiasFiltros({
               </Select>
             </div>
 
+            {/* FECHA DE INGRESO DESDE */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ingreso desde</label>
+              <Input
+                type="date"
+                value={filtros.fechaIngresoDesde}
+                onChange={(e) =>
+                  actualizar("fechaIngresoDesde", e.target.value)
+                }
+              />
+            </div>
+
+            {/* FECHA DE INGRESO HASTA */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ingreso hasta</label>
+              <Input
+                type="date"
+                value={filtros.fechaIngresoHasta}
+                onChange={(e) =>
+                  actualizar("fechaIngresoHasta", e.target.value)
+                }
+              />
+            </div>
+
             {/* TRATAMIENTO IGV */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Tratamiento IGV</label>
@@ -219,23 +265,23 @@ export function GuiasFiltros({
               </Select>
             </div>
 
-            {/* FECHA DESDE */}
+            {/* FECHA DE SALIDA DESDE */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Fecha desde</label>
+              <label className="text-sm font-medium">Salida desde</label>
               <Input
                 type="date"
-                value={filtros.fechaDesde}
-                onChange={(e) => actualizar("fechaDesde", e.target.value)}
+                value={filtros.fechaSalidaDesde}
+                onChange={(e) => actualizar("fechaSalidaDesde", e.target.value)}
               />
             </div>
 
-            {/* FECHA HASTA */}
+            {/* FECHA DE SALIDA HASTA */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Fecha hasta</label>
+              <label className="text-sm font-medium">Salida hasta</label>
               <Input
                 type="date"
-                value={filtros.fechaHasta}
-                onChange={(e) => actualizar("fechaHasta", e.target.value)}
+                value={filtros.fechaSalidaHasta}
+                onChange={(e) => actualizar("fechaSalidaHasta", e.target.value)}
               />
             </div>
           </div>

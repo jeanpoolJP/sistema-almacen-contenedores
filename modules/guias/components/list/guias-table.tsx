@@ -29,6 +29,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
     filtros,
     setFiltros,
+    filtrosActivos,
+    filtrosPendientes,
     filtrosAbiertos,
     setFiltrosAbiertos,
 
@@ -66,6 +68,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
         onAplicar={aplicarFiltros}
         onLimpiar={limpiarFiltros}
         onExportar={exportarAExcel}
+        filtrosActivos={filtrosActivos}
+        filtrosPendientes={filtrosPendientes}
         isPending={isPending}
         exportando={exportando}
         total={total}

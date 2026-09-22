@@ -146,8 +146,20 @@ type ObtenerGuiasParams = {
   estadoPago?: EstadoPago
   tratamientoIGV?: TratamientoIGV
 
+  fechaIngresoDesde?: string
+  fechaIngresoHasta?: string
+  fechaSalidaDesde?: string
+  fechaSalidaHasta?: string
   fechaDesde?: Date
   fechaHasta?: Date
+}
+
+function fechaCalendarioUtc(fecha: string, finDelDia = false) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    throw new Error("La fecha debe tener el formato YYYY-MM-DD")
+  }
+
+  return new Date(`${fecha}T${finDelDia ? "23:59:59.999" : "00:00:00.000"}Z`)
 }
 
 /**
@@ -163,9 +175,20 @@ export async function obtenerGuias({
   estado,
   estadoPago,
   tratamientoIGV,
+  fechaIngresoDesde,
+  fechaIngresoHasta,
+  fechaSalidaDesde,
+  fechaSalidaHasta,
   fechaDesde,
   fechaHasta,
 }: ObtenerGuiasParams) {
+  const ingresoDesde = fechaIngresoDesde
+    ? fechaCalendarioUtc(fechaIngresoDesde)
+    : fechaDesde
+  const ingresoHasta = fechaIngresoHasta
+    ? fechaCalendarioUtc(fechaIngresoHasta, true)
+    : fechaHasta
+
   const where: Prisma.GuiaInternamientoWhereInput = {
     ...(numeroGuia && {
       numeroGuia: {
@@ -208,15 +231,29 @@ export async function obtenerGuias({
       tratamientoIGV,
     }),
 
-    ...(fechaDesde || fechaHasta
+    ...(ingresoDesde || ingresoHasta
       ? {
           fechaIngreso: {
-            ...(fechaDesde && {
-              gte: fechaDesde,
+            ...(ingresoDesde && {
+              gte: ingresoDesde,
             }),
 
-            ...(fechaHasta && {
-              lte: fechaHasta,
+            ...(ingresoHasta && {
+              lte: ingresoHasta,
+            }),
+          },
+        }
+      : {}),
+
+    ...(fechaSalidaDesde || fechaSalidaHasta
+      ? {
+          fechaSalida: {
+            ...(fechaSalidaDesde && {
+              gte: fechaCalendarioUtc(fechaSalidaDesde),
+            }),
+
+            ...(fechaSalidaHasta && {
+              lte: fechaCalendarioUtc(fechaSalidaHasta, true),
             }),
           },
         }

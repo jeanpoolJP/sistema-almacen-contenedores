@@ -18,8 +18,10 @@ export type GuiasFiltros = {
   estado?: string
   estadoPago?: string
   tratamientoIGV?: string
-  fechaDesde: string
-  fechaHasta: string
+  fechaIngresoDesde: string
+  fechaIngresoHasta: string
+  fechaSalidaDesde: string
+  fechaSalidaHasta: string
 }
 
 export type GuiasTableProps = {
