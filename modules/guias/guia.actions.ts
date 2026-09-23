@@ -192,7 +192,7 @@ type ObtenerGuiasActionParams = {
 
 export async function obtenerGuiasAction({
   pagina = 1,
-  limite = 10,
+  limite = 20,
 
   numeroGuia,
   numeroContenedor,
