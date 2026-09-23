@@ -1,9 +1,9 @@
-// modules\guias\components\registrar-pago-dialog.tsx
+// modules/guias/components/registrar-pago-dialog.tsx
 
 "use client"
 
 import { useEffect, useState } from "react"
-import { useForm, FormProvider } from "react-hook-form"
+import { useForm, FormProvider, useFormContext } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CreditCard, WalletCards } from "lucide-react"
 import { toast } from "sonner"
@@ -46,11 +46,58 @@ import { ClienteField } from "./fields/cliente-field"
 import { FechaHoraField } from "./fields/fecha-hora-field"
 import type { GuiaConRelaciones } from "./guia-con-relaciones.type"
 
+const FORM_ID = "registrar-pago-form"
+const METODO_PAGO_DEFAULT = "YAPE" as const
+
+const METODOS_PAGO = [
+  { value: "EFECTIVO", label: "Efectivo" },
+  { value: "YAPE", label: "Yape" },
+  { value: "PLIN", label: "Plin" },
+  { value: "TRANSFERENCIA", label: "Transferencia bancaria" },
+  { value: "TARJETA", label: "Tarjeta" },
+  { value: "OTRO", label: "Otro" },
+] as const
+
 type RegistrarPagoDialogProps = {
+  /** Guía sobre la que se registra el pago. Debe incluir `cliente` si existe. */
   guia: GuiaConRelaciones
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Tras un registro exitoso (el padre suele cerrar el contexto y refrescar). */
   onRegistrado?: () => void
+}
+
+type ClienteForm = RegistrarPagoGuiaSchema["cliente"]
+
+function valoresIniciales(guiaId: number) {
+  return {
+    guiaId,
+    cliente: null,
+    metodoPago: METODO_PAGO_DEFAULT,
+    numeroOperacion: "",
+    fechaPago: undefined,
+    horaPago: undefined,
+  }
+}
+
+/** Precarga el cliente de la guía en el form; no se edita si ya está asociado. */
+function clienteDesdeGuia(guia: GuiaConRelaciones): ClienteForm {
+  if (!guia.cliente) {
+    return null
+  }
+
+  return {
+    tipoDocumento: guia.cliente.tipoDocumento,
+    numeroDocumento: guia.cliente.numeroDocumento,
+    nombreCompleto: guia.cliente.nombreCompleto ?? "",
+  }
+}
+
+function valoresAlAbrir(guia: GuiaConRelaciones) {
+  return {
+    ...valoresIniciales(guia.id),
+    cliente: clienteDesdeGuia(guia),
+  }
 }
 
 function formatMoneda(valor: number | null) {
@@ -61,6 +108,40 @@ function formatMoneda(valor: number | null) {
   return `S/ ${valor.toFixed(2)}`
 }
 
+/**
+ * Omite un cliente incompleto (p. ej. switch apagado o documento vacío)
+ * para que el backend reciba `cliente: null`.
+ */
+function payloadRegistroPago(
+  data: RegistrarPagoGuiaSchema
+): RegistrarPagoGuiaSchema {
+  return {
+    ...data,
+    cliente:
+      data.cliente && data.cliente.numeroDocumento
+        ? {
+            ...data.cliente,
+            nombreCompleto: data.cliente.nombreCompleto || undefined,
+          }
+        : null,
+  }
+}
+
+/**
+ * Diálogo de registro de pago de una guía de almacenamiento.
+ *
+ * Flujo: resumen del monto → método y operación → cliente (si aplica) →
+ * fecha/hora → `registrarPagoGuiaAction`. En éxito: toast, reset, cierra
+ * y dispara `onRegistrado`.
+ *
+ * Reglas (schema + servicio):
+ * - `numeroOperacion` es obligatorio salvo `metodoPago === "EFECTIVO"`.
+ * - Cliente existente: solo lectura; no se reasigna en este flujo.
+ * - Sin cliente: asociarlo es opcional (switch).
+ * - El backend rechaza guías sin `montoTotal` o ya `PAGADO`.
+ *
+ * El formulario se resetea cada vez que `open` pasa a `true`.
+ */
 export function RegistrarPagoDialog({
   guia,
   open,
@@ -68,69 +149,31 @@ export function RegistrarPagoDialog({
   onRegistrado,
 }: RegistrarPagoDialogProps) {
   const [submitting, setSubmitting] = useState(false)
+  const [registrarCliente, setRegistrarCliente] = useState(false)
 
   const tieneCliente = guia.cliente !== null
-  const [registrarCliente, setRegistrarCliente] = useState(false)
 
   const form = useForm<RegistrarPagoGuiaSchema>({
     resolver: zodResolver(registrarPagoGuiaSchema),
-
-    defaultValues: {
-      guiaId: guia.id,
-      cliente: null,
-      metodoPago: "YAPE",
-      numeroOperacion: "",
-      fechaPago: undefined,
-      horaPago: undefined,
-    },
+    defaultValues: valoresIniciales(guia.id),
   })
 
   useEffect(() => {
+    setRegistrarCliente(false)
+
     if (!open) {
-      setRegistrarCliente(false)
       return
     }
 
-    setRegistrarCliente(false)
-
-    form.reset({
-      guiaId: guia.id,
-
-      cliente: guia.cliente
-        ? {
-            tipoDocumento: guia.cliente.tipoDocumento,
-            numeroDocumento: guia.cliente.numeroDocumento,
-            nombreCompleto: guia.cliente.nombreCompleto ?? "",
-          }
-        : null,
-
-      metodoPago: "YAPE",
-      numeroOperacion: "",
-      fechaPago: undefined,
-      horaPago: undefined,
-    })
+    form.reset(valoresAlAbrir(guia))
   }, [open, guia, form])
 
-  /* Obtenemos el método actual para actualizar la UI dinámicamente */
-  const metodoPagoActual = form.watch("metodoPago")
-  const esEfectivo = metodoPagoActual === "EFECTIVO"
+  const esEfectivo = form.watch("metodoPago") === "EFECTIVO"
 
   async function onSubmit(data: RegistrarPagoGuiaSchema) {
     setSubmitting(true)
 
-    const payload = {
-      ...data,
-
-      cliente:
-        data.cliente && data.cliente.numeroDocumento
-          ? {
-              ...data.cliente,
-              nombreCompleto: data.cliente.nombreCompleto || undefined,
-            }
-          : null,
-    }
-
-    const res = await registrarPagoGuiaAction(payload)
+    const res = await registrarPagoGuiaAction(payloadRegistroPago(data))
 
     setSubmitting(false)
 
@@ -140,18 +183,8 @@ export function RegistrarPagoDialog({
     }
 
     toast.success(res.message)
-
-    form.reset({
-      guiaId: guia.id,
-      cliente: null,
-      metodoPago: "YAPE",
-      numeroOperacion: "",
-      fechaPago: undefined,
-      horaPago: undefined,
-    })
-
+    form.reset(valoresIniciales(guia.id))
     setRegistrarCliente(false)
-
     onOpenChange(false)
     onRegistrado?.()
   }
@@ -162,10 +195,8 @@ export function RegistrarPagoDialog({
         <DialogHeader className="border-b px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <CreditCard className="size-5" />
-
             <DialogTitle>Registrar pago — Guía {guia.numeroGuia}</DialogTitle>
           </div>
-
           <DialogDescription>
             Registra la información del pago realizado por el cliente.
           </DialogDescription>
@@ -174,221 +205,25 @@ export function RegistrarPagoDialog({
         <ScrollArea className="max-h-[60vh] px-4 sm:px-6">
           <FormProvider {...form}>
             <form
-              id="registrar-pago-form"
+              id={FORM_ID}
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-6 py-4"
             >
-              {/* ============================================================
-                  RESUMEN DEL PAGO
-              ============================================================ */}
-
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      Monto total de la guía
-                    </p>
-
-                    <p className="text-xl font-semibold">
-                      {formatMoneda(guia.montoTotal)}
-                    </p>
-                  </div>
-
-                  <WalletCards className="size-6 text-muted-foreground" />
-                </div>
-              </div>
+              <ResumenMonto montoTotal={guia.montoTotal} />
 
               <Separator />
 
-              {/* ============================================================
-                  MÉTODO DE PAGO
-              ============================================================ */}
-
-              <FormField
-                control={form.control}
-                name="metodoPago"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Método de pago</FormLabel>
-
-                    <Select
-                      value={field.value ?? "YAPE"}
-                      onValueChange={field.onChange}
-                    >
-                      {" "}
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecciona un método" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="EFECTIVO">Efectivo</SelectItem>
-
-                        <SelectItem value="YAPE">Yape</SelectItem>
-
-                        <SelectItem value="PLIN">Plin</SelectItem>
-
-                        <SelectItem value="TRANSFERENCIA">
-                          Transferencia bancaria
-                        </SelectItem>
-
-                        <SelectItem value="TARJETA">Tarjeta</SelectItem>
-
-                        <SelectItem value="OTRO">Otro</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* ============================================================
-                   NÚMERO DE OPERACIÓN
-                ============================================================ */}
-
-              <FormField
-                control={form.control}
-                name="numeroOperacion"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Número de operación
-                      {esEfectivo ? (
-                        <span className="ml-1 text-muted-foreground">
-                          (opcional)
-                        </span>
-                      ) : (
-                        <span className="ml-1 text-destructive">*</span>
-                      )}
-                    </FormLabel>
-
-                    <FormControl>
-                      <Input
-                        placeholder={
-                          esEfectivo
-                            ? "Ej. 123456789 (opcional)"
-                            : "Ej. 123456789"
-                        }
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
-
-                    <p className="text-xs text-muted-foreground">
-                      {esEfectivo
-                        ? "Puedes dejarlo vacío si el pago fue en efectivo."
-                        : "Obligatorio para pagos por Yape, Plin, Transferencia o Tarjeta."}
-                    </p>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <CampoMetodoPago />
+              <CampoNumeroOperacion esEfectivo={esEfectivo} />
 
               <Separator />
 
-              {/* ============================================================
-                    CLIENTE
-                ============================================================ */}
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold">Cliente</p>
-
-                  {tieneCliente ? (
-                    <p className="text-xs text-muted-foreground">
-                      Cliente asociado a la guía.
-                    </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Esta guía no tiene un cliente asociado. Puedes
-                      identificarlo durante el registro del pago si corresponde.
-                    </p>
-                  )}
-                </div>
-
-                {tieneCliente ? (
-                  /* ========================================================
-                       CLIENTE YA ASOCIADO → SOLO LECTURA
-                   ======================================================== */
-                  <div className="rounded-lg border bg-muted/40 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 space-y-1">
-                        <p className="text-sm font-medium">
-                          {guia.cliente?.nombreCompleto ||
-                            "Sin nombre registrado"}
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          {guia.cliente?.tipoDocumento}:{" "}
-                          {guia.cliente?.numeroDocumento}
-                        </p>
-                      </div>
-
-                      <span className="shrink-0 rounded-md border px-2 py-1 text-xs text-muted-foreground">
-                        Solo lectura
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Este cliente ya está asociado a la guía y no puede
-                      modificarse durante el registro del pago.
-                    </p>
-                  </div>
-                ) : (
-                  /* ========================================================
-       SIN CLIENTE → OPCIONAL
-    ======================================================== */
-                  <>
-                    <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          Identificar cliente
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          Opcional. Puedes registrar el pago sin asociar ningún
-                          cliente.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground">
-                          Asociar cliente
-                        </span>
-
-                        <Switch
-                          checked={registrarCliente}
-                          onCheckedChange={(checked) => {
-                            setRegistrarCliente(checked)
-
-                            if (!checked) {
-                              form.setValue("cliente", null)
-                            } else {
-                              form.setValue("cliente", {
-                                tipoDocumento: "DNI",
-                                numeroDocumento: "",
-                                nombreCompleto: "",
-                              })
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {registrarCliente && (
-                      <div className="rounded-lg border p-4">
-                        <ClienteField />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* ============================================================
-                  FECHA Y HORA
-              ============================================================ */}
+              <SeccionCliente
+                cliente={guia.cliente}
+                tieneCliente={tieneCliente}
+                registrarCliente={registrarCliente}
+                onToggleRegistrarCliente={setRegistrarCliente}
+              />
 
               <FechaHoraField
                 fechaName="fechaPago"
@@ -408,19 +243,200 @@ export function RegistrarPagoDialog({
           >
             Cancelar
           </Button>
-
           <Button
             type="submit"
-            form="registrar-pago-form"
+            form={FORM_ID}
             disabled={submitting}
             className="w-full gap-2 sm:w-auto"
           >
             <CreditCard className="size-4" />
-
             {submitting ? "Guardando..." : "Registrar pago"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function ResumenMonto({ montoTotal }: { montoTotal: number | null }) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs text-muted-foreground">Monto total de la guía</p>
+          <p className="text-xl font-semibold">{formatMoneda(montoTotal)}</p>
+        </div>
+        <WalletCards className="size-6 text-muted-foreground" />
+      </div>
+    </div>
+  )
+}
+
+function CampoMetodoPago() {
+  const { control } = useFormContext<RegistrarPagoGuiaSchema>()
+
+  return (
+    <FormField
+      control={control}
+      name="metodoPago"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Método de pago</FormLabel>
+          <Select
+            value={field.value ?? METODO_PAGO_DEFAULT}
+            onValueChange={field.onChange}
+          >
+            <FormControl>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecciona un método" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {METODOS_PAGO.map((metodo) => (
+                <SelectItem key={metodo.value} value={metodo.value}>
+                  {metodo.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+function CampoNumeroOperacion({ esEfectivo }: { esEfectivo: boolean }) {
+  const { control } = useFormContext<RegistrarPagoGuiaSchema>()
+
+  return (
+    <FormField
+      control={control}
+      name="numeroOperacion"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>
+            Número de operación
+            {esEfectivo ? (
+              <span className="ml-1 text-muted-foreground">(opcional)</span>
+            ) : (
+              <span className="ml-1 text-destructive">*</span>
+            )}
+          </FormLabel>
+          <FormControl>
+            <Input
+              placeholder={
+                esEfectivo ? "Ej. 123456789 (opcional)" : "Ej. 123456789"
+              }
+              {...field}
+              value={field.value ?? ""}
+            />
+          </FormControl>
+          <p className="text-xs text-muted-foreground">
+            {esEfectivo
+              ? "Puedes dejarlo vacío si el pago fue en efectivo."
+              : "Obligatorio para pagos por Yape, Plin, Transferencia o Tarjeta."}
+          </p>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+function SeccionCliente({
+  cliente,
+  tieneCliente,
+  registrarCliente,
+  onToggleRegistrarCliente,
+}: {
+  cliente: GuiaConRelaciones["cliente"]
+  tieneCliente: boolean
+  registrarCliente: boolean
+  onToggleRegistrarCliente: (checked: boolean) => void
+}) {
+  const { setValue } = useFormContext<RegistrarPagoGuiaSchema>()
+
+  function handleToggle(checked: boolean) {
+    onToggleRegistrarCliente(checked)
+
+    if (!checked) {
+      setValue("cliente", null)
+      return
+    }
+
+    setValue("cliente", {
+      tipoDocumento: "DNI",
+      numeroDocumento: "",
+      nombreCompleto: "",
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-semibold">Cliente</p>
+        <p className="text-xs text-muted-foreground">
+          {tieneCliente
+            ? "Cliente asociado a la guía."
+            : "Esta guía no tiene un cliente asociado. Puedes identificarlo durante el registro del pago si corresponde."}
+        </p>
+      </div>
+
+      {tieneCliente ? (
+        <ClienteSoloLectura cliente={cliente} />
+      ) : (
+        <>
+          <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Identificar cliente</p>
+              <p className="text-xs text-muted-foreground">
+                Opcional. Puedes registrar el pago sin asociar ningún cliente.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                Asociar cliente
+              </span>
+              <Switch checked={registrarCliente} onCheckedChange={handleToggle} />
+            </div>
+          </div>
+
+          {registrarCliente && (
+            <div className="rounded-lg border p-4">
+              <ClienteField />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ClienteSoloLectura({
+  cliente,
+}: {
+  cliente: GuiaConRelaciones["cliente"]
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          <p className="text-sm font-medium">
+            {cliente?.nombreCompleto || "Sin nombre registrado"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {cliente?.tipoDocumento}: {cliente?.numeroDocumento}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md border px-2 py-1 text-xs text-muted-foreground">
+          Solo lectura
+        </span>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Este cliente ya está asociado a la guía y no puede modificarse durante
+        el registro del pago.
+      </p>
+    </div>
   )
 }
