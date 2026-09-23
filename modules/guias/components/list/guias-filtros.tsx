@@ -140,6 +140,29 @@ export function GuiasFiltros({
               />
             </div>
 
+            {/* MEDIDA DEL CONTENEDOR */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Medida</label>
+              <Select
+                value={filtros.medidaContenedor?.toString() ?? "TODOS"}
+                onValueChange={(value) =>
+                  actualizar(
+                    "medidaContenedor",
+                    value === "TODOS" ? undefined : (Number(value) as 20 | 40)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Todas las medidas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TODOS">Todas las medidas</SelectItem>
+                  <SelectItem value="20">20 pies</SelectItem>
+                  <SelectItem value="40">40 pies</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* DOCUMENTO */}
             <div className="space-y-2">
               <label className="text-sm font-medium">

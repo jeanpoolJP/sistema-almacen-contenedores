@@ -138,6 +138,7 @@ type ObtenerGuiasParams = {
 
   numeroGuia?: string
   numeroContenedor?: string
+  medidaContenedor?: 20 | 40
   documentoCliente?: string
 
   sinCliente?: boolean
@@ -170,6 +171,7 @@ export async function obtenerGuias({
   limite,
   numeroGuia,
   numeroContenedor,
+  medidaContenedor,
   documentoCliente,
   sinCliente,
   estado,
@@ -203,8 +205,18 @@ export async function obtenerGuias({
           contains: numeroContenedor,
           mode: "insensitive",
         },
+        ...(medidaContenedor && {
+          medida: medidaContenedor,
+        }),
       },
     }),
+
+    ...(medidaContenedor &&
+      !numeroContenedor && {
+        contenedor: {
+          medida: medidaContenedor,
+        },
+      }),
 
     ...(documentoCliente && {
       cliente: {

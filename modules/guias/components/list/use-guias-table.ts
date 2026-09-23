@@ -40,6 +40,7 @@ function fechaArchivoActual() {
 const FILTROS_INICIALES: GuiasFiltros = {
   numeroGuia: "",
   numeroContenedor: "",
+  medidaContenedor: undefined,
   documentoCliente: "",
   sinCliente: false,
   estado: undefined,
@@ -129,6 +130,7 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     return {
       numeroGuia: filtrosConsulta.numeroGuia.trim() || undefined,
       numeroContenedor: filtrosConsulta.numeroContenedor.trim() || undefined,
+      medidaContenedor: filtrosConsulta.medidaContenedor,
       documentoCliente: filtrosConsulta.documentoCliente.trim() || undefined,
       sinCliente: filtrosConsulta.sinCliente,
       estado: filtrosConsulta.estado as EstadoGuia | undefined,

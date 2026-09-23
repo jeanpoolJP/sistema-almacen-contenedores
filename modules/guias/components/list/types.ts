@@ -13,6 +13,7 @@ export type GuiasData = {
 export type GuiasFiltros = {
   numeroGuia: string
   numeroContenedor: string
+  medidaContenedor?: 20 | 40
   documentoCliente: string
   sinCliente: boolean
   estado?: string

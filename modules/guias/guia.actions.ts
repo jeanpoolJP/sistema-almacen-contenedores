@@ -172,6 +172,7 @@ type ObtenerGuiasActionParams = {
 
   numeroGuia?: string
   numeroContenedor?: string
+  medidaContenedor?: 20 | 40
   documentoCliente?: string
 
   sinCliente?: boolean
@@ -196,6 +197,7 @@ export async function obtenerGuiasAction({
 
   numeroGuia,
   numeroContenedor,
+  medidaContenedor,
   documentoCliente,
   sinCliente,
 
@@ -217,6 +219,7 @@ export async function obtenerGuiasAction({
 
       numeroGuia,
       numeroContenedor,
+      medidaContenedor,
       documentoCliente,
       sinCliente,
 
