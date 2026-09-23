@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 
 import { EstadoBadge } from "../estado-badge"
 import { EstadoPagoBadge } from "../estado-pago-badge"
@@ -89,10 +90,18 @@ export function GuiasTabla({
 
               <TableCell>
                 <div>
-                  <p className="text-sm font-medium">{guia.contenedor.marca}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {guia.contenedor.numeroContenedor}
-                  </p>
+                  <p className="text-sm font-medium">{guia.contenedor.numeroContenedor}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {guia.contenedor.marca}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className="px-1.5 py-0 text-[11px]"
+                    >
+                      {guia.contenedor.medida}
+                    </Badge>
+                  </div>
                 </div>
               </TableCell>
 
