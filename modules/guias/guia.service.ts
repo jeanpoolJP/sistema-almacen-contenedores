@@ -7,6 +7,7 @@ import {
   crearGuia,
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
+  obtenerGuiaAlmacenadaPorContenedorId,
   obtenerGuias,
   obtenerGuiasEspacioAlquilado,
   registrarPagoGuia,
@@ -123,6 +124,16 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
     tipo: datosValidados.contenedor.tipo,
   })
+
+  const guiaAlmacenada = await obtenerGuiaAlmacenadaPorContenedorId(
+    contenedor.id
+  )
+
+  if (guiaAlmacenada) {
+    throw new Error(
+      `El contenedor ${contenedor.numeroContenedor} ya se encuentra almacenado en la guía ${guiaAlmacenada.numeroGuia}`
+    )
+  }
 
   // ============================================================
   // 5. EMPRESA DE TRANSPORTE
