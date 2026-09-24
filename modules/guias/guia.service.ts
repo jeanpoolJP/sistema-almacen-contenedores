@@ -3,6 +3,7 @@
 import {
   actualizarGuia,
   anularGuia,
+  anularSalidaGuia,
   crearGuia,
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
@@ -788,6 +789,39 @@ export async function anularGuiaService(id: number) {
   }
 
   return anularGuia(id)
+}
+
+/**
+ * Revierte la salida de una guía y la devuelve al estado almacenado.
+ */
+export async function anularSalidaGuiaService(id: number) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("El ID de la guía no es válido")
+  }
+
+  const guia = await obtenerGuiaPorId(id)
+
+  if (!guia) {
+    throw new Error("La guía no existe")
+  }
+
+  if (!guia.fechaSalida) {
+    throw new Error("La guía no tiene una salida registrada")
+  }
+
+  if (guia.estado !== "RETIRADO") {
+    throw new Error("Solo se puede anular la salida de una guía retirada")
+  }
+
+  if (guia.estadoPago === "PAGADO") {
+    throw new Error(
+      "No se puede anular la salida de una guía con pago registrado"
+    )
+  }
+
+  const guiaActualizada = await anularSalidaGuia(id)
+
+  return serializarGuia(guiaActualizada)
 }
 
 type AsignarClienteMasivoParams = {

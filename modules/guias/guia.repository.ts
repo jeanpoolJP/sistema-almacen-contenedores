@@ -398,6 +398,43 @@ export async function anularGuia(id: number) {
 }
 
 /**
+ * Revierte la salida de una guía sin eliminar su registro.
+ */
+export async function anularSalidaGuia(id: number) {
+  return prisma.guiaInternamiento.update({
+    where: {
+      id,
+    },
+
+    data: {
+      empresaTransporteSalidaId: null,
+      vehiculoSalidaId: null,
+      conductorSalidaId: null,
+      fechaSalida: null,
+      horaSalida: null,
+      diasAlmacenamiento: null,
+      cantidadMovimientos: null,
+      subtotalMovimientos: null,
+      subtotal: null,
+      montoIGV: null,
+      montoTotal: null,
+      estado: "ALMACENADO",
+    },
+
+    include: {
+      cliente: true,
+      contenedor: true,
+      empresaTransporteIngreso: true,
+      vehiculoIngreso: true,
+      conductorIngreso: true,
+      empresaTransporteSalida: true,
+      vehiculoSalida: true,
+      conductorSalida: true,
+    },
+  })
+}
+
+/**
  * Obtiene las guías seleccionadas para validar
  * una asignación masiva de cliente.
  *

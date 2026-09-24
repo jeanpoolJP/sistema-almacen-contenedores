@@ -32,8 +32,13 @@ type GuiasDialogsProps = {
   guiaAnular: GuiaConRelaciones | null
   setGuiaAnular: (guia: GuiaConRelaciones | null) => void
 
+  guiaAnularSalida: GuiaConRelaciones | null
+  setGuiaAnularSalida: (guia: GuiaConRelaciones | null) => void
+
   anulando: boolean
   onConfirmarAnulacion: () => void
+  anulandoSalida: boolean
+  onConfirmarAnulacionSalida: () => void
   onRefrescar: () => void
 }
 
@@ -46,8 +51,12 @@ export function GuiasDialogs({
   setGuiaPago,
   guiaAnular,
   setGuiaAnular,
+  guiaAnularSalida,
+  setGuiaAnularSalida,
   anulando,
   onConfirmarAnulacion,
+  anulandoSalida,
+  onConfirmarAnulacionSalida,
   onRefrescar,
 }: GuiasDialogsProps) {
   return (
@@ -111,6 +120,37 @@ export function GuiasDialogs({
               className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
             >
               {anulando ? "Anulando..." : "Sí, anular"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ANULAR SALIDA */}
+      <AlertDialog
+        open={!!guiaAnularSalida}
+        onOpenChange={(open) => !open && setGuiaAnularSalida(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              ¿Anular la salida de la guía {guiaAnularSalida?.numeroGuia}?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Se eliminarán los datos de transporte, fecha, almacenamiento y
+              montos de salida. La guía volverá al estado almacenado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+
+            <AlertDialogAction
+              disabled={anulandoSalida}
+              onClick={onConfirmarAnulacionSalida}
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+            >
+              {anulandoSalida ? "Anulando..." : "Sí, anular salida"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

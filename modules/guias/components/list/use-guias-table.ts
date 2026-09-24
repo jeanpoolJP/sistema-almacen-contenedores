@@ -6,7 +6,11 @@ import { useEffect, useState, useTransition } from "react"
 
 import { toast } from "sonner"
 
-import { anularGuiaAction, obtenerGuiasAction } from "../../guia.actions"
+import {
+  anularGuiaAction,
+  anularSalidaGuiaAction,
+  obtenerGuiasAction,
+} from "../../guia.actions"
 
 import { exportarExcel } from "@/lib/exportar-excel"
 
@@ -104,6 +108,9 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
   const [guiaPago, setGuiaPago] = useState<GuiaConRelaciones | null>(null)
   const [guiaAnular, setGuiaAnular] = useState<GuiaConRelaciones | null>(null)
   const [anulando, setAnulando] = useState(false)
+  const [guiaAnularSalida, setGuiaAnularSalida] =
+    useState<GuiaConRelaciones | null>(null)
+  const [anulandoSalida, setAnulandoSalida] = useState(false)
 
   /**
    * SINCRONIZAR DATOS CON EL SERVIDOR
@@ -311,6 +318,27 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     onCambio?.()
   }
 
+  async function confirmarAnulacionSalida() {
+    if (!guiaAnularSalida) return
+
+    setAnulandoSalida(true)
+
+    const res = await anularSalidaGuiaAction(guiaAnularSalida.id)
+
+    setAnulandoSalida(false)
+    setGuiaAnularSalida(null)
+
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+
+    toast.success(res.message)
+
+    buscarGuias(pagina, limite)
+    onCambio?.()
+  }
+
   /**
    * REFRESCAR DESPUÉS DE UNA ACCIÓN EXITOSA
    */
@@ -339,6 +367,7 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     isPending,
     exportando,
     anulando,
+    anulandoSalida,
 
     // dialogs
     guiaDetalle,
@@ -349,6 +378,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     setGuiaPago,
     guiaAnular,
     setGuiaAnular,
+    guiaAnularSalida,
+    setGuiaAnularSalida,
 
     // acciones
     aplicarFiltros,
@@ -357,6 +388,7 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     cambiarLimite,
     exportarAExcel,
     confirmarAnulacion,
+    confirmarAnulacionSalida,
     refrescarTrasAccion,
   }
 }

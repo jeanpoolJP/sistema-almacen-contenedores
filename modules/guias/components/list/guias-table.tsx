@@ -37,6 +37,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     isPending,
     exportando,
     anulando,
+    anulandoSalida,
 
     guiaDetalle,
     setGuiaDetalle,
@@ -46,6 +47,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     setGuiaPago,
     guiaAnular,
     setGuiaAnular,
+    guiaAnularSalida,
+    setGuiaAnularSalida,
 
     aplicarFiltros,
     limpiarFiltros,
@@ -53,6 +56,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
     cambiarLimite,
     exportarAExcel,
     confirmarAnulacion,
+    confirmarAnulacionSalida,
     refrescarTrasAccion,
   } = useGuiasTable(data, onCambio)
 
@@ -81,6 +85,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
         guias={guias}
         onVerDetalle={setGuiaDetalle}
         onRegistrarSalida={setGuiaSalida}
+        onAnularSalida={setGuiaAnularSalida}
         onRegistrarPago={setGuiaPago}
         onAnular={setGuiaAnular}
         onCambio={refrescarTrasAccion}
@@ -106,6 +111,10 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
         setGuiaAnular={setGuiaAnular}
         anulando={anulando}
         onConfirmarAnulacion={confirmarAnulacion}
+        guiaAnularSalida={guiaAnularSalida}
+        setGuiaAnularSalida={setGuiaAnularSalida}
+        anulandoSalida={anulandoSalida}
+        onConfirmarAnulacionSalida={confirmarAnulacionSalida}
         onRefrescar={refrescarTrasAccion}
       />
     </div>

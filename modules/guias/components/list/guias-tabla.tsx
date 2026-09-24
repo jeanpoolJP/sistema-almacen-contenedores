@@ -24,6 +24,7 @@ type GuiasTablaProps = {
   guias: GuiaConRelaciones[]
   onVerDetalle: (guia: GuiaConRelaciones) => void
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
+  onAnularSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
   onAnular: (guia: GuiaConRelaciones) => void
   onCambio: () => void
@@ -33,6 +34,7 @@ export function GuiasTabla({
   guias,
   onVerDetalle,
   onRegistrarSalida,
+  onAnularSalida,
   onRegistrarPago,
   onAnular,
   onCambio,
@@ -90,7 +92,9 @@ export function GuiasTabla({
 
               <TableCell>
                 <div>
-                  <p className="text-sm font-medium">{guia.contenedor.numeroContenedor}</p>
+                  <p className="text-sm font-medium">
+                    {guia.contenedor.numeroContenedor}
+                  </p>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">
                       {guia.contenedor.marca}
@@ -132,6 +136,7 @@ export function GuiasTabla({
                   guia={guia}
                   onVerDetalle={onVerDetalle}
                   onRegistrarSalida={onRegistrarSalida}
+                  onAnularSalida={onAnularSalida}
                   onRegistrarPago={onRegistrarPago}
                   onAnular={onAnular}
                   onCambio={onCambio}

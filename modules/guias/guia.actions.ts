@@ -10,6 +10,7 @@ import {
   obtenerGuiasService,
   obtenerGuiasEspacioAlquiladoService,
   anularGuiaService,
+  anularSalidaGuiaService,
   registrarPagoGuiaService,
   asignarClienteMasivoService,
   asignarOActualizarClienteGuiaService,
@@ -312,6 +313,32 @@ export async function anularGuiaAction(id: number) {
         error instanceof Error
           ? error.message
           : "Ocurrió un error al anular la guía",
+    }
+  }
+}
+
+/**
+ * Revierte la salida registrada de una guía.
+ */
+export async function anularSalidaGuiaAction(id: number) {
+  try {
+    const guia = await anularSalidaGuiaService(id)
+
+    return {
+      success: true,
+      data: guia,
+      message: "La salida del contenedor se anuló correctamente",
+    }
+  } catch (error) {
+    console.error("Error al anular salida:", error)
+
+    return {
+      success: false,
+      data: null,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al anular la salida",
     }
   }
 }

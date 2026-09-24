@@ -8,6 +8,7 @@ import {
   Eye,
   LogOut,
   MoreHorizontal,
+  Undo2,
   UserPlus,
   UserRoundPen,
 } from "lucide-react"
@@ -31,6 +32,7 @@ type GuiasAccionesMenuProps = {
 
   onVerDetalle: (guia: GuiaConRelaciones) => void
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
+  onAnularSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
   onAnular: (guia: GuiaConRelaciones) => void
 
@@ -41,11 +43,16 @@ export function GuiasAccionesMenu({
   guia,
   onVerDetalle,
   onRegistrarSalida,
+  onAnularSalida,
   onRegistrarPago,
   onAnular,
   onCambio,
 }: GuiasAccionesMenuProps) {
   const puedeRegistrarSalida = guia.estado === "ALMACENADO"
+  const puedeAnularSalida =
+    guia.estado === "RETIRADO" &&
+    guia.estadoPago === "PENDIENTE" &&
+    Boolean(guia.fechaSalida)
   const puedeRegistrarPago =
     guia.estado === "RETIRADO" && guia.estadoPago === "PENDIENTE"
   const puedeAnular = guia.estado === "ALMACENADO"
@@ -78,6 +85,16 @@ export function GuiasAccionesMenu({
           <DropdownMenuItem onClick={() => onRegistrarSalida(guia)}>
             <LogOut className="mr-2 size-4" />
             Registrar salida
+          </DropdownMenuItem>
+        )}
+
+        {puedeAnularSalida && (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => onAnularSalida(guia)}
+          >
+            <Undo2 className="mr-2 size-4" />
+            Anular salida
           </DropdownMenuItem>
         )}
 
