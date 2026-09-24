@@ -42,12 +42,12 @@ export function GuiasTabla({
   onCambio,
 }: GuiasTablaProps) {
   return (
-    <div className="rounded-lg border">
-      <Table>
+    <div className="min-w-0 w-full overflow-hidden rounded-lg border">
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead>N° Guía</TableHead>
-            <TableHead>Cliente</TableHead>
+            <TableHead className="w-[7.5rem]">N° Guía</TableHead>
+            <TableHead className="w-[14rem]">Cliente</TableHead>
             <TableHead>Contenedor</TableHead>
             <TableHead>Ingreso</TableHead>
             <TableHead>Salida</TableHead>
@@ -74,13 +74,16 @@ export function GuiasTabla({
             <TableRow key={guia.id}>
               <TableCell className="font-medium">{guia.numeroGuia}</TableCell>
 
-              <TableCell>
+              <TableCell className="max-w-0">
                 {guia.cliente ? (
-                  <div>
-                    <p className="text-sm">
+                  <div className="min-w-0">
+                    <p
+                      className="truncate text-sm"
+                      title={guia.cliente.nombreCompleto || "Sin nombre"}
+                    >
                       {guia.cliente.nombreCompleto || "Sin nombre"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {guia.cliente.tipoDocumento}{" "}
                       {guia.cliente.numeroDocumento}
                     </p>
