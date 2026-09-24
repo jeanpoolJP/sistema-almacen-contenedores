@@ -123,7 +123,7 @@ export function FormContenedor({
             </FormLabel>
             <FormControl>
               <UppercaseInput
-                placeholder="MSCU1234567"
+                placeholder="7654321"
                 {...field}
                 disabled={buscando}
               />
@@ -148,7 +148,7 @@ export function FormContenedor({
             </FormLabel>
             <FormControl>
               <UppercaseInput
-                placeholder="MSC"
+                placeholder="UACU"
                 {...field}
                 disabled={bloqueado}
                 className={cn(bloqueado && "bg-muted")}

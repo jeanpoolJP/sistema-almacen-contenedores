@@ -91,7 +91,7 @@ export function ContenedorField() {
               <div className="relative">
                 <Input
                   {...field}
-                  placeholder="Ej: MSCU1234567"
+                  placeholder="Ej: 1234567"
                   className="uppercase"
                   onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                   onBlur={(e) => {
