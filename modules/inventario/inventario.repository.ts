@@ -58,6 +58,14 @@ export async function obtenerInventarioPorId(id: number) {
               numeroGuia: true,
               fechaIngreso: true,
               estado: true,
+              cliente: {
+                select: {
+                  id: true,
+                  nombreCompleto: true,
+                  tipoDocumento: true,
+                  numeroDocumento: true,
+                },
+              },
               contenedor: {
                 select: {
                   id: true,

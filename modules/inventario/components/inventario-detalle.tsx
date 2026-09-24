@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table"
 
 import { exportarExcel } from "@/lib/exportar-excel"
+import { InventarioPrint } from "./inventario-print"
 
 /**
  * Resultado que puede registrar un contenedor durante un inventario físico.
@@ -40,6 +41,13 @@ type Detalle = {
     numeroGuia: string
     fechaIngreso: Date
     estado: string
+
+    cliente?: {
+      id: number
+      nombreCompleto: string | null
+      tipoDocumento: string
+      numeroDocumento: string
+    } | null
 
     contenedor: {
       id: number
@@ -111,13 +119,13 @@ export function InventarioDetalle({
   onVerificar,
   onFinalizar,
 }: InventarioDetalleProps) {
-  const contentRef = useRef<HTMLDivElement>(null)
+  const printRef = useRef<HTMLDivElement>(null)
 
   /**
-   * Configura la impresión del contenido del inventario utilizando react-to-print.
+   * Imprime el reporte agrupado por cliente (`InventarioPrint`).
    */
   const handlePrint = useReactToPrint({
-    contentRef,
+    contentRef: printRef,
     documentTitle: `inventario-${inventarioId}`,
   })
 
@@ -383,8 +391,18 @@ export function InventarioDetalle({
         </div>
       </div>
 
-      {/* Contenido Imprimible */}
-      <div ref={contentRef} className="space-y-6 print:bg-white print:p-6">
+      <div className="hidden">
+        <div ref={printRef} className="bg-white p-6">
+          <InventarioPrint
+            inventarioId={inventarioId}
+            fecha={fecha}
+            detalles={detalles}
+          />
+        </div>
+      </div>
+
+      {/* Contenido en pantalla (la impresión usa InventarioPrint) */}
+      <div className="space-y-6 print:hidden">
         {/* Estadísticas */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="rounded-lg border p-4">

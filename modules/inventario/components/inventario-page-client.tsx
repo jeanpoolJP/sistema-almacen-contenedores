@@ -52,6 +52,13 @@ type InventarioDetalleData = {
     fechaIngreso: Date
     estado: string
 
+    cliente?: {
+      id: number
+      nombreCompleto: string | null
+      tipoDocumento: string
+      numeroDocumento: string
+    } | null
+
     contenedor: {
       id: number
       numeroContenedor: string
