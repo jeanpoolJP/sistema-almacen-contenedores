@@ -104,6 +104,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
    */
 
   const [guiaDetalle, setGuiaDetalle] = useState<GuiaConRelaciones | null>(null)
+  const [guiaEditarIngreso, setGuiaEditarIngreso] =
+    useState<GuiaConRelaciones | null>(null)
   const [guiaSalida, setGuiaSalida] = useState<GuiaConRelaciones | null>(null)
   const [guiaPago, setGuiaPago] = useState<GuiaConRelaciones | null>(null)
   const [guiaAnular, setGuiaAnular] = useState<GuiaConRelaciones | null>(null)
@@ -372,6 +374,8 @@ export function useGuiasTable(data: GuiasData, onCambio?: () => void) {
     // dialogs
     guiaDetalle,
     setGuiaDetalle,
+    guiaEditarIngreso,
+    setGuiaEditarIngreso,
     guiaSalida,
     setGuiaSalida,
     guiaPago,

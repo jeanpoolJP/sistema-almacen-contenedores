@@ -8,6 +8,7 @@ import {
   Eye,
   LogOut,
   MoreHorizontal,
+  Pencil,
   Undo2,
   UserPlus,
   UserRoundPen,
@@ -31,6 +32,7 @@ type GuiasAccionesMenuProps = {
   guia: GuiaConRelaciones
 
   onVerDetalle: (guia: GuiaConRelaciones) => void
+  onEditarIngreso: (guia: GuiaConRelaciones) => void
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
   onAnularSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
@@ -42,6 +44,7 @@ type GuiasAccionesMenuProps = {
 export function GuiasAccionesMenu({
   guia,
   onVerDetalle,
+  onEditarIngreso,
   onRegistrarSalida,
   onAnularSalida,
   onRegistrarPago,
@@ -80,6 +83,13 @@ export function GuiasAccionesMenu({
           )}
           {guia.cliente ? "Cambiar cliente" : "Asignar cliente"}
         </DropdownMenuItem>
+
+        {guia.estado === "ALMACENADO" && (
+          <DropdownMenuItem onClick={() => onEditarIngreso(guia)}>
+            <Pencil className="mr-2 size-4" />
+            Editar ingreso
+          </DropdownMenuItem>
+        )}
 
         {puedeRegistrarSalida && (
           <DropdownMenuItem onClick={() => onRegistrarSalida(guia)}>

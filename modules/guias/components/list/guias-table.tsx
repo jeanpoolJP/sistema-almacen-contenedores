@@ -41,6 +41,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
 
     guiaDetalle,
     setGuiaDetalle,
+    guiaEditarIngreso,
+    setGuiaEditarIngreso,
     guiaSalida,
     setGuiaSalida,
     guiaPago,
@@ -84,6 +86,7 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
       <GuiasTabla
         guias={guias}
         onVerDetalle={setGuiaDetalle}
+        onEditarIngreso={setGuiaEditarIngreso}
         onRegistrarSalida={setGuiaSalida}
         onAnularSalida={setGuiaAnularSalida}
         onRegistrarPago={setGuiaPago}
@@ -103,6 +106,8 @@ export function GuiasTable({ data, onCambio }: GuiasTableProps) {
       <GuiasDialogs
         guiaDetalle={guiaDetalle}
         setGuiaDetalle={setGuiaDetalle}
+        guiaEditarIngreso={guiaEditarIngreso}
+        setGuiaEditarIngreso={setGuiaEditarIngreso}
         guiaSalida={guiaSalida}
         setGuiaSalida={setGuiaSalida}
         guiaPago={guiaPago}

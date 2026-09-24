@@ -10,6 +10,8 @@ import type {
   TratamientoIGV,
 } from "@/lib/generated/prisma"
 import { GuiaConRelaciones } from "./components/guia-con-relaciones.type"
+import { z } from "zod"
+import { editarGuiaSchema } from "./guia.schema"
 
 /**
  * Resultado del cálculo de días de almacenamiento.
@@ -110,7 +112,7 @@ export type CrearGuiaInput = {
 
   tipoPrecio: TipoPrecioGuia
 
-  precioIngresoSalida?: number 
+  precioIngresoSalida?: number
   /**
    * Solo se utilizan cuando
    * tipoPrecio = PERSONALIZADO.
@@ -122,6 +124,13 @@ export type CrearGuiaInput = {
 
   observaciones?: string | null
 }
+
+export type EditarGuiaInput = {
+  guiaId: number
+  numeroGuia: string
+} & Omit<CrearGuiaInput, "numeroGuia" | "cliente">
+
+export type EditarGuiaSchema = z.infer<typeof editarGuiaSchema>
 
 /**
  * Datos necesarios para registrar

@@ -4,6 +4,7 @@
 
 import {
   crearGuiaService,
+  editarGuiaService,
   registrarSalidaGuiaService,
   obtenerGuiaPorIdService,
   obtenerGuiaPorNumeroService,
@@ -16,7 +17,11 @@ import {
   asignarOActualizarClienteGuiaService,
 } from "./guia.service"
 
-import type { CrearGuiaInput, RegistrarSalidaGuiaInput } from "./guia.types"
+import type {
+  CrearGuiaInput,
+  EditarGuiaInput,
+  RegistrarSalidaGuiaInput,
+} from "./guia.types"
 
 import type {
   EstadoGuia,
@@ -53,6 +58,29 @@ export async function crearGuiaAction(data: CrearGuiaInput) {
         error instanceof Error
           ? error.message
           : "Ocurrió un error al registrar la guía",
+    }
+  }
+}
+
+export async function editarGuiaAction(data: EditarGuiaInput) {
+  try {
+    const guia = await editarGuiaService(data)
+
+    return {
+      success: true,
+      data: guia,
+      message: "Los datos de ingreso se actualizaron correctamente",
+    }
+  } catch (error) {
+    console.error("Error al editar ingreso de guía:", error)
+
+    return {
+      success: false,
+      data: null,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al editar los datos de ingreso",
     }
   }
 }

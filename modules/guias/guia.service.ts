@@ -5,9 +5,9 @@ import {
   anularGuia,
   anularSalidaGuia,
   crearGuia,
+  obtenerGuiaAlmacenadaPorContenedorId,
   obtenerGuiaPorId,
   obtenerGuiaPorNumero,
-  obtenerGuiaAlmacenadaPorContenedorId,
   obtenerGuias,
   obtenerGuiasEspacioAlquilado,
   registrarPagoGuia,
@@ -21,6 +21,7 @@ import { findClienteById } from "@/modules/clientes/cliente.repository"
 
 import {
   crearGuiaSchema,
+  editarGuiaSchema,
   registrarPagoGuiaSchema,
   registrarSalidaGuiaSchema,
 } from "./guia.schema"
@@ -32,6 +33,7 @@ import {
 import { clienteSchema } from "@/modules/clientes/cliente.schema"
 import type {
   CrearGuiaInput,
+  EditarGuiaInput,
   RegistrarSalidaGuiaInput,
   RegistrarPagoGuiaInput,
 } from "./guia.types"
@@ -44,10 +46,7 @@ import { serializarGuia } from "./utils/serializar-guia"
 
 import { obtenerConfiguracionPrecioService } from "@/modules/configuracion/configuracion.service"
 
-import {
-  obtenerClientePorId,
-  obtenerOCrearCliente,
-} from "@/modules/clientes/cliente.service"
+import { obtenerOCrearCliente } from "@/modules/clientes/cliente.service"
 
 import { obtenerOCrearContenedor } from "@/modules/contenedores/contenedores.service"
 
@@ -247,6 +246,114 @@ export async function crearGuiaService(data: CrearGuiaInput) {
   })
 
   return serializarGuia(guia)
+}
+
+/**
+ * Edita los datos de ingreso de una guía almacenada.
+ */
+export async function editarGuiaService(data: EditarGuiaInput) {
+  if (!Number.isInteger(data.guiaId) || data.guiaId <= 0) {
+    throw new Error("El ID de la guía no es válido")
+  }
+
+  const datosValidados = editarGuiaSchema.parse(data)
+  const numeroGuia = formatearNumeroGuia(datosValidados.numeroGuia)
+  const guia = await obtenerGuiaPorId(data.guiaId)
+
+  if (!guia) {
+    throw new Error("La guía no existe")
+  }
+
+  if (guia.estado !== "ALMACENADO") {
+    throw new Error("Solo se puede editar el ingreso de una guía almacenada")
+  }
+
+  const guiaConNumero = await obtenerGuiaPorNumero(numeroGuia)
+
+  if (guiaConNumero && guiaConNumero.id !== guia.id) {
+    throw new Error(`Ya existe una guía con el número ${numeroGuia}`)
+  }
+
+  const contenedor = await obtenerOCrearContenedor({
+    numeroContenedor: datosValidados.contenedor.numeroContenedor,
+    marca: datosValidados.contenedor.marca,
+    medida: datosValidados.contenedor.medida,
+    tipo: datosValidados.contenedor.tipo,
+  })
+
+  const cambioContenedor = contenedor.id !== guia.contenedorId
+
+  if (cambioContenedor) {
+    const guiaAlmacenada = await obtenerGuiaAlmacenadaPorContenedorId(
+      contenedor.id,
+      guia.id
+    )
+
+    if (guiaAlmacenada) {
+      throw new Error(
+        `El contenedor ${contenedor.numeroContenedor} ya se encuentra almacenado en la guía ${guiaAlmacenada.numeroGuia}`
+      )
+    }
+  }
+
+  const empresaIngreso = await obtenerOCrearEmpresaTransporte({
+    nombre: datosValidados.transportistaIngreso.empresaNombre,
+    ruc: datosValidados.transportistaIngreso.ruc,
+    telefono: datosValidados.transportistaIngreso.telefono,
+    contactoLogistico: datosValidados.transportistaIngreso.contactoLogistico,
+    nombreEncargado: datosValidados.transportistaIngreso.nombreEncargado,
+  })
+
+  const vehiculoIngreso = await obtenerOCrearVehiculo({
+    placa: datosValidados.transportistaIngreso.placa,
+  })
+
+  const conductorIngreso = await obtenerOCrearConductor({
+    nombreCompleto: datosValidados.transportistaIngreso.conductorNombre,
+    numeroLicencia: datosValidados.transportistaIngreso.numeroLicencia,
+  })
+
+  const configuracion = await obtenerConfiguracionPrecioService()
+
+  let precioPrimerDia = 0
+  let precioDiaAdicional = 0
+  let precioIngresoSalida: number | undefined
+
+  if (datosValidados.tipoPrecio === "ESTANDAR") {
+    precioPrimerDia =
+      datosValidados.contenedor.tipo === "REEFER"
+        ? 40
+        : Number(configuracion.precioPrimerDia)
+    precioDiaAdicional = Number(configuracion.precioDiaAdicional)
+  }
+
+  if (datosValidados.tipoPrecio === "PERSONALIZADO") {
+    precioPrimerDia = datosValidados.precioPrimerDia!
+    precioDiaAdicional = datosValidados.precioDiaAdicional!
+  }
+
+  if (datosValidados.tipoPrecio === "ESPACIO_ALQUILADO") {
+    precioIngresoSalida = datosValidados.precioIngresoSalida!
+  }
+
+  const guiaActualizada = await actualizarGuia(guia.id, {
+    numeroGuia,
+    contenedorId: contenedor.id,
+    empresaTransporteIngresoId: empresaIngreso.id,
+    vehiculoIngresoId: vehiculoIngreso.id,
+    conductorIngresoId: conductorIngreso.id,
+    fechaIngreso: datosValidados.fechaIngreso,
+    horaIngreso: datosValidados.horaIngreso,
+    tipoPrecio: datosValidados.tipoPrecio,
+    precioPrimerDia,
+    precioDiaAdicional,
+    precioIngresoSalida,
+    porcentajeIGV: Number(configuracion.porcentajeIGV),
+    tratamientoIGV: datosValidados.tratamientoIGV,
+    observaciones: datosValidados.observaciones ?? null,
+  })
+
+  return serializarGuia(guiaActualizada)
 }
 
 /**

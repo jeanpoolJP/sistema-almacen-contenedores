@@ -23,6 +23,7 @@ import { formatFechaNegocio } from "./guias-utils"
 type GuiasTablaProps = {
   guias: GuiaConRelaciones[]
   onVerDetalle: (guia: GuiaConRelaciones) => void
+  onEditarIngreso: (guia: GuiaConRelaciones) => void
   onRegistrarSalida: (guia: GuiaConRelaciones) => void
   onAnularSalida: (guia: GuiaConRelaciones) => void
   onRegistrarPago: (guia: GuiaConRelaciones) => void
@@ -33,6 +34,7 @@ type GuiasTablaProps = {
 export function GuiasTabla({
   guias,
   onVerDetalle,
+  onEditarIngreso,
   onRegistrarSalida,
   onAnularSalida,
   onRegistrarPago,
@@ -135,6 +137,7 @@ export function GuiasTabla({
                 <GuiasAccionesMenu
                   guia={guia}
                   onVerDetalle={onVerDetalle}
+                  onEditarIngreso={onEditarIngreso}
                   onRegistrarSalida={onRegistrarSalida}
                   onAnularSalida={onAnularSalida}
                   onRegistrarPago={onRegistrarPago}

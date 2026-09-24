@@ -124,89 +124,107 @@ const transportistaGuiaSchema = z.object({
     ),
 })
 
+const datosIngresoGuiaSchema = z.object({
+  contenedor: contenedorGuiaSchema,
+
+  transportistaIngreso: transportistaGuiaSchema,
+
+  fechaIngreso: z.date({
+    message: "La fecha de ingreso es obligatoria",
+  }),
+
+  horaIngreso: z.date({
+    message: "La hora de ingreso es obligatoria",
+  }),
+
+  tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO", "ESPACIO_ALQUILADO"]),
+
+  precioPrimerDia: z
+    .number()
+    .finite()
+    .positive("El precio del primer día debe ser mayor a 0")
+    .optional(),
+
+  precioDiaAdicional: z
+    .number()
+    .finite()
+    .min(0, "El precio adicional no puede ser negativo")
+    .optional(),
+
+  precioIngresoSalida: z
+    .number()
+    .finite()
+    .positive("El precio de ingreso y salida debe ser mayor a 0")
+    .optional(),
+
+  tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
+
+  observaciones: z
+    .string()
+    .trim()
+    .max(5000, "Las observaciones no pueden superar los 5000 caracteres")
+    .nullable()
+    .optional(),
+})
+
+const numeroGuiaSchema = z
+  .string()
+  .trim()
+  .regex(/^\d+$/, "El número de guía solo puede contener números")
+  .transform((valor) => {
+    const numero = Number(valor)
+
+    if (numero > 999999) {
+      throw new Error("El número de guía no puede tener más de 6 dígitos")
+    }
+
+    return numero.toString().padStart(6, "0")
+  })
+
+function validarPreciosGuia(
+  data: z.infer<typeof datosIngresoGuiaSchema>,
+  ctx: z.RefinementCtx
+) {
+  if (data.tipoPrecio === "PERSONALIZADO") {
+    if (data.precioPrimerDia === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["precioPrimerDia"],
+        message:
+          "El precio del primer día es obligatorio para un precio personalizado",
+      })
+    }
+
+    if (data.precioDiaAdicional === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["precioDiaAdicional"],
+        message:
+          "El precio adicional es obligatorio para un precio personalizado",
+      })
+    }
+  }
+}
+
 /**
  * Schema para crear una guía.
  */
-export const crearGuiaSchema = z
-  .object({
-    numeroGuia: z
-      .string()
-      .trim()
-      .regex(/^\d+$/, "El número de guía solo puede contener números")
-      .transform((valor) => {
-        const numero = Number(valor)
-
-        if (numero > 999999) {
-          throw new Error("El número de guía no puede tener más de 6 dígitos")
-        }
-
-        return numero.toString().padStart(6, "0")
-      }),
-
+export const crearGuiaSchema = datosIngresoGuiaSchema
+  .extend({
+    numeroGuia: numeroGuiaSchema,
     cliente: clienteGuiaSchema.nullable().optional(),
-
-    contenedor: contenedorGuiaSchema,
-
-    transportistaIngreso: transportistaGuiaSchema,
-
-    fechaIngreso: z.date({
-      message: "La fecha de ingreso es obligatoria",
-    }),
-
-    horaIngreso: z.date({
-      message: "La hora de ingreso es obligatoria",
-    }),
-
-    tipoPrecio: z.enum(["ESTANDAR", "PERSONALIZADO", "ESPACIO_ALQUILADO"]),
-
-    precioPrimerDia: z
-      .number()
-      .finite()
-      .positive("El precio del primer día debe ser mayor a 0")
-      .optional(),
-
-    precioDiaAdicional: z
-      .number()
-      .finite()
-      .min(0, "El precio adicional no puede ser negativo")
-      .optional(),
-
-    precioIngresoSalida: z
-      .number()
-      .finite()
-      .positive("El precio de ingreso y salida debe ser mayor a 0")
-      .optional(),
-
-    tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
-
-    observaciones: z
-      .string()
-      .trim()
-      .max(5000, "Las observaciones no pueden superar los 5000 caracteres")
-      .nullable()
-      .optional(),
   })
-  .superRefine((data, ctx) => {
-    if (data.tipoPrecio === "PERSONALIZADO") {
-      if (data.precioPrimerDia === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["precioPrimerDia"],
-          message:
-            "El precio del primer día es obligatorio para un precio personalizado",
-        })
-      }
+  .superRefine(validarPreciosGuia)
 
-      if (data.precioDiaAdicional === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["precioDiaAdicional"],
-          message:
-            "El precio adicional es obligatorio para un precio personalizado",
-        })
-      }
-    }
+/**
+ * Schema para editar los datos de ingreso de una guía existente.
+ * El número de guía y el cliente se administran por separado.
+ */
+export const editarGuiaSchema = datosIngresoGuiaSchema
+  .extend({
+    numeroGuia: numeroGuiaSchema,
   })
+  .superRefine(validarPreciosGuia)
 
 /**
  * Schema para registrar la salida

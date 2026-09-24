@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 import { GuiaDetalleSheet } from "../guia-detalle-sheet"
+import { EditarGuiaDialog } from "../ingreso-guia/editar-guia-dialog"
 import { RegistrarSalidaDialog } from "../registrar-salida-dialog"
 import { RegistrarPagoDialog } from "../registrar-pago-dialog"
 
@@ -22,6 +23,9 @@ import type { GuiaConRelaciones } from "../guia-con-relaciones.type"
 type GuiasDialogsProps = {
   guiaDetalle: GuiaConRelaciones | null
   setGuiaDetalle: (guia: GuiaConRelaciones | null) => void
+
+  guiaEditarIngreso: GuiaConRelaciones | null
+  setGuiaEditarIngreso: (guia: GuiaConRelaciones | null) => void
 
   guiaSalida: GuiaConRelaciones | null
   setGuiaSalida: (guia: GuiaConRelaciones | null) => void
@@ -45,6 +49,8 @@ type GuiasDialogsProps = {
 export function GuiasDialogs({
   guiaDetalle,
   setGuiaDetalle,
+  guiaEditarIngreso,
+  setGuiaEditarIngreso,
   guiaSalida,
   setGuiaSalida,
   guiaPago,
@@ -67,6 +73,19 @@ export function GuiasDialogs({
         open={!!guiaDetalle}
         onOpenChange={(open) => !open && setGuiaDetalle(null)}
       />
+
+      {/* EDITAR INGRESO */}
+      {guiaEditarIngreso && (
+        <EditarGuiaDialog
+          guia={guiaEditarIngreso}
+          open={!!guiaEditarIngreso}
+          onOpenChange={(open) => !open && setGuiaEditarIngreso(null)}
+          onEditada={() => {
+            setGuiaEditarIngreso(null)
+            onRefrescar()
+          }}
+        />
+      )}
 
       {/* SALIDA */}
       {guiaSalida && (

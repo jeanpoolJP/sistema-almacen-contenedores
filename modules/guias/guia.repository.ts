@@ -132,12 +132,18 @@ export async function obtenerGuiaPorNumero(numeroGuia: string) {
  * Busca una guía que mantenga el contenedor actualmente almacenado.
  */
 export async function obtenerGuiaAlmacenadaPorContenedorId(
-  contenedorId: number
+  contenedorId: number,
+  excludeGuiaId?: number
 ) {
   return prisma.guiaInternamiento.findFirst({
     where: {
       contenedorId,
       estado: "ALMACENADO",
+      ...(excludeGuiaId && {
+        id: {
+          not: excludeGuiaId,
+        },
+      }),
     },
     select: {
       id: true,
