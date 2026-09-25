@@ -2,10 +2,13 @@
 
 "use client"
 
+import { useRef, useState, useTransition, type KeyboardEvent } from "react"
+
 import { Check, ChevronDown, Download, Loader2, Search, X } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { obtenerClientesFrecuentesAction } from "@/modules/clientes/cliente.actions"
 
 import {
   Collapsible,
@@ -28,6 +31,17 @@ import type {
 } from "@/lib/generated/prisma"
 
 import type { GuiasFiltros } from "./types"
+
+type ClienteFrecuente = NonNullable<
+  Awaited<ReturnType<typeof obtenerClientesFrecuentesAction>>["data"]
+>[number]
+
+function normalizarTexto(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+}
 
 type GuiasFiltrosProps = {
   filtros: GuiasFiltros
@@ -58,6 +72,16 @@ export function GuiasFiltros({
   exportando,
   total,
 }: GuiasFiltrosProps) {
+  const [busquedaCliente, setBusquedaCliente] = useState("")
+  const [clientesFrecuentes, setClientesFrecuentes] = useState<
+    ClienteFrecuente[] | null
+  >(null)
+  const [errorClientes, setErrorClientes] = useState<string | null>(null)
+  const [selectorClienteAbierto, setSelectorClienteAbierto] = useState(false)
+  const [indiceActivo, setIndiceActivo] = useState(-1)
+  const solicitudEnCurso = useRef(false)
+  const [cargandoClientes, iniciarCargaClientes] = useTransition()
+
   function actualizar<K extends keyof GuiasFiltros>(
     campo: K,
     valor: GuiasFiltros[K]
@@ -66,6 +90,103 @@ export function GuiasFiltros({
   }
 
   const deshabilitado = isPending || exportando
+  const clienteSeleccionado = clientesFrecuentes?.find(
+    (cliente) => cliente.numeroDocumento === filtros.documentoCliente
+  )
+  const valorBusquedaCliente = clienteSeleccionado
+    ? `${clienteSeleccionado.nombreCompleto || "Sin nombre"} · ${clienteSeleccionado.tipoDocumento} ${clienteSeleccionado.numeroDocumento}`
+    : busquedaCliente
+  const terminoNormalizado = normalizarTexto(busquedaCliente.trim())
+  const clientesVisibles = (clientesFrecuentes ?? []).filter((cliente) => {
+    const datosCliente = normalizarTexto(
+      `${cliente.nombreCompleto ?? ""} ${cliente.tipoDocumento} ${cliente.numeroDocumento}`
+    )
+
+    return datosCliente.includes(terminoNormalizado)
+  })
+
+  function cargarClientesFrecuentes() {
+    if (clientesFrecuentes !== null || solicitudEnCurso.current) return
+
+    solicitudEnCurso.current = true
+    setErrorClientes(null)
+
+    iniciarCargaClientes(async () => {
+      try {
+        const resultado = await obtenerClientesFrecuentesAction()
+
+        if (!resultado.success || !resultado.data) {
+          setErrorClientes(
+            resultado.error ?? "No se pudieron cargar los clientes frecuentes"
+          )
+          return
+        }
+
+        setClientesFrecuentes(resultado.data)
+      } catch {
+        setErrorClientes("No se pudieron cargar los clientes frecuentes")
+      } finally {
+        solicitudEnCurso.current = false
+      }
+    })
+  }
+
+  function seleccionarCliente(cliente: ClienteFrecuente) {
+    setBusquedaCliente("")
+    setIndiceActivo(-1)
+    setSelectorClienteAbierto(false)
+    onFiltrosChange({
+      ...filtros,
+      documentoCliente: cliente.numeroDocumento,
+      sinCliente: false,
+    })
+  }
+
+  function limpiarBusquedaCliente() {
+    setBusquedaCliente("")
+    setIndiceActivo(-1)
+    onFiltrosChange({ ...filtros, documentoCliente: "" })
+  }
+
+  function limpiarFiltros() {
+    setBusquedaCliente("")
+    setSelectorClienteAbierto(false)
+    onLimpiar()
+  }
+
+  function manejarTeclaCliente(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Escape") {
+      setSelectorClienteAbierto(false)
+      return
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      setSelectorClienteAbierto(true)
+      cargarClientesFrecuentes()
+      setIndiceActivo((indice) =>
+        Math.min(indice < 0 ? 0 : indice + 1, clientesVisibles.length - 1)
+      )
+      return
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault()
+      setIndiceActivo((indice) =>
+        clientesVisibles.length === 0
+          ? -1
+          : indice <= 0
+            ? clientesVisibles.length - 1
+            : indice - 1
+      )
+      return
+    }
+
+    if (event.key === "Enter" && clientesVisibles[indiceActivo]) {
+      event.preventDefault()
+      seleccionarCliente(clientesVisibles[indiceActivo])
+    }
+  }
 
   return (
     <Collapsible
@@ -163,26 +284,168 @@ export function GuiasFiltros({
               </Select>
             </div>
 
-            {/* DOCUMENTO */}
+            {/* CLIENTE POR NOMBRE O DOCUMENTO */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Documento del cliente
+              <label htmlFor="filtro-cliente" className="text-sm font-medium">
+                Cliente
               </label>
-              <Input
-                value={filtros.documentoCliente}
-                onChange={(e) => actualizar("documentoCliente", e.target.value)}
-                placeholder="DNI o RUC"
-              />
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (
+                    !event.currentTarget.contains(
+                      event.relatedTarget as Node | null
+                    )
+                  ) {
+                    setSelectorClienteAbierto(false)
+                  }
+                }}
+              >
+                <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="filtro-cliente"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={selectorClienteAbierto}
+                  aria-controls="clientes-frecuentes-lista"
+                  aria-activedescendant={
+                    indiceActivo >= 0
+                      ? `cliente-frecuente-${clientesVisibles[indiceActivo]?.id}`
+                      : undefined
+                  }
+                  autoComplete="off"
+                  value={valorBusquedaCliente}
+                  onFocus={() => {
+                    setSelectorClienteAbierto(true)
+                    cargarClientesFrecuentes()
+                  }}
+                  onChange={(event) => {
+                    setBusquedaCliente(event.target.value)
+                    setIndiceActivo(-1)
+                    onFiltrosChange({
+                      ...filtros,
+                      documentoCliente: "",
+                      sinCliente: false,
+                    })
+                    setSelectorClienteAbierto(true)
+                    cargarClientesFrecuentes()
+                  }}
+                  onKeyDown={manejarTeclaCliente}
+                  placeholder="Buscar por nombre o documento"
+                  className="pr-9 pl-8"
+                  disabled={deshabilitado}
+                />
+                {(filtros.documentoCliente || busquedaCliente) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Limpiar cliente seleccionado"
+                    className="absolute top-1/2 right-1.5 -translate-y-1/2"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={limpiarBusquedaCliente}
+                  >
+                    <X />
+                  </Button>
+                )}
+
+                {selectorClienteAbierto && (
+                  <div
+                    id="clientes-frecuentes-lista"
+                    role="listbox"
+                    aria-label="Clientes frecuentes"
+                    aria-busy={cargandoClientes}
+                    className="absolute inset-x-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
+                  >
+                    {cargandoClientes ? (
+                      <p className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                        <Loader2 className="size-4 animate-spin" />
+                        Cargando clientes frecuentes...
+                      </p>
+                    ) : errorClientes ? (
+                      <div className="space-y-2 p-2">
+                        <p className="text-sm text-muted-foreground">
+                          {errorClientes}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={cargarClientesFrecuentes}
+                        >
+                          Reintentar
+                        </Button>
+                      </div>
+                    ) : clientesFrecuentes && clientesVisibles.length > 0 ? (
+                      clientesVisibles.map((cliente, indice) => (
+                        <button
+                          key={cliente.id}
+                          id={`cliente-frecuente-${cliente.id}`}
+                          type="button"
+                          role="option"
+                          aria-selected={
+                            cliente.numeroDocumento === filtros.documentoCliente
+                          }
+                          tabIndex={-1}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setIndiceActivo(indice)}
+                          onClick={() => seleccionarCliente(cliente)}
+                          className={`flex w-full items-center justify-between gap-3 rounded-sm px-3 py-2 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground ${
+                            indiceActivo === indice
+                              ? "bg-accent text-accent-foreground"
+                              : ""
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">
+                              {cliente.nombreCompleto || "Sin nombre"}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {cliente.tipoDocumento} {cliente.numeroDocumento}
+                            </span>
+                          </span>
+                          <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                            {cliente._count.guiasInternamiento} guías
+                            {cliente.numeroDocumento ===
+                              filtros.documentoCliente && (
+                              <Check className="size-4 text-primary" />
+                            )}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-3 py-2 text-sm text-muted-foreground">
+                        {clientesFrecuentes
+                          ? busquedaCliente.trim()
+                            ? "No se encontraron clientes frecuentes."
+                            : "No hay clientes frecuentes disponibles."
+                          : "No se pudieron cargar los clientes frecuentes."}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* CLIENTE */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Cliente</label>
+              <label className="text-sm font-medium">Asignación</label>
               <Select
                 value={filtros.sinCliente ? "SIN_CLIENTE" : "TODOS"}
-                onValueChange={(value) =>
-                  actualizar("sinCliente", value === "SIN_CLIENTE")
-                }
+                onValueChange={(value) => {
+                  if (value === "SIN_CLIENTE") {
+                    setBusquedaCliente("")
+                    onFiltrosChange({
+                      ...filtros,
+                      documentoCliente: "",
+                      sinCliente: true,
+                    })
+                    return
+                  }
+
+                  actualizar("sinCliente", false)
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Todos los clientes" />
@@ -318,7 +581,7 @@ export function GuiasFiltros({
 
             <Button
               variant="outline"
-              onClick={onLimpiar}
+              onClick={limpiarFiltros}
               disabled={deshabilitado}
             >
               <X className="mr-2 size-4" />
