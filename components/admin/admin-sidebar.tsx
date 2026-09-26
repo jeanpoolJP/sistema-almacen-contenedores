@@ -24,6 +24,7 @@ import {
   Box,
   ArrowRightLeft,
   Receipt,
+  FileBarChart,
 } from "lucide-react"
 
 import {
@@ -83,6 +84,11 @@ const inventarioItems = [
   { title: "Liquidaciones", 
     href: "/admin/liquidaciones", 
     icon: Receipt },
+  {
+    title: "Inventario por cliente",
+    href: "/admin/reportes/inventario",
+    icon: FileBarChart,
+  },
 ]
 
 /**
