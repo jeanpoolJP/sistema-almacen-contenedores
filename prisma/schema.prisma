@@ -66,6 +66,7 @@ model Cliente {
   guiasInternamiento GuiaInternamiento[]
   pagos              Pago[]
   guiasTrasegado GuiaTrasegado[]
+  liquidaciones Liquidacion[]
 
   @@map("clientes")
 }
@@ -293,6 +294,8 @@ model GuiaInternamiento {
   conductorSalida Conductor? @relation("ConductorSalida", fields: [conductorSalidaId], references: [id], onDelete: SetNull)
 
   inventarios InventarioDetalle[]
+
+  liquidacionDetalle LiquidacionDetalle?
 
   // ============================================================
   // ÍNDICES
@@ -558,4 +561,76 @@ model FlatRack {
   elementosTrasegado GuiaTrasegadoElemento[]
 
   @@map("flat_racks")
+}
+
+
+// ============================================================
+// LIQUIDACIONES
+// ============================================================
+
+enum EstadoLiquidacion {
+  BORRADOR
+  CONFIRMADA
+  PAGADA
+  ANULADA
+}
+
+model Liquidacion {
+  id              Int                @id @default(autoincrement())
+  numero          String             @unique @db.VarChar(30)
+  clienteId       Int                @map("cliente_id")
+  fechaCorte      DateTime           @map("fecha_corte") @db.Date
+  estado          EstadoLiquidacion  @default(BORRADOR)
+
+  // Totales (fotografía al confirmar)
+  cantidadGuias   Int                @default(0) @map("cantidad_guias")
+  subtotal        Decimal            @default(0) @map("subtotal") @db.Decimal(10, 2)
+  porcentajeIGV   Decimal            @default(0) @map("porcentaje_igv") @db.Decimal(5, 2)
+  montoIGV        Decimal            @default(0) @map("monto_igv") @db.Decimal(10, 2)
+  montoTotal      Decimal            @default(0) @map("monto_total") @db.Decimal(10, 2)
+
+  // Pago
+  metodoPago      MetodoPago?        @map("metodo_pago")
+  numeroOperacion String?            @map("numero_operacion") @db.VarChar(100)
+  fechaPago       DateTime?          @map("fecha_pago") @db.Timestamp(0)
+
+  observaciones   String?            @db.Text
+
+  confirmadaAt    DateTime?          @map("confirmada_at") @db.Timestamp(0)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  cliente         Cliente            @relation(fields: [clienteId], references: [id])
+  detalles        LiquidacionDetalle[]
+
+  @@index([clienteId])
+  @@index([estado])
+  @@index([fechaCorte])
+  @@map("liquidaciones")
+}
+
+model LiquidacionDetalle {
+  id              Int           @id @default(autoincrement())
+  liquidacionId   Int           @map("liquidacion_id")
+  guiaId          Int           @map("guia_id")
+
+  // ===== Fotografía histórica de la guía =====
+  numeroGuia           String    @map("numero_guia") @db.VarChar(30)
+  marcaContenedor      String    @map("marca_contenedor") @db.VarChar(100)
+  numeroContenedor     String    @map("numero_contenedor") @db.VarChar(20)
+  medidaContenedor     Int       @map("medida_contenedor")
+  tipoContenedor       TipoContenedor @map("tipo_contenedor")
+  fechaIngreso         DateTime  @map("fecha_ingreso") @db.Date
+  fechaSalida          DateTime? @map("fecha_salida") @db.Date
+  precioIngresoSalida  Decimal?  @map("precio_ingreso_salida") @db.Decimal(10, 2)
+  cantidadMovimientos  Int?      @map("cantidad_movimientos")
+  subtotalMovimientos  Decimal?  @map("subtotal_movimientos") @db.Decimal(10, 2)
+  montoTotalGuia       Decimal   @map("monto_total_guia") @db.Decimal(10, 2)
+
+  liquidacion     Liquidacion         @relation(fields: [liquidacionId], references: [id], onDelete: Cascade)
+  guia            GuiaInternamiento   @relation(fields: [guiaId], references: [id])
+
+  @@unique([guiaId], name: "uq_liquidacion_detalle_guia")
+  @@index([liquidacionId])
+  @@map("liquidacion_detalles")
 }

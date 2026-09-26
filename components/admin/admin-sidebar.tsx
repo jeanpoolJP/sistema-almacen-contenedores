@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   Box,
   ArrowRightLeft,
+  Receipt,
 } from "lucide-react"
 
 import {
@@ -79,6 +80,9 @@ const inventarioItems = [
     href: "/admin/inventario",
     icon: ClipboardCheck,
   },
+  { title: "Liquidaciones", 
+    href: "/admin/liquidaciones", 
+    icon: Receipt },
 ]
 
 /**
@@ -122,7 +126,7 @@ const maestrosItems = [
  * Sistema: administración y análisis.
  */
 const sistemaItems = [
-/*   {
+  /*   {
     title: "Reportes",
     href: "/admin/reportes",
     icon: BarChart3,
