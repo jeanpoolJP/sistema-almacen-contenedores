@@ -42,19 +42,24 @@ export function GuiasTabla({
   onCambio,
 }: GuiasTablaProps) {
   return (
-    <div className="min-w-0 w-full overflow-hidden rounded-lg border">
-      <Table className="min-w-[1050px] table-fixed">
+    // 1. Permitimos scroll horizontal (overflow-x-auto) solo cuando sea necesario en móviles
+    <div className="w-full overflow-x-auto rounded-lg border">
+      {/* 2. Establecemos min-w-[850px] en móvil para proteger las columnas, 
+             y lg:min-w-full lg:table-fixed para laptops/desktops */}
+      <Table className="w-full min-w-[850px] lg:table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[7.5rem]">N° Guía</TableHead>
-            <TableHead className="w-[14rem]">Cliente</TableHead>
-            <TableHead className="w-[11rem]">Contenedor</TableHead>
-            <TableHead className="w-[8rem]">Ingreso</TableHead>
-            <TableHead className="w-[8rem]">Salida</TableHead>
-            <TableHead className="w-[7.5rem]">Estado</TableHead>
-            <TableHead className="w-[8.5rem]">Estado de pago</TableHead>
-            <TableHead className="w-[7.5rem] text-right">Monto total</TableHead>
-            <TableHead className="w-12 text-right" />
+            <TableHead className="w-[85px] lg:w-[8%]">N° Guía</TableHead>
+            <TableHead className="w-[180px] lg:w-[18%]">Cliente</TableHead>
+            <TableHead className="w-[150px] lg:w-[15%]">Contenedor</TableHead>
+            <TableHead className="w-[110px] lg:w-[11%]">Ingreso</TableHead>
+            <TableHead className="w-[110px] lg:w-[11%]">Salida</TableHead>
+            <TableHead className="w-[100px] lg:w-[10%]">Estado</TableHead>
+            <TableHead className="w-[110px] lg:w-[11%]">Pago</TableHead>
+            <TableHead className="w-[110px] text-right lg:w-[11%]">
+              Monto
+            </TableHead>
+            <TableHead className="w-[50px] lg:w-[5%]" />
           </TableRow>
         </TableHeader>
 
@@ -72,9 +77,11 @@ export function GuiasTabla({
 
           {guias.map((guia) => (
             <TableRow key={guia.id}>
-              <TableCell className="font-medium">{guia.numeroGuia}</TableCell>
+              <TableCell className="truncate font-medium">
+                {guia.numeroGuia}
+              </TableCell>
 
-              <TableCell className="max-w-0">
+              <TableCell className="min-w-0">
                 {guia.cliente ? (
                   <div className="min-w-0">
                     <p
@@ -83,6 +90,7 @@ export function GuiasTabla({
                     >
                       {guia.cliente.nombreCompleto || "Sin nombre"}
                     </p>
+
                     <p className="truncate text-xs text-muted-foreground">
                       {guia.cliente.tipoDocumento}{" "}
                       {guia.cliente.numeroDocumento}
@@ -95,18 +103,26 @@ export function GuiasTabla({
                 )}
               </TableCell>
 
-              <TableCell>
-                <div>
-                  <p className="text-sm font-medium">
+              <TableCell className="min-w-0">
+                <div className="min-w-0">
+                  <p
+                    className="truncate text-sm font-medium"
+                    title={guia.contenedor.numeroContenedor}
+                  >
                     {guia.contenedor.numeroContenedor}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground">
+
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <p
+                      className="truncate text-xs text-muted-foreground"
+                      title={guia.contenedor.marca}
+                    >
                       {guia.contenedor.marca}
                     </p>
+
                     <Badge
                       variant="outline"
-                      className="px-1.5 py-0 text-[11px]"
+                      className="shrink-0 px-1.5 py-0 text-[11px]"
                     >
                       {guia.contenedor.medida}
                     </Badge>
@@ -114,11 +130,11 @@ export function GuiasTabla({
                 </div>
               </TableCell>
 
-              <TableCell className="text-sm">
+              <TableCell className="text-sm whitespace-nowrap">
                 {formatFechaNegocio(guia.fechaIngreso)}
               </TableCell>
 
-              <TableCell className="text-sm">
+              <TableCell className="text-sm whitespace-nowrap">
                 {formatFechaNegocio(guia.fechaSalida)}
               </TableCell>
 
@@ -130,7 +146,7 @@ export function GuiasTabla({
                 <EstadoPagoBadge estado={guia.estadoPago} />
               </TableCell>
 
-              <TableCell className="text-right text-sm">
+              <TableCell className="text-right text-sm whitespace-nowrap">
                 {guia.montoTotal !== null
                   ? `S/ ${guia.montoTotal.toFixed(2)}`
                   : "—"}
