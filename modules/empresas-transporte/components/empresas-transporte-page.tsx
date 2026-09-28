@@ -55,12 +55,17 @@ export function EmpresasTransportePage() {
    */
   async function cargarEmpresas(
     pagina: number = page,
-    cantidad: number = pageSize
+    cantidad: number = pageSize,
+    termino: string = busqueda
   ) {
     setLoading(true)
 
     try {
-      const result = await obtenerEmpresasTransporteAction(pagina, cantidad)
+      const result = await obtenerEmpresasTransporteAction(
+        pagina,
+        cantidad,
+        termino
+      )
 
       if (result.success) {
         setEmpresas(result.data.data)
@@ -90,8 +95,18 @@ export function EmpresasTransportePage() {
    * Carga inicial.
    */
   useEffect(() => {
-    cargarEmpresas(1, 10)
+    cargarEmpresas(1, 10, "")
   }, [])
+
+  // Debounce: cada vez que cambia "busqueda", espera 400ms y recarga
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      cargarEmpresas(1, pageSize, busqueda)
+    }, 400)
+
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda])
 
   /**
    * Cambia de página.
@@ -107,32 +122,6 @@ export function EmpresasTransportePage() {
   function handlePageSizeChange(nuevaCantidad: number) {
     cargarEmpresas(1, nuevaCantidad)
   }
-
-  /**
-   * Filtra las empresas cargadas
-   * actualmente.
-   *
-   * - Nombre
-   * - RUC
-   * - Teléfono
-   * - Contacto logístico
-   * - Nombre del encargado
-   */
-  const empresasFiltradas = empresas.filter((empresa) => {
-    const termino = busqueda.trim().toLowerCase()
-
-    if (!termino) {
-      return true
-    }
-
-    return (
-      empresa.nombre.toLowerCase().includes(termino) ||
-      empresa.ruc?.toLowerCase().includes(termino) ||
-      empresa.telefono?.toLowerCase().includes(termino) ||
-      empresa.contactoLogistico?.toLowerCase().includes(termino) ||
-      empresa.nombreEncargado?.toLowerCase().includes(termino)
-    )
-  })
 
   /**
    * Nueva empresa.
@@ -289,7 +278,7 @@ export function EmpresasTransportePage() {
         </div>
       ) : (
         <EmpresaTransporteTable
-          empresas={empresasFiltradas}
+          empresas={empresas}
           onEdit={handleEditarEmpresa}
           onRefresh={() => cargarEmpresas(page, pageSize)}
           page={page}
@@ -308,9 +297,7 @@ export function EmpresasTransportePage() {
       {!loading && (
         <div className="text-sm text-muted-foreground">
           Mostrando{" "}
-          <span className="font-medium text-foreground">
-            {empresasFiltradas.length}
-          </span>{" "}
+          <span className="font-medium text-foreground">{empresas.length}</span>{" "}
           de{" "}
           <span className="font-medium text-foreground">{totalEmpresas}</span>{" "}
           empresas.

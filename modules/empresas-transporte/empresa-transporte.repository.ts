@@ -20,8 +20,6 @@ export async function obtenerEmpresaTransportePorRuc(ruc: string) {
   })
 }
 
-
-
 /**
  * Crea una empresa de transporte.
  */
@@ -47,26 +45,71 @@ export async function crearEmpresaTransporte(
  */
 export async function obtenerEmpresasTransporte(
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  busqueda?: string
 ) {
   const skip = (page - 1) * pageSize
+  const termino = busqueda?.trim()
+
+  const where = termino
+    ? {
+        OR: [
+          { nombre: { contains: termino, mode: "insensitive" as const } },
+          { ruc: { contains: termino, mode: "insensitive" as const } },
+          { telefono: { contains: termino, mode: "insensitive" as const } },
+          {
+            contactoLogistico: {
+              contains: termino,
+              mode: "insensitive" as const,
+            },
+          },
+          {
+            nombreEncargado: {
+              contains: termino,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      }
+    : undefined
 
   return prisma.empresaTransporte.findMany({
     skip,
     take: pageSize,
-
-    orderBy: {
-      nombre: "asc",
-    },
+    where,
+    orderBy: { nombre: "asc" },
   })
 }
 
-/**
- * Obtiene la cantidad total de empresas
- * de transporte registradas.
- */
-export async function countEmpresasTransporte() {
-  return prisma.empresaTransporte.count()
+/* 
+  Obetener la cantidad de empresas 
+*/
+export async function countEmpresasTransporte(busqueda?: string) {
+  const termino = busqueda?.trim()
+
+  const where = termino
+    ? {
+        OR: [
+          { nombre: { contains: termino, mode: "insensitive" as const } },
+          { ruc: { contains: termino, mode: "insensitive" as const } },
+          { telefono: { contains: termino, mode: "insensitive" as const } },
+          {
+            contactoLogistico: {
+              contains: termino,
+              mode: "insensitive" as const,
+            },
+          },
+          {
+            nombreEncargado: {
+              contains: termino,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      }
+    : undefined
+
+  return prisma.empresaTransporte.count({ where })
 }
 
 /**

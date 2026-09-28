@@ -126,17 +126,18 @@ export async function obtenerOCrearEmpresaTransporte(
  */
 export async function obtenerEmpresasTransporteService(
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  busqueda?: string
 ) {
-  return obtenerEmpresasTransporte(page, pageSize)
+  return obtenerEmpresasTransporte(page, pageSize, busqueda)
 }
 
 /**
  * Obtiene la cantidad total de empresas
  * de transporte.
  */
-export async function contarEmpresasTransporteService() {
-  return countEmpresasTransporte()
+export async function contarEmpresasTransporteService(busqueda?: string) {
+  return countEmpresasTransporte(busqueda)
 }
 
 /**

@@ -56,42 +56,27 @@ export async function crearEmpresaTransporteAction(data: unknown) {
  */
 export async function obtenerEmpresasTransporteAction(
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  busqueda?: string
 ) {
   try {
     const [empresas, total] = await Promise.all([
-      obtenerEmpresasTransporteService(page, pageSize),
-      contarEmpresasTransporteService(),
+      obtenerEmpresasTransporteService(page, pageSize, busqueda),
+      contarEmpresasTransporteService(busqueda),
     ])
 
     const totalPages = Math.ceil(total / pageSize)
 
     return {
       success: true,
-
-      data: {
-        data: empresas,
-        total,
-        page,
-        pageSize,
-        totalPages,
-      },
+      data: { data: empresas, total, page, pageSize, totalPages },
     }
   } catch (error) {
     console.error("Error al obtener empresas de transporte:", error)
-
     return {
       success: false,
-
       message: "No se pudieron obtener las empresas de transporte",
-
-      data: {
-        data: [],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0,
-      },
+      data: { data: [], total: 0, page, pageSize, totalPages: 0 },
     }
   }
 }
