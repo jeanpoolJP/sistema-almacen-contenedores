@@ -43,18 +43,18 @@ export function GuiasTabla({
 }: GuiasTablaProps) {
   return (
     <div className="min-w-0 w-full overflow-hidden rounded-lg border">
-      <Table className="table-fixed">
+      <Table className="min-w-[1050px] table-fixed">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[7.5rem]">N° Guía</TableHead>
             <TableHead className="w-[14rem]">Cliente</TableHead>
-            <TableHead>Contenedor</TableHead>
-            <TableHead>Ingreso</TableHead>
-            <TableHead>Salida</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Estado de pago</TableHead>
-            <TableHead className="text-right">Monto total</TableHead>
-            <TableHead className="w-10" />
+            <TableHead className="w-[11rem]">Contenedor</TableHead>
+            <TableHead className="w-[8rem]">Ingreso</TableHead>
+            <TableHead className="w-[8rem]">Salida</TableHead>
+            <TableHead className="w-[7.5rem]">Estado</TableHead>
+            <TableHead className="w-[8.5rem]">Estado de pago</TableHead>
+            <TableHead className="w-[7.5rem] text-right">Monto total</TableHead>
+            <TableHead className="w-12 text-right" />
           </TableRow>
         </TableHeader>
 
