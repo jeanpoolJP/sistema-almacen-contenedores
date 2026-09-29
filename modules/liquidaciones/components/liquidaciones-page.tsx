@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { listLiquidacionesAction } from "../liquidacion.actions"
 import type { LiquidacionListItem } from "../liquidacion.types"
 import { runAction } from "../hooks/use-action-result"
+import { formatDate } from "@/lib/date/format"
 
 const estadoColor: Record<string, string> = {
   BORRADOR: "bg-gray-200 text-gray-800",
@@ -87,7 +88,7 @@ export function LiquidacionesPage() {
                     {l.clienteNombre} ({l.clienteDocumento})
                   </TableCell>
                   <TableCell>
-                    {new Date(l.fechaCorte).toLocaleDateString("es-PE")}
+                    {formatDate(l.fechaCorte)}
                   </TableCell>
                   <TableCell className="text-right">
                     {l.cantidadGuias}

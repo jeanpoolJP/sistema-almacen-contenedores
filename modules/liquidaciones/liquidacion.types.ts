@@ -61,3 +61,15 @@ export type GuiaDisponible = {
   subtotalMovimientos: number | null
   montoTotal: number
 }
+
+export type LiquidacionResumen = {
+  cantidadSalidas: number
+  cantidadMovimientos: number
+  fechaMin: Date | null
+  fechaMax: Date | null
+  montoPorSalidas: number // Σ (precioIngresoSalida) — 1 por guía
+  montoPorMovimientos: number // Σ (subtotalMovimientos)
+  subtotal: number // montoPorSalidas + montoPorMovimientos (o el subtotal real)
+  igv: number
+  total: number
+}

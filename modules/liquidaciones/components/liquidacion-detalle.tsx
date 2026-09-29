@@ -31,6 +31,12 @@ import type { LiquidacionDetalle } from "../liquidacion.types"
 import { exportLiquidacionToPDF } from "../utils/pdf"
 import { exportLiquidacionToExcel } from "../utils/excel"
 import { LiquidacionBackButton } from "./liquidacion-back-button"
+import { calcularResumen } from "../utils/resumen"
+import { formatDate } from "@/lib/date/format"
+
+function formatMoneda(valor: number) {
+  return `S/ ${valor.toFixed(2)}`
+}
 
 export function LiquidacionDetalleView({
   liquidacion,
@@ -43,6 +49,12 @@ export function LiquidacionDetalleView({
   const [fechaPago, setFechaPago] = useState(
     new Date().toISOString().slice(0, 16)
   )
+
+  const resumen = calcularResumen(liquidacion)
+  const periodo =
+    resumen.fechaMin && resumen.fechaMax
+      ? `${formatDate(resumen.fechaMin)} - ${formatDate(resumen.fechaMax)}`
+      : "-"
 
   async function handleConfirmar() {
     await confirmarLiquidacionAction({ liquidacionId: liquidacion.id })
@@ -72,8 +84,7 @@ export function LiquidacionDetalleView({
             {liquidacion.clienteNombre} - {liquidacion.clienteDocumento}
           </p>
           <p className="text-sm">
-            Fecha de corte:{" "}
-            {new Date(liquidacion.fechaCorte).toLocaleDateString("es-PE")}
+            Fecha de corte: {formatDate(liquidacion.fechaCorte)}
           </p>
         </div>
         <Badge>{liquidacion.estado}</Badge>
@@ -152,6 +163,90 @@ export function LiquidacionDetalleView({
 
       <Card>
         <CardHeader>
+          <CardTitle>Resumen de la liquidación</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Tabla 1: cifras clave */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Servicios de ingreso/salida</TableHead>
+                <TableHead>Movimientos adicionales</TableHead>
+                <TableHead>Periodo de salidas</TableHead>
+                <TableHead className="text-right">Total a pagar</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>
+                  {resumen.cantidadSalidas} contenedores retirados
+                </TableCell>
+                <TableCell>{resumen.cantidadMovimientos} movimientos</TableCell>
+                <TableCell>{periodo}</TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatMoneda(resumen.total)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {/* Tabla 2: desglose del cobro */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Concepto</TableHead>
+                <TableHead>Detalle</TableHead>
+                <TableHead className="text-center">Cantidad</TableHead>
+                <TableHead className="text-right">Importe</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-semibold">
+                  Servicios de ingreso y salida
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  Cobro por el ingreso y la salida de cada contenedor retirado
+                </TableCell>
+                <TableCell className="text-center">
+                  {resumen.cantidadSalidas}
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatMoneda(resumen.montoPorSalidas)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-semibold">
+                  Movimientos adicionales
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  Movimientos realizados por el almacén para retirar los
+                  contenedores
+                </TableCell>
+                <TableCell className="text-center">
+                  {resumen.cantidadMovimientos}
+                </TableCell>
+                <TableCell className="text-right font-semibold">
+                  {formatMoneda(resumen.montoPorMovimientos)}
+                </TableCell>
+              </TableRow>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableCell className="text-base font-bold">
+                  Total a pagar
+                </TableCell>
+                <TableCell />
+                <TableCell />
+                <TableCell className="text-right text-base font-bold">
+                  {formatMoneda(resumen.total)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Detalle de guías</CardTitle>
         </CardHeader>
         <CardContent>
@@ -179,14 +274,8 @@ export function LiquidacionDetalleView({
                   <TableCell>{d.numeroContenedor}</TableCell>
                   <TableCell>{d.medidaContenedor}</TableCell>
                   <TableCell>{d.tipoContenedor}</TableCell>
-                  <TableCell>
-                    {new Date(d.fechaIngreso).toLocaleDateString("es-PE")}
-                  </TableCell>
-                  <TableCell>
-                    {d.fechaSalida
-                      ? new Date(d.fechaSalida).toLocaleDateString("es-PE")
-                      : "-"}
-                  </TableCell>
+                  <TableCell>{formatDate(d.fechaIngreso)}</TableCell>
+                  <TableCell>{formatDate(d.fechaSalida)}</TableCell>
                   <TableCell className="text-right">
                     {d.precioIngresoSalida?.toFixed(2) ?? "-"}
                   </TableCell>
@@ -207,14 +296,9 @@ export function LiquidacionDetalleView({
       </Card>
 
       <Card>
-        <CardContent className="space-y-1 pt-6 text-right">
-          <p>Subtotal: S/ {liquidacion.subtotal.toFixed(2)}</p>
-          <p>
-            IGV ({liquidacion.porcentajeIGV}%): S/{" "}
-            {liquidacion.montoIGV.toFixed(2)}
-          </p>
+        <CardContent className="pt-6 text-right">
           <p className="text-2xl font-bold">
-            Total: S/ {liquidacion.montoTotal.toFixed(2)}
+            Total a pagar: {formatMoneda(liquidacion.montoTotal)}
           </p>
         </CardContent>
       </Card>

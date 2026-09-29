@@ -27,6 +27,8 @@ import { runAction } from "../hooks/use-action-result"
 import { toast } from "sonner"
 import { LiquidacionBackButton } from "./liquidacion-back-button"
 
+import { formatDate } from "@/lib/date/format"
+
 type Cliente = {
   id: number
   nombreCompleto: string | null
@@ -197,12 +199,10 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                     <TableCell>{g.medidaContenedor}</TableCell>
                     <TableCell>{g.tipoContenedor}</TableCell>
                     <TableCell>
-                      {new Date(g.fechaIngreso).toLocaleDateString("es-PE")}
+                      {formatDate(g.fechaIngreso)}
                     </TableCell>
                     <TableCell>
-                      {g.fechaSalida
-                        ? new Date(g.fechaSalida).toLocaleDateString("es-PE")
-                        : "-"}
+                      {formatDate(g.fechaSalida)}
                     </TableCell>
                     <TableCell className="text-right">
                       {g.precioIngresoSalida?.toFixed(2) ?? "-"}

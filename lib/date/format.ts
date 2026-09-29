@@ -1,22 +1,33 @@
-// lib\date\format.ts
-
+// lib/date/format.ts
 import { formatInTimeZone } from "date-fns-tz"
-
 import { APP_TIMEZONE } from "./constants"
 
+function isUtcMidnight(d: Date): boolean {
+  return (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  )
+}
+
 /**
- * Formatea una fecha mostrando únicamente el día, mes y año
- * utilizando la zona horaria de Lima.
+ * Formatea una fecha al estilo dd/MM/yyyy.
  *
- * @param date Fecha proveniente normalmente de Prisma/PostgreSQL.
+ * - Columnas `date` de Prisma (medianoche UTC) → se formatean en UTC.
+ * - Timestamps reales → se formatean en `APP_TIMEZONE` (America/Lima).
  *
- * @returns Fecha en formato DD/MM/YYYY.
- *
- * @example
- * formatDate(guia.fechaIngreso)
- * // "15/09/2026"
+ * @param date   Fecha a formatear. Puede ser null/undefined.
+ * @param fallback Texto a devolver cuando `date` es null/undefined. Default: "-".
  */
-export function formatDate(date: Date): string {
+export function formatDate(
+  date: Date | null | undefined,
+  fallback = "-",
+): string {
+  if (!date) return fallback
+  if (isUtcMidnight(date)) {
+    return formatInTimeZone(date, "UTC", "dd/MM/yyyy")
+  }
   return formatInTimeZone(date, APP_TIMEZONE, "dd/MM/yyyy")
 }
 
