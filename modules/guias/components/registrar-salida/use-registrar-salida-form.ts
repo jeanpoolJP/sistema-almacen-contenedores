@@ -70,7 +70,9 @@ export function useRegistrarSalidaForm({
       tipoPrecio: guia.tipoPrecio,
 
       precioPrimerDia:
-        guia.precioPrimerDia !== null ? Number(guia.precioPrimerDia) : undefined,
+        guia.precioPrimerDia !== null
+          ? Number(guia.precioPrimerDia)
+          : undefined,
 
       precioDiaAdicional:
         guia.precioDiaAdicional !== null
@@ -85,9 +87,10 @@ export function useRegistrarSalidaForm({
           : undefined,
 
       precioIngresoSalida:
+        guia.tipoPrecio === "ESPACIO_ALQUILADO" &&
         guia.precioIngresoSalida !== null
           ? Number(guia.precioIngresoSalida)
-          : 50,
+          : undefined,
     },
   })
 
@@ -230,6 +233,12 @@ export function useRegistrarSalidaForm({
 
       form.setValue("tipoPrecio", value)
 
+      if (value !== "ESPACIO_ALQUILADO") {
+        form.setValue("precioIngresoSalida", undefined, {
+          shouldValidate: true,
+        })
+      }
+
       if (value === "ESTANDAR") {
         if (!precioBase) {
           toast.error("No se pudo cargar la configuración de precios")
@@ -265,11 +274,6 @@ export function useRegistrarSalidaForm({
         )
 
         return
-      }
-
-      if (value === "ESPACIO_ALQUILADO") {
-        form.setValue("precioPrimerDia", undefined)
-        form.setValue("precioDiaAdicional", undefined)
       }
     },
     [form, precioBase, guia]
