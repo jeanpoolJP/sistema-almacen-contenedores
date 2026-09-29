@@ -19,6 +19,7 @@ import type { GuiaConRelaciones } from "../guia-con-relaciones.type"
 
 import { GuiasAccionesMenu } from "./guias-acciones-menu"
 import { formatFechaNegocio } from "./guias-utils"
+import { formatHoraNegocio } from "./guias-utils"
 
 type GuiasTablaProps = {
   guias: GuiaConRelaciones[]
@@ -131,11 +132,29 @@ export function GuiasTabla({
               </TableCell>
 
               <TableCell className="text-sm whitespace-nowrap">
-                {formatFechaNegocio(guia.fechaIngreso)}
+                {guia.fechaIngreso ? (
+                  <div>
+                    <p>{formatFechaNegocio(guia.fechaIngreso)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatHoraNegocio(guia.horaIngreso)}
+                    </p>
+                  </div>
+                ) : (
+                  "—"
+                )}
               </TableCell>
 
               <TableCell className="text-sm whitespace-nowrap">
-                {formatFechaNegocio(guia.fechaSalida)}
+                {guia.fechaSalida ? (
+                  <div>
+                    <p>{formatFechaNegocio(guia.fechaSalida)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatHoraNegocio(guia.horaSalida)}
+                    </p>
+                  </div>
+                ) : (
+                  "—"
+                )}
               </TableCell>
 
               <TableCell>
