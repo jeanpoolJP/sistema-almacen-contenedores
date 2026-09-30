@@ -260,6 +260,7 @@ export function LiquidacionDetalleView({
                 <TableHead>Tipo</TableHead>
                 <TableHead>F. Ingreso</TableHead>
                 <TableHead>F. Salida</TableHead>
+                <TableHead className="text-right">Días</TableHead>
                 <TableHead className="text-right">P. Ing/Sal</TableHead>
                 <TableHead className="text-right">Movs</TableHead>
                 <TableHead className="text-right">Subtotal movs</TableHead>
@@ -276,6 +277,9 @@ export function LiquidacionDetalleView({
                   <TableCell>{d.tipoContenedor}</TableCell>
                   <TableCell>{formatDate(d.fechaIngreso)}</TableCell>
                   <TableCell>{formatDate(d.fechaSalida)}</TableCell>
+                  <TableCell className="text-right">
+                    {d.diasAlmacenamiento ?? "-"}
+                  </TableCell>
                   <TableCell className="text-right">
                     {d.precioIngresoSalida?.toFixed(2) ?? "-"}
                   </TableCell>

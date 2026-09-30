@@ -335,6 +335,7 @@ function dibujarTablaDetalle(
         "Tipo",
         "F. Ingreso",
         "F. Salida",
+        "Días", // ← NUEVO
         "P. Ing/Sal",
         "Movs",
         "Subtotal movs",
@@ -348,6 +349,7 @@ function dibujarTablaDetalle(
       d.tipoContenedor,
       formatFecha(d.fechaIngreso),
       formatFecha(d.fechaSalida),
+      d.diasAlmacenamiento ?? "-", // ← NUEVO
       d.precioIngresoSalida !== null && d.precioIngresoSalida !== undefined
         ? formatNumero(d.precioIngresoSalida)
         : "-",
@@ -360,10 +362,11 @@ function dibujarTablaDetalle(
     ...TABLE_STYLE,
     columnStyles: {
       1: { fontStyle: "bold" }, // Contenedor
-      6: { halign: "right" }, // P. Ing/Sal
-      7: { halign: "center" }, // Movs
-      8: { halign: "right" }, // Subtotal movs
-      9: { halign: "right", fontStyle: "bold" }, // Monto guía
+      6: { halign: "center" }, // Días            ← NUEVO (era 6=P.Ing/Sal; ahora 6=Días)
+      7: { halign: "right" }, // P. Ing/Sal      ← antes 6
+      8: { halign: "center" }, // Movs            ← antes 7
+      9: { halign: "right" }, // Subtotal movs   ← antes 8
+      10: { halign: "right", fontStyle: "bold" }, // Monto guía ← antes 9
     },
     didDrawPage: (data) => {
       dibujarPiePagina(doc, data.pageNumber)

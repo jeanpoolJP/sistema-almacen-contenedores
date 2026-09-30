@@ -20,12 +20,17 @@ export function calcularResumen(l: LiquidacionDetalle): LiquidacionResumen {
     montoPorSalidas += d.precioIngresoSalida ?? 0
     montoPorMovimientos += d.subtotalMovimientos ?? 0
 
-    // Rango por fecha de salida (es el criterio de la liquidación)
     if (d.fechaSalida) {
       const f = new Date(d.fechaSalida)
       if (!fechaMin || f < fechaMin) fechaMin = f
       if (!fechaMax || f > fechaMax) fechaMax = f
     }
+  }
+
+  // Regla de negocio: si el cliente no cobra "ingreso/salida",
+  // se asigna el total de la liquidación a ese concepto.
+  if (montoPorSalidas === 0 && l.montoTotal > 0) {
+    montoPorSalidas = l.montoTotal
   }
 
   return {

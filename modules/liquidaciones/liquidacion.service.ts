@@ -95,6 +95,7 @@ export const liquidacionService = {
         tipoContenedor: d.tipoContenedor,
         fechaIngreso: d.fechaIngreso,
         fechaSalida: d.fechaSalida,
+        diasAlmacenamiento: d.diasAlmacenamiento,
         precioIngresoSalida: d.precioIngresoSalida
           ? toNumber(d.precioIngresoSalida)
           : null,
@@ -118,6 +119,7 @@ export const liquidacionService = {
       tipoContenedor: g.contenedor.tipo,
       fechaIngreso: g.fechaIngreso,
       fechaSalida: g.fechaSalida,
+      diasAlmacenamiento: g.diasAlmacenamiento,
       precioIngresoSalida: g.precioIngresoSalida
         ? toNumber(g.precioIngresoSalida)
         : null,
@@ -206,6 +208,7 @@ export const liquidacionService = {
           tipoContenedor: g.contenedor.tipo,
           fechaIngreso: g.fechaIngreso,
           fechaSalida: g.fechaSalida,
+          diasAlmacenamiento: g.diasAlmacenamiento, 
           precioIngresoSalida: g.precioIngresoSalida,
           cantidadMovimientos: g.cantidadMovimientos,
           subtotalMovimientos: g.subtotalMovimientos,

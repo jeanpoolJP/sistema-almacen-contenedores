@@ -194,6 +194,7 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Ingreso</TableHead>
                   <TableHead>Salida</TableHead>
+                  <TableHead className="text-right">Días</TableHead>
                   <TableHead className="text-right">P. Ing/Sal</TableHead>
                   <TableHead className="text-right">Movs</TableHead>
                   <TableHead className="text-right">Subtotal movs</TableHead>
@@ -216,6 +217,9 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                     <TableCell>{g.tipoContenedor}</TableCell>
                     <TableCell>{formatDate(g.fechaIngreso)}</TableCell>
                     <TableCell>{formatDate(g.fechaSalida)}</TableCell>
+                    <TableCell className="text-right">
+                      {g.diasAlmacenamiento ?? "-"} 
+                    </TableCell>
                     <TableCell className="text-right">
                       {g.precioIngresoSalida?.toFixed(2) ?? "-"}
                     </TableCell>

@@ -622,6 +622,7 @@ model LiquidacionDetalle {
   tipoContenedor       TipoContenedor @map("tipo_contenedor")
   fechaIngreso         DateTime  @map("fecha_ingreso") @db.Date
   fechaSalida          DateTime? @map("fecha_salida") @db.Date
+  diasAlmacenamiento   Int?      @map("dias_almacenamiento")  
   precioIngresoSalida  Decimal?  @map("precio_ingreso_salida") @db.Decimal(10, 2)
   cantidadMovimientos  Int?      @map("cantidad_movimientos")
   subtotalMovimientos  Decimal?  @map("subtotal_movimientos") @db.Decimal(10, 2)

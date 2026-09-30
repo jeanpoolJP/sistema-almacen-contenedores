@@ -76,10 +76,13 @@ export const liquidacionRepository = {
   generateNumero(): Promise<string> {
     return prisma.$transaction(async (tx) => {
       const year = new Date().getFullYear()
-      const count = await tx.liquidacion.count({
+      const last = await tx.liquidacion.findFirst({
         where: { numero: { startsWith: `LIQ-${year}-` } },
+        orderBy: { numero: "desc" },
+        select: { numero: true },
       })
-      return `LIQ-${year}-${String(count + 1).padStart(6, "0")}`
+      const n = last ? parseInt(last.numero.split("-").pop()!, 10) + 1 : 1
+      return `LIQ-${year}-${String(n).padStart(6, "0")}`
     })
   },
 }

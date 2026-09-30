@@ -379,7 +379,7 @@ function construirHojaResumen(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
 
 function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
   const HEADER_ROW = 4
-  const COLS = 10
+  const COLS = 11 // ← antes 10
 
   const ws = wb.addWorksheet("Detalle", {
     views: [{ showGridLines: false, state: "frozen", ySplit: HEADER_ROW }],
@@ -399,6 +399,7 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
     { width: 10 }, // Tipo
     { width: 13 }, // F. Ingreso
     { width: 13 }, // F. Salida
+    { width: 8 }, // Días          ← NUEVO
     { width: 14 }, // P. Ing/Sal
     { width: 9 }, // Movs
     { width: 17 }, // Subtotal movs
@@ -406,13 +407,13 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
   ]
 
   dibujarMarca(ws)
-
   dibujarTituloSeccion(ws, 2, "Detalle de guías")
-  const info = ws.getCell(2, COLS)
+
+  const info = ws.getCell(2, COLS) // ← ahora 11
   info.value = `Liquidación N° ${l.numero}  |  ${l.clienteNombre}`
   info.font = { name: FONT, size: 9, color: { argb: COLORS.muted } }
   info.alignment = { vertical: "middle", horizontal: "right" }
-  dibujarLineaNavy(ws, 2, COLS)
+  dibujarLineaNavy(ws, 2, COLS) // ← 11
 
   const body = l.detalles.map((d) => [
     d.numeroGuia,
@@ -421,6 +422,7 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
     d.tipoContenedor,
     formatFecha(d.fechaIngreso),
     formatFecha(d.fechaSalida),
+    d.diasAlmacenamiento ?? "-", // ← NUEVO
     d.precioIngresoSalida ?? "-",
     d.cantidadMovimientos ?? "-",
     d.subtotalMovimientos ?? "-",
@@ -437,6 +439,7 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
       "Tipo",
       "F. Ingreso",
       "F. Salida",
+      "Días", // ← NUEVO
       "P. Ing/Sal",
       "Movs",
       "Subtotal movs",
@@ -451,13 +454,18 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
         "left",
         "left",
         "left",
-        "right",
-        "center",
-        "right",
-        "right",
+        "center", // ← Días
+        "right", // ← P. Ing/Sal
+        "center", // ← Movs
+        "right", // ← Subtotal movs
+        "right", // ← Monto guía
       ],
-      boldCols: [1, 9],
-      numFmts: { 6: FMT_NUMERO, 8: FMT_NUMERO, 9: FMT_NUMERO },
+      boldCols: [1, 10], // ← antes [1, 9]; Monto guía ahora es índice 10
+      numFmts: {
+        7: FMT_NUMERO, // P. Ing/Sal   ← antes 6
+        9: FMT_NUMERO, // Subtotal     ← antes 8
+        10: FMT_NUMERO, // Monto guía   ← antes 9
+      },
       fontSize: 9,
       height: 20,
     }
@@ -465,9 +473,9 @@ function construirHojaDetalle(wb: ExcelJS.Workbook, l: LiquidacionDetalle) {
 
   // Caja de total al cierre de la tabla (sin subtotal ni IGV)
   const totalRow = siguiente + 1
-  const label = ws.getCell(totalRow, COLS - 1)
+  const label = ws.getCell(totalRow, COLS - 1) // ← 10 (label)
   label.value = "Total a pagar"
-  const monto = ws.getCell(totalRow, COLS)
+  const monto = ws.getCell(totalRow, COLS) // ← 11 (monto)
   monto.value = l.montoTotal
   resaltarFilaTotal(ws, totalRow, COLS - 1, COLS)
   label.alignment = { vertical: "middle", horizontal: "left" }

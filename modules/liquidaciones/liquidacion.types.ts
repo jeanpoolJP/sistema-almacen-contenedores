@@ -16,6 +16,7 @@ export type LiquidacionDetalleItem = {
   tipoContenedor: TipoContenedor
   fechaIngreso: Date
   fechaSalida: Date | null
+  diasAlmacenamiento: number | null
   precioIngresoSalida: number | null
   cantidadMovimientos: number | null
   subtotalMovimientos: number | null
@@ -56,6 +57,7 @@ export type GuiaDisponible = {
   tipoContenedor: TipoContenedor
   fechaIngreso: Date
   fechaSalida: Date | null
+  diasAlmacenamiento: number | null 
   precioIngresoSalida: number | null
   cantidadMovimientos: number | null
   subtotalMovimientos: number | null
