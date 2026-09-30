@@ -40,6 +40,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+import { useEffect, useState } from "react"
+
 // ============================================================
 // CONFIGURACIÓN DE GRUPOS
 // ============================================================
@@ -81,9 +83,7 @@ const inventarioItems = [
     href: "/admin/inventario",
     icon: ClipboardCheck,
   },
-  { title: "Liquidaciones", 
-    href: "/admin/liquidaciones", 
-    icon: Receipt },
+  { title: "Liquidaciones", href: "/admin/liquidaciones", icon: Receipt },
   {
     title: "Inventario por cliente",
     href: "/admin/reportes/inventario",
@@ -152,6 +152,12 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isDark = theme === "dark"
 
@@ -282,16 +288,32 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={
-                isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+                mounted
+                  ? isDark
+                    ? "Cambiar a modo claro"
+                    : "Cambiar a modo oscuro"
+                  : "Cambiar tema"
               }
               onClick={toggleTheme}
+              disabled={!mounted}
             >
-              {isDark ? (
-                <Sun className="size-4" />
+              {mounted ? (
+                isDark ? (
+                  <Sun className="size-4" />
+                ) : (
+                  <Moon className="size-4" />
+                )
               ) : (
-                <Moon className="size-4" />
+                <Sun className="size-4" />
               )}
-              <span>{isDark ? "Modo claro" : "Modo oscuro"}</span>
+
+              <span>
+                {mounted
+                  ? isDark
+                    ? "Modo claro"
+                    : "Modo oscuro"
+                  : "Cambiar tema"}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 

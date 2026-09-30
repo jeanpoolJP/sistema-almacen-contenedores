@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -128,25 +135,34 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
         <CardHeader>
           <CardTitle>Datos generales</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Cliente</Label>
-            <select
-              className="w-full rounded border px-3 py-2"
-              value={clienteId}
-              onChange={(e) => setClienteId(Number(e.target.value) || "")}
+        <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="cliente">Cliente</Label>
+
+            <Select
+              value={clienteId === "" ? "" : String(clienteId)}
+              onValueChange={(value) => setClienteId(Number(value))}
             >
-              <option value="">-- Seleccionar --</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombreCompleto ?? "Sin nombre"} - {c.numeroDocumento}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="cliente" className="w-full">
+                <SelectValue placeholder="Seleccionar cliente" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {clientes.map((cliente) => (
+                  <SelectItem key={cliente.id} value={String(cliente.id)}>
+                    {cliente.nombreCompleto ?? "Sin nombre"} -{" "}
+                    {cliente.numeroDocumento}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div>
-            <Label>Fecha de corte</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="fechaCorte">Fecha de corte</Label>
+
             <Input
+              id="fechaCorte"
               type="date"
               value={fechaCorte}
               onChange={(e) => setFechaCorte(e.target.value)}
@@ -198,12 +214,8 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                     <TableCell>{g.numeroContenedor}</TableCell>
                     <TableCell>{g.medidaContenedor}</TableCell>
                     <TableCell>{g.tipoContenedor}</TableCell>
-                    <TableCell>
-                      {formatDate(g.fechaIngreso)}
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(g.fechaSalida)}
-                    </TableCell>
+                    <TableCell>{formatDate(g.fechaIngreso)}</TableCell>
+                    <TableCell>{formatDate(g.fechaSalida)}</TableCell>
                     <TableCell className="text-right">
                       {g.precioIngresoSalida?.toFixed(2) ?? "-"}
                     </TableCell>
