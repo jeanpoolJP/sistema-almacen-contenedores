@@ -89,6 +89,11 @@ const inventarioItems = [
     href: "/admin/reportes/inventario",
     icon: FileBarChart,
   },
+  {
+    title: "Movimientos del almacén",
+    href: "/admin/reportes/movimientos",
+    icon: BarChart3,
+  },
 ]
 
 /**
