@@ -2,7 +2,6 @@
 
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -14,23 +13,12 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  confirmarLiquidacionAction,
-  registrarPagoLiquidacionAction,
-} from "../liquidacion.actions"
+import { confirmarLiquidacionAction } from "../liquidacion.actions"
 import type { LiquidacionDetalle } from "../liquidacion.types"
 import { exportLiquidacionToPDF } from "../utils/pdf"
 import { exportLiquidacionToExcel } from "../utils/excel"
 import { LiquidacionBackButton } from "./liquidacion-back-button"
+import { RegistrarPagoLiquidacionDialog } from "./registrar-pago-liquidacion-dialog"
 import { calcularResumen } from "../utils/resumen"
 import { formatDate } from "@/lib/date/format"
 
@@ -43,13 +31,6 @@ export function LiquidacionDetalleView({
 }: {
   liquidacion: LiquidacionDetalle
 }) {
-  const [openPago, setOpenPago] = useState(false)
-  const [metodoPago, setMetodoPago] = useState("EFECTIVO")
-  const [numeroOperacion, setNumeroOperacion] = useState("")
-  const [fechaPago, setFechaPago] = useState(
-    new Date().toISOString().slice(0, 16)
-  )
-
   const resumen = calcularResumen(liquidacion)
   const periodo =
     resumen.fechaMin && resumen.fechaMax
@@ -58,17 +39,6 @@ export function LiquidacionDetalleView({
 
   async function handleConfirmar() {
     await confirmarLiquidacionAction({ liquidacionId: liquidacion.id })
-    location.reload()
-  }
-
-  async function handlePagar() {
-    await registrarPagoLiquidacionAction({
-      liquidacionId: liquidacion.id,
-      metodoPago: metodoPago as any,
-      numeroOperacion,
-      fechaPago: new Date(fechaPago),
-    })
-    setOpenPago(false)
     location.reload()
   }
 
@@ -109,55 +79,11 @@ export function LiquidacionDetalleView({
         )}
 
         {liquidacion.estado === "CONFIRMADA" && (
-          <Dialog open={openPago} onOpenChange={setOpenPago}>
-            <DialogTrigger render={<Button>Registrar pago</Button>} />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Registrar pago</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Método de pago</Label>
-                  <select
-                    className="w-full rounded border px-3 py-2"
-                    value={metodoPago}
-                    onChange={(e) => setMetodoPago(e.target.value)}
-                  >
-                    {[
-                      "EFECTIVO",
-                      "YAPE",
-                      "PLIN",
-                      "TRANSFERENCIA",
-                      "TARJETA",
-                      "OTRO",
-                    ].map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label>Número de operación</Label>
-                  <Input
-                    value={numeroOperacion}
-                    onChange={(e) => setNumeroOperacion(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Fecha y hora</Label>
-                  <Input
-                    type="datetime-local"
-                    value={fechaPago}
-                    onChange={(e) => setFechaPago(e.target.value)}
-                  />
-                </div>
-                <Button onClick={handlePagar} className="w-full">
-                  Confirmar pago
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <RegistrarPagoLiquidacionDialog
+            liquidacionId={liquidacion.id}
+            numero={liquidacion.numero}
+            montoTotal={liquidacion.montoTotal}
+          />
         )}
       </div>
 
