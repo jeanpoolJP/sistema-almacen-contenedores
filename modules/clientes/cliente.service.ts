@@ -178,5 +178,5 @@ export async function desactivarCliente(id: number) {
  * para el modal de asignación.
  */
 export async function obtenerClientesFrecuentes() {
-  return findClientesFrecuentes(10)
+  return findClientesFrecuentes(30)
 }

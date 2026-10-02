@@ -100,7 +100,7 @@ export async function deactivateCliente(id: number) {
 /*
  * Buscar los 10 clientes con mas guias asociadas
  */
-export async function findClientesFrecuentes(limit: number = 10) {
+export async function findClientesFrecuentes(limit: number = 30) {
   return prisma.cliente.findMany({
     where: {
       activo: true,
