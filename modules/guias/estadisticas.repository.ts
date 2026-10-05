@@ -20,14 +20,11 @@ export async function obtenerEstadisticasGuiasRepository(
 ) {
   const where: Prisma.GuiaInternamientoWhereInput = {
     estado: { not: "ANULADO" },
-    ...(filtro.desde || filtro.hasta
-      ? {
-          fechaIngreso: {
-            ...(filtro.desde ? { gte: filtro.desde } : {}),
-            ...(filtro.hasta ? { lt: filtro.hasta } : {}),
-          },
-        }
-      : {}),
+    fechaSalida: {
+      not: null,
+      ...(filtro.desde ? { gte: filtro.desde } : {}),
+      ...(filtro.hasta ? { lt: filtro.hasta } : {}),
+    },
   }
 
   const [resumen, estados, pagos, ingresosMensuales] = await Promise.all([
@@ -48,8 +45,8 @@ export async function obtenerEstadisticasGuiasRepository(
     }),
     prisma.$queryRaw<IngresoMensualQuery[]>`
       SELECT
-        EXTRACT(YEAR FROM "fecha_ingreso")::INTEGER AS anio,
-        EXTRACT(MONTH FROM "fecha_ingreso")::INTEGER AS mes,
+        EXTRACT(YEAR FROM "fecha_salida")::INTEGER AS anio,
+        EXTRACT(MONTH FROM "fecha_salida")::INTEGER AS mes,
         COALESCE(SUM("monto_total"), 0)::DOUBLE PRECISION AS generado,
         COALESCE(
           SUM("monto_total") FILTER (WHERE "estado_pago" = 'PAGADO'),
@@ -57,8 +54,9 @@ export async function obtenerEstadisticasGuiasRepository(
         )::DOUBLE PRECISION AS cobrado
       FROM "guias_internamiento"
       WHERE "estado" <> 'ANULADO'
-        AND "fecha_ingreso" >= ${filtro.inicioGrafica}
-        AND "fecha_ingreso" < ${filtro.finGrafica}
+        AND "fecha_salida" IS NOT NULL
+        AND "fecha_salida" >= ${filtro.inicioGrafica}
+        AND "fecha_salida" < ${filtro.finGrafica}
       GROUP BY anio, mes
       ORDER BY anio, mes
     `,

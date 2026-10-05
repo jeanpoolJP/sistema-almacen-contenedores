@@ -60,8 +60,8 @@ export function IngresosMensualesGuiasChart({
       <CardHeader>
         <CardTitle>Ingresos por mes</CardTitle>
         <CardDescription>
-          Montos generados y cobrados durante los últimos 12 meses, sin depender
-          del periodo de las tarjetas.
+          Montos de guías por fecha de salida en los últimos 12 meses,
+          independientes del periodo de las tarjetas.
         </CardDescription>
       </CardHeader>
       <CardContent>
