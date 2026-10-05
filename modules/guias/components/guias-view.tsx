@@ -3,7 +3,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { ChartNoAxesCombinedIcon } from "lucide-react"
 
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { CrearGuiaDialog } from "./crear-guia-dialog"
 import { GuiasTable } from "./list/guias-table"
 import { AsignarClienteEspacioAlquiladoDialog } from "./asignar-cliente-espacio-alquilado-dialog"
@@ -38,6 +42,13 @@ export function GuiasView({ data }: GuiasViewProps) {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              href="/admin/guias/estadisticas"
+              className={cn(buttonVariants({ variant: "outline" }))}
+            >
+              <ChartNoAxesCombinedIcon className="mr-2 size-4" />
+              Ver estadísticas
+            </Link>
             <AsignarClienteEspacioAlquiladoDialog
               onAsignada={() => router.refresh()}
             />

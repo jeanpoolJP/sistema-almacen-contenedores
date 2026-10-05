@@ -2,7 +2,7 @@
 
 "use client"
 
-import { PlusIcon } from "lucide-react"
+import { ChartNoAxesCombinedIcon, PlusIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -134,10 +134,19 @@ export function ListarGuiasTrasegadoView() {
             Administra y consulta las guías registradas en el almacén.
           </p>
         </div>
-        <Link href="/admin/trasegados/crear" className={cn(buttonVariants())}>
-          <PlusIcon className="mr-2 size-4" />
-          Nueva guía
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/trasegados/estadisticas"
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            <ChartNoAxesCombinedIcon className="mr-2 size-4" />
+            Ver estadísticas
+          </Link>
+          <Link href="/admin/trasegados/crear" className={cn(buttonVariants())}>
+            <PlusIcon className="mr-2 size-4" />
+            Nueva guía
+          </Link>
+        </div>
       </div>
 
       <FiltrosGuiasTrasegado
