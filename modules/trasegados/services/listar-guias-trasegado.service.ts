@@ -30,10 +30,13 @@ export async function listarGuiasTrasegadoService(
   const mapped: GuiaTrasegadoListItem[] = items.map((g) => ({
     id: g.id,
     numeroGuia: g.numeroGuia,
+    numeroCotizacion: g.numeroCotizacion,
     descripcionServicio: g.descripcionServicio,
     fechaIngreso: g.fechaIngreso,
     estado: g.estado,
     estadoPago: g.estadoPago,
+    subtotal: g.subtotal != null ? Number(g.subtotal) : null,
+    modoIGVCotizacion: g.modoIGVCotizacion,
     totalPagar: g.totalPagar != null ? Number(g.totalPagar) : null,
     cliente: g.cliente,
     totalElementos: g.ingresos.reduce(

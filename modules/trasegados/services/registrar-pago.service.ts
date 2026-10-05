@@ -1,6 +1,5 @@
 // modules\trasegados\services\registrar-pago.service.ts
 
-import { calcularTotales } from "../utils/calcular-totales"
 import {
   obtenerEstadoPagoRepository,
   registrarPagoRepository,
@@ -34,16 +33,12 @@ export async function obtenerEstadoPagoService(
   return {
     guiaTrasegadoId: guia.id,
     numeroGuia: guia.numeroGuia,
+    numeroCotizacion: guia.numeroCotizacion,
     estadoPago: guia.estadoPago,
     metodoPago: guia.metodoPago,
     numeroOperacion: guia.numeroOperacion,
     fechaPago: guia.fechaPago,
-    subtotal: guia.subtotal != null ? Number(guia.subtotal) : null,
-    porcentajeIGV:
-      guia.porcentajeIGV != null ? Number(guia.porcentajeIGV) : null,
-    montoIGV: guia.montoIGV != null ? Number(guia.montoIGV) : null,
     totalPagar: guia.totalPagar != null ? Number(guia.totalPagar) : null,
-    tratamientoIGV: guia.tratamientoIGV,
   }
 }
 
@@ -59,8 +54,7 @@ export async function obtenerEstadoPagoService(
  * 2. La guía NO puede estar FINALIZADA sin pago previo...
  *    (en realidad sí puede: se permite pagar una guía finalizada).
  *    La única restricción es que la guía exista.
- * 3. El cálculo de totales se hace SIEMPRE en el backend,
- *    ignorando cualquier cálculo que venga del frontend.
+ * 3. La cotización debe estar asignada antes de registrar el pago.
  *
  * @throws {Error} Si la guía no existe.
  */
@@ -74,22 +68,15 @@ export async function registrarPagoService(input: RegistrarPagoInput) {
     throw new Error(`No se encontró la guía con ID ${datos.guiaTrasegadoId}.`)
   }
 
-  // ------------------ CALCULAR TOTALES ------------------
-  // El cálculo se hace aquí, nunca confiando en el frontend.
-  const totales = calcularTotales({
-    montoBase: datos.montoBase,
-    tratamientoIGV: datos.tratamientoIGV,
-    porcentajeIGV: datos.porcentajeIGV,
-  })
+  if (!guia.numeroCotizacion || guia.totalPagar == null) {
+    throw new Error(
+      "Asigna una cotización y su monto antes de registrar el pago."
+    )
+  }
 
   // ------------------ REGISTRAR ------------------
   return registrarPagoRepository({
     guiaTrasegadoId: datos.guiaTrasegadoId,
-    subtotal: totales.subtotal,
-    porcentajeIGV: totales.porcentajeIGV,
-    montoIGV: totales.montoIGV,
-    totalPagar: totales.totalPagar,
-    tratamientoIGV: datos.tratamientoIGV,
     metodoPago: datos.metodoPago,
     numeroOperacion: datos.numeroOperacion?.trim() || null,
     fechaPago: datos.fechaPago,

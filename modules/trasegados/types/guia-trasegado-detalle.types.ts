@@ -7,6 +7,7 @@
 export interface GuiaTrasegadoDetalle {
   id: number
   numeroGuia: string
+  numeroCotizacion: string | null
   descripcionServicio: string | null
   fechaIngreso: Date
   estado: "EN_PROCESO" | "FINALIZADO"
@@ -16,10 +17,6 @@ export interface GuiaTrasegadoDetalle {
   numeroOperacion: string | null
   fechaPago: Date | null
 
-  tratamientoIGV: "SIN_IGV" | "CON_IGV"
-  subtotal: number | null
-  porcentajeIGV: number | null
-  montoIGV: number | null
   totalPagar: number | null
 
   observaciones: string | null

@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatDateTime } from "@/lib/date/format"
+import { formatDate } from "@/lib/date/format"
 
 import { AccionesGuiaMenu } from "./acciones-guia-menu"
 import { EstadoBadge, EstadoPagoBadge } from "./estado-badge"
@@ -30,6 +30,14 @@ interface TablaGuiasTrasegadoProps {
   isLoading: boolean
   onVerDetalle: (id: number) => void
   onAsignarCliente: (id: number, numeroGuia: string) => void
+  onAsignarCotizacion: (
+    id: number,
+    numeroGuia: string,
+    numeroCotizacion: string | null,
+    montoPagar: number | null,
+    subtotal: number | null,
+    modoIGVCotizacion: "SIN_IGV" | "CON_IGV" | "IGV_INCLUIDO"
+  ) => void
   onRegistrarSalida: (id: number, numeroGuia: string) => void
   onRegistrarIngreso: (id: number, numeroGuia: string) => void
   onFinalizar: (id: number, numeroGuia: string) => void
@@ -46,6 +54,7 @@ export function TablaGuiasTrasegado({
   isLoading,
   onVerDetalle,
   onAsignarCliente,
+  onAsignarCotizacion,
   onRegistrarSalida,
   onRegistrarIngreso,
   onFinalizar,
@@ -104,12 +113,11 @@ export function TablaGuiasTrasegado({
                   )}
                 </button>
               </TableHead>
-              <TableHead className="text-center">Elementos</TableHead>
-              <TableHead className="hidden text-center lg:table-cell">
-                Salidas
-              </TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="hidden xl:table-cell">Pago</TableHead>
+              <TableHead className="hidden w-[7rem] text-right md:table-cell">
+                Cotización
+              </TableHead>
               <TableHead className="hidden text-right xl:table-cell">
                 <button
                   type="button"
@@ -128,7 +136,7 @@ export function TablaGuiasTrasegado({
           <TableBody>
             {result.items.map((g) => (
               <TableRow key={g.id}>
-                <TableCell className="text-xs font-medium">
+                <TableCell className="text-sm font-medium tabular-nums">
                   {g.numeroGuia}
                 </TableCell>
                 <TableCell className="max-w-0">
@@ -151,19 +159,16 @@ export function TablaGuiasTrasegado({
                   )}
                 </TableCell>
                 <TableCell className="text-sm">
-                  {formatDateTime(g.fechaIngreso)}
-                </TableCell>
-                <TableCell className="text-center text-sm">
-                  {g.totalElementos}
-                </TableCell>
-                <TableCell className="hidden text-center text-sm lg:table-cell">
-                  {g.totalSalidas}
+                  {formatDate(g.fechaIngreso)}
                 </TableCell>
                 <TableCell>
                   <EstadoBadge estado={g.estado} />
                 </TableCell>
                 <TableCell className="hidden xl:table-cell">
                   <EstadoPagoBadge estadoPago={g.estadoPago} />
+                </TableCell>
+                <TableCell className="hidden text-right text-sm font-medium tabular-nums md:table-cell">
+                  {g.numeroCotizacion ?? "—"}
                 </TableCell>
                 <TableCell className="hidden text-right text-sm tabular-nums xl:table-cell">
                   {g.totalPagar != null ? `S/ ${g.totalPagar.toFixed(2)}` : "—"}
@@ -172,9 +177,22 @@ export function TablaGuiasTrasegado({
                   <AccionesGuiaMenu
                     estado={g.estado}
                     estadoPago={g.estadoPago}
+                    tieneCotizacion={
+                      Boolean(g.numeroCotizacion) && g.totalPagar != null
+                    }
                     onVerDetalle={() => onVerDetalle(g.id)}
                     onAsignarCliente={() =>
                       onAsignarCliente(g.id, g.numeroGuia)
+                    }
+                    onAsignarCotizacion={() =>
+                      onAsignarCotizacion(
+                        g.id,
+                        g.numeroGuia,
+                        g.numeroCotizacion,
+                        g.totalPagar,
+                        g.subtotal,
+                        g.modoIGVCotizacion
+                      )
                     }
                     onRegistrarSalida={() =>
                       onRegistrarSalida(g.id, g.numeroGuia)

@@ -399,12 +399,13 @@ export function DetalleGuiaPDFDocument({ guia }: DetalleGuiaPDFDocumentProps) {
           <View style={styles.row}>
             <Field label="N° Guía" value={guia.numeroGuia} mono />
             <Field
-              label="Fecha ingreso"
-              value={formatDateTime(guia.fechaIngreso)}
+              label="N° Cotización"
+              value={guia.numeroCotizacion ?? "—"}
+              mono
             />
             <Field
-              label="Tratamiento IGV"
-              value={guia.tratamientoIGV === "CON_IGV" ? "Con IGV" : "Sin IGV"}
+              label="Fecha ingreso"
+              value={formatDateTime(guia.fechaIngreso)}
             />
           </View>
           {guia.observaciones && (

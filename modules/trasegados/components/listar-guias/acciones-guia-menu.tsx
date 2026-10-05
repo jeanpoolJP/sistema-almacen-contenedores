@@ -6,6 +6,7 @@ import {
   CheckCircle2Icon,
   CreditCardIcon,
   EyeIcon,
+  FileTextIcon,
   MoreHorizontalIcon,
   PackageOpenIcon,
   TruckIcon,
@@ -25,6 +26,7 @@ import {
 interface AccionesGuiaMenuProps {
   onVerDetalle: () => void
   onAsignarCliente: () => void
+  onAsignarCotizacion: () => void
   onRegistrarSalida: () => void
   onRegistrarIngreso: () => void
   onFinalizar: () => void
@@ -33,11 +35,13 @@ interface AccionesGuiaMenuProps {
   onRevertirPago: () => void
   estado: "EN_PROCESO" | "FINALIZADO"
   estadoPago: "PENDIENTE" | "PAGADO"
+  tieneCotizacion: boolean
 }
 
 export function AccionesGuiaMenu({
   onVerDetalle,
   onAsignarCliente,
+  onAsignarCotizacion,
   onRegistrarSalida,
   onRegistrarIngreso,
   onFinalizar,
@@ -46,6 +50,7 @@ export function AccionesGuiaMenu({
   onRevertirPago,
   estado,
   estadoPago,
+  tieneCotizacion,
 }: AccionesGuiaMenuProps) {
   const enProceso = estado === "EN_PROCESO"
   const pagado = estadoPago === "PAGADO"
@@ -68,6 +73,14 @@ export function AccionesGuiaMenu({
         <DropdownMenuItem onClick={onVerDetalle} className="cursor-pointer">
           <EyeIcon className="mr-2 size-4" />
           Ver detalle
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onClick={onAsignarCotizacion}
+          className="cursor-pointer"
+        >
+          <FileTextIcon className="mr-2 size-4" />
+          {tieneCotizacion ? "Editar cotización" : "Asignar cotización"}
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={onAsignarCliente} className="cursor-pointer">
@@ -118,6 +131,7 @@ export function AccionesGuiaMenu({
         {!pagado ? (
           <DropdownMenuItem
             onClick={onRegistrarPago}
+            disabled={!tieneCotizacion}
             className="cursor-pointer"
           >
             <CreditCardIcon className="mr-2 size-4" />
@@ -127,6 +141,7 @@ export function AccionesGuiaMenu({
           <>
             <DropdownMenuItem
               onClick={onRegistrarPago}
+              disabled={!tieneCotizacion}
               className="cursor-pointer"
             >
               <CreditCardIcon className="mr-2 size-4" />

@@ -8,16 +8,14 @@ import type { UseFormReturn } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
-import { SeccionTotales } from "./seccion-totales"
 import { SeccionMetodoPago } from "./seccion-metodo-pago"
 import type { RegistrarPagoInput } from "../../schemas/registrar-pago.schema"
-import type { TotalesCalculados } from "../../utils/calcular-totales"
 
 interface RegistrarPagoFormProps {
   form: UseFormReturn<RegistrarPagoInput>
   onSubmit: (e?: React.BaseSyntheticEvent) => void
   isPending: boolean
-  totales: TotalesCalculados
+  cotizacion: { numeroCotizacion: string; montoPagar: number }
   esEdicion: boolean
   onCancel: () => void
 }
@@ -26,7 +24,7 @@ export function RegistrarPagoForm({
   form,
   onSubmit,
   isPending,
-  totales,
+  cotizacion,
   esEdicion,
   onCancel,
 }: RegistrarPagoFormProps) {
@@ -38,7 +36,18 @@ export function RegistrarPagoForm({
         autoComplete="off"
         noValidate
       >
-        <SeccionTotales form={form} totales={totales} />
+        <div className="flex items-center justify-between rounded-md border bg-muted/30 p-4 text-sm">
+          <div>
+            <p className="text-muted-foreground">Cotización</p>
+            <p className="font-medium">{cotizacion.numeroCotizacion}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-muted-foreground">Monto a pagar</p>
+            <p className="font-semibold tabular-nums">
+              S/ {cotizacion.montoPagar.toFixed(2)}
+            </p>
+          </div>
+        </div>
 
         <SeccionMetodoPago form={form} />
 

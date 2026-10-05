@@ -12,12 +12,15 @@ import type { ListarGuiasTrasegadoInput } from "../schemas/listar-guias-trasegad
 export interface GuiaTrasegadoListItem {
   id: number
   numeroGuia: string
+  numeroCotizacion: string | null
   descripcionServicio: string | null
 
   fechaIngreso: Date
   estado: "EN_PROCESO" | "FINALIZADO"
 
   estadoPago: "PENDIENTE" | "PAGADO"
+  subtotal: number | null
+  modoIGVCotizacion: "SIN_IGV" | "CON_IGV" | "IGV_INCLUIDO"
   totalPagar: number | null
 
   cliente: {

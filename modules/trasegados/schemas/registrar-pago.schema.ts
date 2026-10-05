@@ -32,8 +32,6 @@ export const ETIQUETAS_METODO_PAGO: Record<MetodoPagoValue, string> = {
  * Schema para registrar o actualizar el pago de una guía.
  *
  * Reglas:
- * - `montoBase` es el subtotal SIN IGV.
- * - Si `tratamientoIGV = "CON_IGV"` se calcula IGV y total.
  * - `numeroOperacion` es obligatorio si el método NO es EFECTIVO.
  * - `fechaPago` se construye en el form con createLimaDate.
  */
@@ -43,18 +41,6 @@ export const registrarPagoSchema = z
       .number({ error: "El ID de la guía es obligatorio." })
       .int()
       .positive("El ID de la guía es obligatorio."),
-
-    montoBase: z
-      .number({ error: "El monto es obligatorio." })
-      .positive("El monto debe ser mayor a cero.")
-      .max(9_999_999.99, "El monto excede el límite permitido."),
-
-    tratamientoIGV: z.enum(["SIN_IGV", "CON_IGV"]),
-
-    porcentajeIGV: z
-      .number({ error: "El porcentaje es obligatorio." })
-      .min(0, "El porcentaje no puede ser negativo.")
-      .max(100, "El porcentaje no puede superar 100."),
 
     metodoPago: z.enum(METODOS_PAGO),
 

@@ -379,10 +379,13 @@ export async function listarGuiasTrasegadoRepository(
       select: {
         id: true,
         numeroGuia: true,
+        numeroCotizacion: true,
         descripcionServicio: true,
         fechaIngreso: true,
         estado: true,
         estadoPago: true,
+        subtotal: true,
+        modoIGVCotizacion: true,
         totalPagar: true,
         cliente: {
           select: {
@@ -760,16 +763,41 @@ export async function obtenerEstadoPagoRepository(guiaTrasegadoId: number) {
     select: {
       id: true,
       numeroGuia: true,
+      numeroCotizacion: true,
       estado: true,
       estadoPago: true,
       metodoPago: true,
       numeroOperacion: true,
       fechaPago: true,
-      subtotal: true,
-      porcentajeIGV: true,
-      montoIGV: true,
       totalPagar: true,
-      tratamientoIGV: true,
+    },
+  })
+}
+
+export async function guardarCotizacionRepository(params: {
+  guiaTrasegadoId: number
+  numeroCotizacion: string
+  modoIGVCotizacion: "SIN_IGV" | "CON_IGV" | "IGV_INCLUIDO"
+  subtotal: number
+  porcentajeIGV: number
+  montoIGV: number
+  totalPagar: number
+}) {
+  return prisma.guiaTrasegado.update({
+    where: { id: params.guiaTrasegadoId },
+    data: {
+      numeroCotizacion: params.numeroCotizacion,
+      modoIGVCotizacion: params.modoIGVCotizacion,
+      subtotal: params.subtotal,
+      porcentajeIGV: params.porcentajeIGV,
+      montoIGV: params.montoIGV,
+      totalPagar: params.totalPagar,
+    },
+    select: {
+      id: true,
+      numeroGuia: true,
+      numeroCotizacion: true,
+      totalPagar: true,
     },
   })
 }
@@ -780,11 +808,6 @@ export async function obtenerEstadoPagoRepository(guiaTrasegadoId: number) {
  */
 export async function registrarPagoRepository(params: {
   guiaTrasegadoId: number
-  subtotal: number
-  porcentajeIGV: number
-  montoIGV: number
-  totalPagar: number
-  tratamientoIGV: "SIN_IGV" | "CON_IGV"
   metodoPago:
     "EFECTIVO" | "YAPE" | "PLIN" | "TRANSFERENCIA" | "TARJETA" | "OTRO"
   numeroOperacion: string | null
@@ -794,11 +817,6 @@ export async function registrarPagoRepository(params: {
   return prisma.guiaTrasegado.update({
     where: { id: params.guiaTrasegadoId },
     data: {
-      subtotal: params.subtotal,
-      porcentajeIGV: params.porcentajeIGV,
-      montoIGV: params.montoIGV,
-      totalPagar: params.totalPagar,
-      tratamientoIGV: params.tratamientoIGV,
       estadoPago: "PAGADO",
       metodoPago: params.metodoPago,
       numeroOperacion: params.numeroOperacion,

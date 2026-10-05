@@ -4,6 +4,7 @@
 
 import { Loader2Icon } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ export function RegistrarPagoModal({
   numeroGuia,
   onSuccess,
 }: RegistrarPagoModalProps) {
-  const { form, onSubmit, isPending, cargandoEstado, esEdicion, totales } =
+  const { form, onSubmit, isPending, cargandoEstado, esEdicion, cotizacion } =
     useRegistrarPago({
       guiaId,
       open,
@@ -51,7 +52,7 @@ export function RegistrarPagoModal({
             Guía <span className="font-mono font-medium">{numeroGuia}</span>.
             {esEdicion
               ? " Ya tiene un pago registrado. Los cambios lo actualizarán."
-              : " Ingresa el monto y los datos del pago."}
+              : " Registra el pago correspondiente a la cotización asignada."}
           </DialogDescription>
         </DialogHeader>
 
@@ -59,15 +60,26 @@ export function RegistrarPagoModal({
           <div className="flex items-center justify-center py-12">
             <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
           </div>
-        ) : (
+        ) : cotizacion ? (
           <RegistrarPagoForm
             form={form}
             onSubmit={onSubmit}
             isPending={isPending}
-            totales={totales}
+            cotizacion={cotizacion}
             esEdicion={esEdicion}
             onCancel={() => onOpenChange(false)}
           />
+        ) : (
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Esta guía todavía no tiene una cotización asignada.
+            </p>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

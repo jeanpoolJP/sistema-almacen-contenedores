@@ -23,16 +23,16 @@ export function DetalleInfoGeneral({ guia }: DetalleInfoGeneralProps) {
         <CardContent className="space-y-3 text-sm">
           <Row label="Número de guía" value={guia.numeroGuia} />
           <Row
+            label="Número de cotización"
+            value={guia.numeroCotizacion ?? "—"}
+          />
+          <Row
             label="Descripción del servicio"
             value={guia.descripcionServicio ?? "—"}
           />
           <Row
             label="Fecha de ingreso"
             value={formatDateTime(guia.fechaIngreso)}
-          />
-          <Row
-            label="Tratamiento IGV"
-            value={guia.tratamientoIGV === "CON_IGV" ? "Con IGV" : "Sin IGV"}
           />
           {guia.observaciones && (
             <Row label="Observaciones" value={guia.observaciones} />
@@ -45,19 +45,6 @@ export function DetalleInfoGeneral({ guia }: DetalleInfoGeneralProps) {
           <CardTitle className="text-base">Totales y pago</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <Row
-            label="Tratamiento IGV"
-            value={guia.tratamientoIGV === "CON_IGV" ? "Con IGV" : "Sin IGV"}
-          />
-          {guia.subtotal != null && (
-            <Row label="Subtotal" value={`S/ ${guia.subtotal.toFixed(2)}`} />
-          )}
-          {guia.porcentajeIGV != null && guia.tratamientoIGV === "CON_IGV" && (
-            <Row
-              label={`IGV (${guia.porcentajeIGV}%)`}
-              value={`S/ ${(guia.montoIGV ?? 0).toFixed(2)}`}
-            />
-          )}
           {guia.totalPagar != null && (
             <Row
               label="Total a pagar"

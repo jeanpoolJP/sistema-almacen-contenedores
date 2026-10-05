@@ -161,6 +161,12 @@ enum TratamientoIGV {
   CON_IGV
 }
 
+enum ModoIGVCotizacion {
+  SIN_IGV
+  CON_IGV
+  IGV_INCLUIDO
+}
+
 model ConfiguracionPrecio {
   id                 Int      @id @default(autoincrement())
   precioPrimerDia    Decimal  @map("precio_primer_dia") @db.Decimal(10, 2)
@@ -417,6 +423,7 @@ model GuiaTrasegado {
 
   numeroGuia String @unique @map("numero_guia") @db.VarChar(30)
   descripcionServicio String? @map("descripcion_servicio") @db.VarChar(255)
+  numeroCotizacion String? @map("numero_cotizacion") @db.VarChar(100)
 
   clienteId Int? @map("cliente_id")
 
@@ -428,6 +435,7 @@ model GuiaTrasegado {
   porcentajeIGV Decimal? @map("porcentaje_igv") @db.Decimal(5, 2)
   montoIGV Decimal? @map("monto_igv") @db.Decimal(10, 2)
   totalPagar Decimal? @map("total_pagar") @db.Decimal(10, 2)
+  modoIGVCotizacion ModoIGVCotizacion @default(SIN_IGV) @map("modo_igv_cotizacion")
 
   estadoPago EstadoPago @default(PENDIENTE) @map("estado_pago")
   metodoPago MetodoPago? @map("metodo_pago")

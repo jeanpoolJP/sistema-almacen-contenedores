@@ -126,6 +126,7 @@ export async function obtenerGuiaTrasegadoService(input: {
   return {
     id: guia.id,
     numeroGuia: guia.numeroGuia,
+    numeroCotizacion: guia.numeroCotizacion,
     descripcionServicio: guia.descripcionServicio,
     fechaIngreso: guia.fechaIngreso,
     estado: guia.estado,
@@ -133,11 +134,6 @@ export async function obtenerGuiaTrasegadoService(input: {
     metodoPago: guia.metodoPago,
     numeroOperacion: guia.numeroOperacion,
     fechaPago: guia.fechaPago,
-    tratamientoIGV: guia.tratamientoIGV,
-    subtotal: guia.subtotal != null ? Number(guia.subtotal) : null,
-    porcentajeIGV:
-      guia.porcentajeIGV != null ? Number(guia.porcentajeIGV) : null,
-    montoIGV: guia.montoIGV != null ? Number(guia.montoIGV) : null,
     totalPagar: guia.totalPagar != null ? Number(guia.totalPagar) : null,
     observaciones: guia.observaciones,
     cliente: guia.cliente

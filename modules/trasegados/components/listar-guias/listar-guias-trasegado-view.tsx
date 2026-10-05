@@ -24,6 +24,8 @@ import {
 import { FiltrosGuiasTrasegado } from "./filtros-guias-trasegado"
 import { TablaGuiasTrasegado } from "./tabla-guias-trasegado"
 import { AsignarClienteModal } from "../asignar-cliente/asignar-cliente-modal"
+import { AsignarCotizacionModal } from "../asignar-cotizacion/asignar-cotizacion-modal"
+import type { ModoIGVCotizacionValue } from "../../schemas/cotizacion.schema"
 import { FinalizarGuiaModal } from "../finalizar-guia/finalizar-guia-modal"
 import { RegistrarSalidaModal } from "../registrar-salida/registrar-salida-modal"
 import { useListarGuiasTrasegado } from "../../hooks/use-listar-guias-trasegado"
@@ -35,6 +37,13 @@ type ModalGuia = {
   open: boolean
   guiaId: number
   numeroGuia: string
+}
+
+type ModalCotizacion = ModalGuia & {
+  numeroCotizacion: string | null
+  montoPagar: number | null
+  subtotal: number | null
+  modoIGVCotizacion: ModoIGVCotizacionValue
 }
 
 export function ListarGuiasTrasegadoView() {
@@ -60,6 +69,16 @@ export function ListarGuiasTrasegadoView() {
     open: false,
     guiaId: 0,
     numeroGuia: "",
+  })
+
+  const [asignarCotizacion, setAsignarCotizacion] = useState<ModalCotizacion>({
+    open: false,
+    guiaId: 0,
+    numeroGuia: "",
+    numeroCotizacion: null,
+    montoPagar: null,
+    subtotal: null,
+    modoIGVCotizacion: "SIN_IGV",
   })
 
   const [registrarSalida, setRegistrarSalida] = useState({
@@ -92,26 +111,6 @@ export function ListarGuiasTrasegadoView() {
     guiaId: 0,
     numeroGuia: "",
   })
-
-  const handleVerDetalle = (id: number) => {
-    router.push(`/admin/trasegados/${id}`)
-  }
-
-  const handleAbrirAsignarCliente = (id: number, numeroGuia: string) => {
-    setAsignarCliente({ open: true, guiaId: id, numeroGuia })
-  }
-
-  const handleAbrirRegistrarSalida = (id: number, numeroGuia: string) => {
-    setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
-  }
-
-  const handleAbrirFinalizar = (id: number, numeroGuia: string) => {
-    setCambiarEstado({ open: true, guiaId: id, numeroGuia, finalizar: true })
-  }
-
-  const handleAbrirReactivar = (id: number, numeroGuia: string) => {
-    setCambiarEstado({ open: true, guiaId: id, numeroGuia, finalizar: false })
-  }
 
   const handleRevertirPago = async () => {
     const res = await revertirPagoAction(confirmarRevertir.guiaId)
@@ -154,6 +153,24 @@ export function ListarGuiasTrasegadoView() {
         onAsignarCliente={(id, numeroGuia) =>
           setAsignarCliente({ open: true, guiaId: id, numeroGuia })
         }
+        onAsignarCotizacion={(
+          id,
+          numeroGuia,
+          numeroCotizacion,
+          montoPagar,
+          subtotal,
+          modoIGVCotizacion
+        ) =>
+          setAsignarCotizacion({
+            open: true,
+            guiaId: id,
+            numeroGuia,
+            numeroCotizacion,
+            montoPagar,
+            subtotal,
+            modoIGVCotizacion,
+          })
+        }
         onRegistrarSalida={(id, numeroGuia) =>
           setRegistrarSalida({ open: true, guiaId: id, numeroGuia })
         }
@@ -194,6 +211,20 @@ export function ListarGuiasTrasegadoView() {
         }
         guiaId={asignarCliente.guiaId}
         numeroGuia={asignarCliente.numeroGuia}
+        onSuccess={refetch}
+      />
+
+      <AsignarCotizacionModal
+        open={asignarCotizacion.open}
+        onOpenChange={(open) =>
+          setAsignarCotizacion((prev) => ({ ...prev, open }))
+        }
+        guiaId={asignarCotizacion.guiaId}
+        numeroGuia={asignarCotizacion.numeroGuia}
+        numeroCotizacion={asignarCotizacion.numeroCotizacion}
+        montoPagar={asignarCotizacion.montoPagar}
+        subtotal={asignarCotizacion.subtotal}
+        modoIGVCotizacion={asignarCotizacion.modoIGVCotizacion}
         onSuccess={refetch}
       />
 

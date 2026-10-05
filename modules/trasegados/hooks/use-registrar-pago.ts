@@ -4,7 +4,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState, useTransition } from "react"
-import { useForm, useWatch } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 import {
@@ -15,7 +15,6 @@ import {
   registrarPagoSchema,
   type RegistrarPagoInput,
 } from "../schemas/registrar-pago.schema"
-import { calcularTotales } from "../utils/calcular-totales"
 
 interface UseRegistrarPagoOptions {
   guiaId: number
@@ -31,16 +30,15 @@ export function useRegistrarPago({
   const [isPending, startTransition] = useTransition()
   const [cargandoEstado, setCargandoEstado] = useState(false)
   const [esEdicion, setEsEdicion] = useState(false)
+  const [cotizacion, setCotizacion] = useState<{
+    numeroCotizacion: string
+    montoPagar: number
+  } | null>(null)
 
   const form = useForm<RegistrarPagoInput>({
-    resolver: zodResolver<RegistrarPagoInput, any, RegistrarPagoInput>(
-      registrarPagoSchema
-    ),
+    resolver: zodResolver(registrarPagoSchema),
     defaultValues: {
       guiaTrasegadoId: guiaId,
-      montoBase: 0,
-      tratamientoIGV: "SIN_IGV",
-      porcentajeIGV: 18,
       metodoPago: "EFECTIVO",
       numeroOperacion: "",
       fechaPago: new Date(),
@@ -57,6 +55,7 @@ export function useRegistrarPago({
 
     const cargar = async () => {
       setCargandoEstado(true)
+      setCotizacion(null)
       const res = await obtenerEstadoPagoAction(guiaId)
       if (cancelado) return
       setCargandoEstado(false)
@@ -70,11 +69,19 @@ export function useRegistrarPago({
       const pagado = p.estadoPago === "PAGADO"
       setEsEdicion(pagado)
 
+      if (!p.numeroCotizacion || p.totalPagar == null) {
+        setCotizacion(null)
+        toast.error("Asigna una cotización antes de registrar el pago.")
+        return
+      }
+
+      setCotizacion({
+        numeroCotizacion: p.numeroCotizacion,
+        montoPagar: p.totalPagar,
+      })
+
       form.reset({
         guiaTrasegadoId: guiaId,
-        montoBase: p.subtotal ?? p.totalPagar ?? 0,
-        tratamientoIGV: p.tratamientoIGV,
-        porcentajeIGV: p.porcentajeIGV ?? 18,
         metodoPago:
           (p.metodoPago as RegistrarPagoInput["metodoPago"]) ?? "EFECTIVO",
         numeroOperacion: p.numeroOperacion ?? "",
@@ -90,25 +97,6 @@ export function useRegistrarPago({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, guiaId])
-
-  // ------------------ TOTALES REACTIVOS ------------------
-  // useWatch para que la UI muestre el cálculo en vivo
-  const montoBase = useWatch({ control: form.control, name: "montoBase" })
-  const tratamientoIGV = useWatch({
-    control: form.control,
-    name: "tratamientoIGV",
-  })
-  const porcentajeIGV = useWatch({
-    control: form.control,
-    name: "porcentajeIGV",
-  })
-  const metodoPago = useWatch({ control: form.control, name: "metodoPago" })
-
-  const totales = calcularTotales({
-    montoBase: Number(montoBase) || 0,
-    tratamientoIGV,
-    porcentajeIGV: Number(porcentajeIGV) || 0,
-  })
 
   // ------------------ SUBMIT ------------------
   const onSubmit = form.handleSubmit((data: RegistrarPagoInput) => {
@@ -131,7 +119,6 @@ export function useRegistrarPago({
     isPending,
     cargandoEstado,
     esEdicion,
-    totales,
-    metodoPago,
+    cotizacion,
   }
 }
