@@ -15,7 +15,6 @@
     "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.9.1",
     "@prisma/adapter-neon": "^7.9.1",
-    "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "^7.9.1",
     "@react-pdf/renderer": "^4.9.0",
     "@tanstack/react-query": "^5.83.0",
@@ -49,6 +48,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@prisma/client": "^7.9.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

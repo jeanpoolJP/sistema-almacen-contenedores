@@ -218,6 +218,8 @@ export async function crearGuiaService(data: CrearGuiaInput) {
 
     contenedorId: contenedor.id,
 
+    cargaContenedor: datosValidados.cargaContenedor,
+
     empresaTransporteIngresoId: empresaIngreso.id,
 
     vehiculoIngresoId: vehiculoIngreso.id,
@@ -339,6 +341,7 @@ export async function editarGuiaService(data: EditarGuiaInput) {
   const guiaActualizada = await actualizarGuia(guia.id, {
     numeroGuia,
     contenedorId: contenedor.id,
+    cargaContenedor: datosValidados.cargaContenedor,
     empresaTransporteIngresoId: empresaIngreso.id,
     vehiculoIngresoId: vehiculoIngreso.id,
     conductorIngresoId: conductorIngreso.id,

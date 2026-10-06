@@ -1,6 +1,7 @@
 // modules/guias/components/guia-con-relaciones.type.ts
 
 import type {
+  CargaContenedor,
   EstadoGuia,
   EstadoPago,
   MetodoPago,
@@ -28,6 +29,8 @@ import type {
 export type GuiaConRelaciones = {
   id: number
   numeroGuia: string
+
+  cargaContenedor: CargaContenedor | null
 
   fechaIngreso: Date
   horaIngreso: Date

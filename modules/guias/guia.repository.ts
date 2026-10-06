@@ -32,6 +32,8 @@ export async function crearGuia(data: CrearGuiaRepositoryInput) {
 
       clienteId: data.clienteId ?? null,
 
+      cargaContenedor: data.cargaContenedor,
+
       contenedorId: data.contenedorId,
 
       empresaTransporteIngresoId: data.empresaTransporteIngresoId,

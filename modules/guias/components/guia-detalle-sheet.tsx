@@ -116,6 +116,16 @@ export function GuiaDetalleSheet({
                     guia.contenedor.tipo === "REEFER" ? "Reefer" : "Normal"
                   }
                 />
+                <Dato
+                  label="Estado de carga"
+                  value={
+                    guia.cargaContenedor === "LLENO"
+                      ? "Lleno"
+                      : guia.cargaContenedor === "VACIO"
+                        ? "Vacío"
+                        : null
+                  }
+                />
               </div>
             </div>
 

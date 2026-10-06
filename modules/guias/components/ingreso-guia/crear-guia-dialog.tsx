@@ -53,6 +53,7 @@ export function CrearGuiaDialog({ onCreada }: CrearGuiaDialogProps) {
     resolver: zodResolver(crearGuiaSchema),
     defaultValues: {
       numeroGuia: "",
+      cargaContenedor: "VACIO",
       contenedor: {
         numeroContenedor: "",
         marca: "",

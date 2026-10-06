@@ -127,7 +127,33 @@ export function GuiaIngresoForm({
 
       <div className="space-y-3">
         <p className={SECTION_TITLE}>Contenedor</p>
+
         <ContenedorField />
+
+        <FormField
+          control={form.control}
+          name="cargaContenedor"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Carga del contenedor</FormLabel>
+
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecciona si está lleno o vacío" />
+                  </SelectTrigger>
+                </FormControl>
+
+                <SelectContent>
+                  <SelectItem value="LLENO">Lleno</SelectItem>
+                  <SelectItem value="VACIO">Vacío</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       <Separator />

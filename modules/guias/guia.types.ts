@@ -1,6 +1,7 @@
 // modules/guias/guia.types.ts
 
 import type {
+  CargaContenedor,
   EstadoGuia,
   EstadoPago,
   MetodoPago,
@@ -104,6 +105,7 @@ export type CrearGuiaInput = {
   cliente?: ClienteGuiaInput | null
 
   contenedor: ContenedorGuiaInput
+  cargaContenedor: CargaContenedor
 
   transportistaIngreso: TransportistaGuiaInput
 
@@ -186,6 +188,7 @@ export type CrearGuiaRepositoryInput = {
 
   clienteId?: number | null
   contenedorId: number
+  cargaContenedor: CargaContenedor
 
   empresaTransporteIngresoId: number
   vehiculoIngresoId: number

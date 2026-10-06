@@ -127,6 +127,8 @@ const transportistaGuiaSchema = z.object({
 const datosIngresoGuiaSchema = z.object({
   contenedor: contenedorGuiaSchema,
 
+  cargaContenedor: z.enum(["LLENO", "VACIO"]),
+
   transportistaIngreso: transportistaGuiaSchema,
 
   fechaIngreso: z.date({
