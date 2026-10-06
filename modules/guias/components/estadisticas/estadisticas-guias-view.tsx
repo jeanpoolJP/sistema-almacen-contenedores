@@ -52,7 +52,7 @@ const TARJETAS = [
     titulo: "Guías totales",
     clave: "guiasTotales",
     tipo: "cantidad",
-    detalle: "Guías con salida registrada en el periodo",
+    detalle: "Total histórico; excluye las guías anuladas",
     icono: FilesIcon,
     color: "text-sky-700 bg-sky-500/10",
   },
@@ -187,7 +187,7 @@ export function EstadisticasGuiasView({
               Estadísticas de guías
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Indicadores calculados según la fecha de salida de cada guía.
+              Los montos y las guías retiradas se filtran por fecha de salida; el total histórico y las almacenadas no dependen del periodo.
             </p>
           </div>
         </div>

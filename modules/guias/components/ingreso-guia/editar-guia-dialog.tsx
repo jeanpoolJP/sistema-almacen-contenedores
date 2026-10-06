@@ -73,7 +73,7 @@ type EditarGuiaDialogProps = {
 function obtenerValoresIniciales(guia: GuiaConRelaciones): EditarGuiaSchema {
   return {
     numeroGuia: guia.numeroGuia,
-    cargaContenedor: guia.cargaContenedor ?? undefined,
+    cargaContenedor: guia.cargaContenedor ?? "VACIO",
     contenedor: {
       numeroContenedor: guia.contenedor.numeroContenedor,
       marca: guia.contenedor.marca,
