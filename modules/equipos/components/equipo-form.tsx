@@ -18,7 +18,13 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-const inicial = { success: false, message: "" }
+type EquipoFormState = {
+  success: boolean
+  message: string
+  fieldErrors?: Record<string, string[]>
+}
+
+const inicial: EquipoFormState = { success: false, message: "" }
 const tipos = [
   ["MONTACARGAS", "Montacargas"],
   ["STACKER", "Stacker"],
