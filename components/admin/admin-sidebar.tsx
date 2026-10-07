@@ -25,6 +25,8 @@ import {
   ArrowRightLeft,
   Receipt,
   FileBarChart,
+  Wrench,
+  UserRound,
 } from "lucide-react"
 
 import {
@@ -125,6 +127,16 @@ const maestrosItems = [
     title: "Conductores",
     href: "/admin/conductores",
     icon: UsersRound,
+  },
+  {
+    title: "Operadores",
+    href: "/admin/operadores",
+    icon: UserRound,
+  },
+  {
+    title: "Equipos",
+    href: "/admin/equipos",
+    icon: Wrench,
   },
   {
     title: "Flat Racks",

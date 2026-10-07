@@ -674,3 +674,35 @@ model Operador {
   @@unique([tipoDocumento, numeroDocumento])
   @@index([apellidos, nombres])
 }
+
+
+model Equipo {
+  id              String       @id @default(cuid())
+  codigo          String       @unique
+  nombre          String
+  tipo            TipoEquipo
+  marca           String?
+  modelo          String?
+  placa           String?
+  capacidadCarga  Decimal?     @db.Decimal(6, 2)
+  estado          EstadoEquipo @default(DISPONIBLE)
+  observaciones   String?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([tipo])
+  @@index([estado])
+}
+
+enum TipoEquipo {
+  MONTACARGAS
+  STACKER
+  OTRO
+}
+
+enum EstadoEquipo {
+  DISPONIBLE
+  EN_REPARACION
+  INOPERATIVO
+}
