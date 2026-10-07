@@ -649,3 +649,28 @@ model LiquidacionDetalle {
   @@index([liquidacionId])
   @@map("liquidacion_detalles")
 }
+
+enum TipoDocumentoPersona {
+  DNI
+  CARNET_EXTRANJERIA
+  PASAPORTE
+  OTRO
+}
+
+model Operador {
+  id              String              @id @default(cuid())
+  tipoDocumento   TipoDocumentoPersona
+  numeroDocumento String              @db.VarChar(30)
+  nombres         String
+  apellidos       String
+  telefono        String?
+  licencia        String?
+  activo          Boolean             @default(true)
+  observaciones   String?
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([tipoDocumento, numeroDocumento])
+  @@index([apellidos, nombres])
+}
