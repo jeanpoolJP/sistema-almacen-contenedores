@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react"
 import { LoaderCircle } from "lucide-react"
 import { toast } from "sonner"
 
-import type { Equipo } from "../equipos.types"
+import type { Equipo, EquipoActionState } from "../equipos.types"
 import { crearEquipo, editarEquipo } from "../equipos.actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,13 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-type EquipoFormState = {
-  success: boolean
-  message: string
-  fieldErrors?: Record<string, string[]>
-}
-
-const inicial: EquipoFormState = { success: false, message: "" }
+const inicial: EquipoActionState = { success: false, message: "" }
 const tipos = [
   ["MONTACARGAS", "Montacargas"],
   ["STACKER", "Stacker"],
