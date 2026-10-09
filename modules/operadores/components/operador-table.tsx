@@ -158,8 +158,8 @@ export function OperadorTable({
         <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[25%]">Operador</TableHead>
-              <TableHead className="w-[22%]">Documento</TableHead>
+              <TableHead className="w-[30%]">Operador</TableHead>
+              <TableHead className="w-[17%]">Documento</TableHead>
               <TableHead className="w-[17%]">Teléfono</TableHead>
               <TableHead className="hidden w-[18%] sm:table-cell">
                 Licencia
@@ -186,9 +186,9 @@ export function OperadorTable({
                   <TableCell className="max-w-0">
                     <div
                       className="truncate font-medium"
-                      title={`${operador.apellidos}, ${operador.nombres}`}
+                      title={`${operador.nombres}, ${operador.apellidos}`}
                     >
-                      {operador.apellidos}, {operador.nombres}
+                      {operador.nombres}, {operador.apellidos}
                     </div>
                   </TableCell>
                   <TableCell className="max-w-0">
