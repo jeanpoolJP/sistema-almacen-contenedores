@@ -324,7 +324,7 @@ export function ControlAlquilerView() {
                       </>
                     ) : (
                       <span className="text-sm text-muted-foreground">
-                        Sin cotización
+                        —
                       </span>
                     )}
                   </TableCell>
