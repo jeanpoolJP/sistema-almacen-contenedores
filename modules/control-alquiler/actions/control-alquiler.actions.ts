@@ -26,6 +26,10 @@ type ActionResult<T = undefined> =
   | { success: true; message: string; data: T }
   | { success: false; message: string }
 
+function revalidarPaginaControlAlquiler() {
+  revalidatePath("/admin/control-alquiler", "page")
+}
+
 function errorMessage(error: unknown, fallback: string) {
   if (error instanceof ZodError) {
     return error.issues[0]?.message ?? "Revisa los datos ingresados."
@@ -80,7 +84,7 @@ export async function crearGuiaAlquilerAction(
   try {
     await requerirSesion()
     await crearGuiaAlquilerService(input)
-    revalidatePath("/admin/control-alquiler")
+    revalidarPaginaControlAlquiler()
     return {
       success: true,
       message: "Guía de alquiler registrada.",
@@ -101,7 +105,7 @@ export async function actualizarGuiaAlquilerAction(
   try {
     await requerirSesion()
     await actualizarGuiaAlquilerService(input)
-    revalidatePath("/admin/control-alquiler")
+    revalidarPaginaControlAlquiler()
     return {
       success: true,
       message: "Guía de alquiler actualizada.",
@@ -122,7 +126,7 @@ export async function asignarClienteAlquilerAction(
   try {
     await requerirSesion()
     await asignarClienteAlquilerService(input)
-    revalidatePath("/admin/control-alquiler")
+    revalidarPaginaControlAlquiler()
     return {
       success: true,
       message: "Cliente asignado correctamente.",
@@ -143,7 +147,7 @@ export async function guardarCotizacionAlquilerAction(
   try {
     await requerirSesion()
     await guardarCotizacionAlquilerService(input)
-    revalidatePath("/admin/control-alquiler")
+    revalidarPaginaControlAlquiler()
     return {
       success: true,
       message: "Cotización guardada correctamente.",
@@ -164,7 +168,7 @@ export async function registrarPagoAlquilerAction(
   try {
     await requerirSesion()
     await registrarPagoAlquilerService(input)
-    revalidatePath("/admin/control-alquiler")
+    revalidarPaginaControlAlquiler()
     return {
       success: true,
       message:

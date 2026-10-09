@@ -6,7 +6,8 @@ import {
   PlusIcon,
   SearchIcon,
 } from "lucide-react"
-import { useEffect, useState, useTransition } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -73,15 +74,16 @@ function fechaCorta(fecha: string) {
 }
 
 export function ControlAlquilerView() {
+  const router = useRouter()
   const [opciones, setOpciones] = useState<Opciones | null>(null)
   const [resultado, setResultado] = useState<ResultadoListado | null>(null)
-  const [cargando, startTransition] = useTransition()
+  const [cargando, startListadoTransition] = useTransition()
   const [cargandoOpciones, startOpcionesTransition] = useTransition()
   const [errorListado, setErrorListado] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
   const [busquedaIngresada, setBusquedaIngresada] = useState("")
   const [busqueda, setBusqueda] = useState("")
-  const [actualizacion, setActualizacion] = useState(0)
+  const solicitudListadoRef = useRef(0)
   const [formGuia, setFormGuia] = useState<DialogState<Guia>>({
     open: false,
     guia: null,
@@ -129,9 +131,9 @@ export function ControlAlquilerView() {
     }
   }, [startOpcionesTransition])
 
-  useEffect(() => {
-    let vigente = true
-    startTransition(async () => {
+  const cargarListado = useCallback(async () => {
+    const solicitud = ++solicitudListadoRef.current
+    startListadoTransition(async () => {
       setErrorListado(null)
       try {
         const response = await listarGuiasAlquilerAction({
@@ -139,27 +141,34 @@ export function ControlAlquilerView() {
           limite: 20,
           busqueda,
         })
-        if (!vigente) return
+
+        if (solicitud !== solicitudListadoRef.current) return
         if (!response.success) {
-          setErrorListado(response.message)
+          startListadoTransition(() => setErrorListado(response.message))
           return
         }
-        setResultado(response.data)
+        startListadoTransition(() => setResultado(response.data))
       } catch (error) {
         console.error("[ControlAlquilerView:listado]", error)
-        if (vigente) {
-          setErrorListado("No se pudieron cargar las guías de alquiler.")
+        if (solicitud === solicitudListadoRef.current) {
+          startListadoTransition(() =>
+            setErrorListado("No se pudieron cargar las guías de alquiler.")
+          )
         }
       }
     })
+  }, [busqueda, pagina, startListadoTransition])
 
+  useEffect(() => {
+    void cargarListado()
     return () => {
-      vigente = false
+      solicitudListadoRef.current += 1
     }
-  }, [actualizacion, busqueda, pagina, startTransition])
+  }, [cargarListado])
 
   function refrescar() {
-    setActualizacion((actual) => actual + 1)
+    router.refresh()
+    void cargarListado()
   }
 
   function buscar(event: React.FormEvent<HTMLFormElement>) {
