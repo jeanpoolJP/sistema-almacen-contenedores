@@ -67,6 +67,7 @@ model Cliente {
   pagos              Pago[]
   guiasTrasegado GuiaTrasegado[]
   liquidaciones Liquidacion[]
+  guiasAlquiler GuiaAlquiler[]
 
   @@map("clientes")
 }
@@ -671,6 +672,7 @@ model Operador {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
+  guiasAlquiler GuiaAlquiler[]
   @@unique([tipoDocumento, numeroDocumento])
   @@index([apellidos, nombres])
 }
@@ -691,6 +693,7 @@ model Equipo {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  guiasAlquiler GuiaAlquiler[]
   @@index([tipo])
   @@index([estado])
 }
@@ -705,4 +708,65 @@ enum EstadoEquipo {
   DISPONIBLE
   EN_REPARACION
   INOPERATIVO
+}
+
+enum EstadoGuiaAlquiler {
+  EN_PROCESO
+  FINALIZADO
+  ANULADO
+}
+
+model GuiaAlquiler {
+  id String @id @default(cuid())
+
+  numeroGuia String @unique @db.VarChar(30)
+
+  // Fechas del servicio
+  fechaInicio DateTime @db.Date
+  fechaFin    DateTime @db.Date
+
+  // Datos del servicio
+  solicitante String? @db.VarChar(150)
+
+  // Horarios
+  horaSalida       DateTime? @db.Time(0)
+  horaInicio       DateTime? @db.Time(0)
+  horaFinalizacion DateTime? @db.Time(0)
+  horaRetorno      DateTime? @db.Time(0)
+
+  // Datos comerciales
+  subtotal          Decimal? @db.Decimal(10, 2)
+  igv               Decimal? @db.Decimal(10, 2)
+  total             Decimal? @db.Decimal(10, 2)
+  modoIGVCotizacion ModoIGVCotizacion?
+  numeroCotizacion  String?  @db.VarChar(50)
+
+  // Pago
+  estadoPago      EstadoPago @default(PENDIENTE) @map("estado_pago")
+  metodoPago      MetodoPago? @map("metodo_pago")
+  numeroOperacion String?    @map("numero_operacion") @db.VarChar(100)
+  fechaPago       DateTime?  @map("fecha_pago") @db.Date
+  horaPago        DateTime?  @map("hora_pago") @db.Time(0)
+
+  // Observaciones y estado
+  observaciones String? @db.Text
+  estado        EstadoGuiaAlquiler @default(EN_PROCESO)
+
+  // Relaciones
+  clienteId  Int?
+  equipoId   String
+  operadorId String
+
+  cliente  Cliente? @relation(fields: [clienteId], references: [id])
+  equipo   Equipo   @relation(fields: [equipoId], references: [id])
+  operador Operador @relation(fields: [operadorId], references: [id])
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([fechaInicio, estado])
+  @@index([clienteId, fechaInicio])
+  @@index([equipoId, fechaInicio])
+  @@index([operadorId, fechaInicio])
+  @@index([numeroCotizacion])
 }

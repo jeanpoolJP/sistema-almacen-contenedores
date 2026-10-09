@@ -73,6 +73,11 @@ const operacionesItems = [
     href: "/admin/trasegados",
     icon: ArrowRightLeft,
   },
+  {
+    title: "Control de alquiler",
+    href: "/admin/control-alquiler",
+    icon: ClipboardCheck,
+  },
 ]
 
 /**
