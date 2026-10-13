@@ -1,3 +1,5 @@
+// modules\operadores\operadores.service.ts
+
 import type { Prisma } from "@/lib/generated/prisma/client"
 import { filtroOperadoresSchema, operadorSchema } from "./operadores.schema"
 import {
