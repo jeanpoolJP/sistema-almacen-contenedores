@@ -144,7 +144,15 @@ export function ControlAlquilerTable({
               resultado.guias.map((g) => (
                 <TableRow key={g.id}>
                   <TableCell className="font-medium">{g.numeroGuia}</TableCell>
-                  <TableCell>
+                  <TableCell
+                    className="max-w-[140px] truncate"
+                    title={
+                      g.cliente
+                        ? (g.cliente.nombreCompleto ??
+                          g.cliente.numeroDocumento)
+                        : undefined
+                    }
+                  >
                     {g.cliente
                       ? (g.cliente.nombreCompleto ?? g.cliente.numeroDocumento)
                       : "—"}
