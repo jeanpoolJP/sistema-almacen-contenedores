@@ -82,11 +82,11 @@ export function TablaGuiasTrasegado({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <Table className="table-fixed">
+      <div className="rounded-lg border bg-card">
+        <Table className="min-w-[60rem] table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[6.5rem]">
+              <TableHead className="w-[4.5rem]">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("numeroGuia")}
@@ -98,10 +98,10 @@ export function TablaGuiasTrasegado({
                   )}
                 </button>
               </TableHead>
-              <TableHead className="w-[clamp(9rem,22vw,15rem)]">
+              <TableHead className="w-[12rem]">
                 Cliente
               </TableHead>
-              <TableHead className="w-[7.5rem]">
+              <TableHead className="w-[6rem]">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("fechaIngreso")}
@@ -113,12 +113,12 @@ export function TablaGuiasTrasegado({
                   )}
                 </button>
               </TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="hidden xl:table-cell">Pago</TableHead>
-              <TableHead className="hidden w-[7rem] text-right md:table-cell">
+              <TableHead className="w-[6rem]">Estado</TableHead>
+              <TableHead className="w-[5rem]">Pago</TableHead>
+              <TableHead className="w-[5rem] text-right">
                 Cotización
               </TableHead>
-              <TableHead className="hidden text-right xl:table-cell">
+              <TableHead className="w-[5rem] text-right">
                 <button
                   type="button"
                   onClick={() => onCambiarOrden("totalPagar")}
@@ -130,7 +130,7 @@ export function TablaGuiasTrasegado({
                   )}
                 </button>
               </TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="w-[6rem] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -164,13 +164,13 @@ export function TablaGuiasTrasegado({
                 <TableCell>
                   <EstadoBadge estado={g.estado} />
                 </TableCell>
-                <TableCell className="hidden xl:table-cell">
+                <TableCell>
                   <EstadoPagoBadge estadoPago={g.estadoPago} />
                 </TableCell>
-                <TableCell className="hidden text-right text-sm font-medium tabular-nums md:table-cell">
+                <TableCell className="text-right text-sm font-medium tabular-nums">
                   {g.numeroCotizacion ?? "—"}
                 </TableCell>
-                <TableCell className="hidden text-right text-sm tabular-nums xl:table-cell">
+                <TableCell className="text-right text-sm tabular-nums">
                   {g.totalPagar != null ? `S/ ${g.totalPagar.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell className="text-right">
@@ -210,6 +210,9 @@ export function TablaGuiasTrasegado({
             ))}
           </TableBody>
         </Table>
+        <p className="border-t px-3 py-2 text-xs text-muted-foreground sm:hidden">
+          Desliza la tabla horizontalmente para ver todas las columnas.
+        </p>
       </div>
 
       {/* Paginación */}
