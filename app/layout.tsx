@@ -1,6 +1,7 @@
 import { Geist_Mono, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import type { Metadata, Viewport } from "next"
 
 import "./globals.css"
 import { QueryProvider } from "@/components/query-provider"
@@ -16,6 +17,22 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: "Sistema Almacén de Contenedores",
+  description: "Gestión de almacén de contenedores",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+}
 
 export default function RootLayout({
   children,
