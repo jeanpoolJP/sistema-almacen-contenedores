@@ -53,6 +53,11 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
   const [loadingGuias, setLoadingGuias] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const clienteSeleccionado = useMemo(
+    () => clientes.find((cliente) => cliente.id === clienteId),
+    [clientes, clienteId]
+  )
+
   useEffect(() => {
     if (!clienteId) {
       setGuias([])
@@ -156,6 +161,22 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                 ))}
               </SelectContent>
             </Select>
+
+            {clienteSeleccionado && (
+              <div className="space-y-1 rounded-md border bg-muted/40 p-3">
+                <p className="text-sm font-semibold">
+                  {clienteSeleccionado.nombreCompleto ?? "Sin nombre"}
+                </p>
+
+                <p className="text-sm text-muted-foreground">
+                  Documento: {clienteSeleccionado.numeroDocumento}
+                </p>
+
+                <p className="text-xs text-muted-foreground">
+                  ID: {clienteSeleccionado.id}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -218,7 +239,7 @@ export function LiquidacionForm({ clientes }: { clientes: Cliente[] }) {
                     <TableCell>{formatDate(g.fechaIngreso)}</TableCell>
                     <TableCell>{formatDate(g.fechaSalida)}</TableCell>
                     <TableCell className="text-right">
-                      {g.diasAlmacenamiento ?? "-"} 
+                      {g.diasAlmacenamiento ?? "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       {g.precioIngresoSalida?.toFixed(2) ?? "-"}

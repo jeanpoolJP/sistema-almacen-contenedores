@@ -5,6 +5,7 @@
 import { logoutAction } from "@/modules/auth/actions/logout"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
+import Image from "next/image"
 
 import {
   LayoutDashboard,
@@ -236,18 +237,19 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="Almacén de Contenedores"
+              tooltip="KRENKO"
               onClick={() => navigateTo("/admin")}
+              className="h-14"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Warehouse className="size-4" />
-              </div>
-
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Almacén</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  Contenedores
-                </span>
+              <div className="flex min-w-0 flex-1 items-center justify-center">
+                <Image
+                  src="/krenco-logo-nombre-transparente.png"
+                  alt="KRENKO"
+                  width={180}
+                  height={48}
+                  priority
+                  className="h-10 w-auto object-contain"
+                />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
