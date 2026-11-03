@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { confirmarLiquidacionAction } from "../liquidacion.actions"
+import { AnularLiquidacionDialog } from "./anular-liquidacion-dialog"
 import type { LiquidacionDetalle } from "../liquidacion.types"
 import { exportLiquidacionToPDF } from "../utils/pdf"
 import { exportLiquidacionToExcel } from "../utils/excel"
@@ -60,13 +61,14 @@ export function LiquidacionDetalleView({
         <Badge>{liquidacion.estado}</Badge>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="outline"
           onClick={() => exportLiquidacionToPDF(liquidacion)}
         >
           Exportar PDF
         </Button>
+
         <Button
           variant="outline"
           onClick={() => exportLiquidacionToExcel(liquidacion)}
@@ -84,6 +86,10 @@ export function LiquidacionDetalleView({
             numero={liquidacion.numero}
             montoTotal={liquidacion.montoTotal}
           />
+        )}
+
+        {["BORRADOR", "CONFIRMADA"].includes(liquidacion.estado) && (
+          <AnularLiquidacionDialog liquidacion={liquidacion} />
         )}
       </div>
 
