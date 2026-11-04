@@ -52,12 +52,12 @@ export function GuiasTabla({
           <TableRow>
             <TableHead className="w-[85px] lg:w-[8%]">N° Guía</TableHead>
             <TableHead className="w-[180px] lg:w-[18%]">Cliente</TableHead>
-            <TableHead className="w-[150px] lg:w-[15%]">Contenedor</TableHead>
+            <TableHead className="w-[150px] lg:w-[10%]">Contenedor</TableHead>
             <TableHead className="w-[110px] lg:w-[11%]">Ingreso</TableHead>
             <TableHead className="w-[110px] lg:w-[11%]">Salida</TableHead>
             <TableHead className="w-[100px] lg:w-[10%]">Estado</TableHead>
-            <TableHead className="w-[110px] lg:w-[11%]">Pago</TableHead>
-            <TableHead className="w-[110px] text-right lg:w-[11%]">
+            <TableHead className="w-[110px] lg:w-[8%]">Pago</TableHead>
+            <TableHead className="w-[110px] text-right lg:w-[8%]">
               Monto
             </TableHead>
             <TableHead className="w-[50px] lg:w-[5%]" />
