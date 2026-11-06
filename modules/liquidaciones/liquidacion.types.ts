@@ -15,11 +15,15 @@ export type LiquidacionDetalleItem = {
   medidaContenedor: number
   tipoContenedor: TipoContenedor
   fechaIngreso: Date
+  horaIngreso: string | null
   fechaSalida: Date | null
+  horaSalida: string | null
   diasAlmacenamiento: number | null
-  precioIngresoSalida: number | null
-  cantidadMovimientos: number | null
-  subtotalMovimientos: number | null
+  precioPrimerDia: number
+  precioIngresoSalida: number | null // NUEVO
+  precioDiaAdicional: number
+  diasAdicionales: number
+  subtotalDiasAdicionales: number
   montoTotalGuia: number
 }
 
@@ -57,7 +61,7 @@ export type GuiaDisponible = {
   tipoContenedor: TipoContenedor
   fechaIngreso: Date
   fechaSalida: Date | null
-  diasAlmacenamiento: number | null 
+  diasAlmacenamiento: number | null
   precioIngresoSalida: number | null
   cantidadMovimientos: number | null
   subtotalMovimientos: number | null
@@ -66,12 +70,14 @@ export type GuiaDisponible = {
 
 export type LiquidacionResumen = {
   cantidadSalidas: number
-  cantidadMovimientos: number
+  totalDiasAdicionales: number
   fechaMin: Date | null
   fechaMax: Date | null
-  montoPorSalidas: number // Σ (precioIngresoSalida) — 1 por guía
-  montoPorMovimientos: number // Σ (subtotalMovimientos)
-  subtotal: number // montoPorSalidas + montoPorMovimientos (o el subtotal real)
+  montoPorSubidaBajada: number
+  montoPorDiasAdicionales: number
+  precioPromedioSubidaBajada: number // promedio de precioPrimerDia de todas las guías
+  precioPromedioDiaAdicional: number // promedio de precioDiaAdicional de todas las guías
+  subtotal: number
   igv: number
   total: number
 }

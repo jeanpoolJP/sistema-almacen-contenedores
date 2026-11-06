@@ -7,25 +7,29 @@ import { formatDate } from "@/lib/date/format"
 import { calcularResumen } from "./resumen"
 
 // ============================================================
-// DISEÑO — mismos colores y patrón visual del resto de reportes
+// DISEÑO — identidad KRENCO: negro + verde #138830
 // ============================================================
 
-/**
- * Tupla mutable [r, g, b]. jsPDF y jspdf-autotable exigen arrays mutables
- * (no `readonly`), así que NO se usa `as const` en ningún color.
- */
 type RGB = [number, number, number]
 
 const COLORS: Record<
-  "navy" | "greyLight" | "line" | "text" | "muted" | "totalBg" | "white",
+  | "brand"
+  | "brandSoft"
+  | "black"
+  | "greyLight"
+  | "line"
+  | "text"
+  | "muted"
+  | "white",
   RGB
 > = {
-  navy: [31, 56, 100], // #1F3864
-  greyLight: [242, 244, 247], // #F2F4F7
-  line: [208, 213, 221], // #D0D5DD
-  text: [34, 34, 34], // #222222
-  muted: [102, 112, 133], // #667085
-  totalBg: [228, 233, 242], // #E4E9F2
+  brand: [19, 136, 48], // #138830 (verde del logo)
+  brandSoft: [231, 244, 235], // verde muy claro para totales
+  black: [20, 20, 20], // negro del logo
+  greyLight: [245, 246, 247],
+  line: [215, 219, 224],
+  text: [34, 34, 34],
+  muted: [102, 112, 133],
   white: [255, 255, 255],
 }
 
@@ -39,14 +43,20 @@ const ESTADO_LABEL: Record<LiquidacionDetalle["estado"], string> = {
 const ESTADO_COLOR: Record<LiquidacionDetalle["estado"], RGB> = {
   BORRADOR: COLORS.muted,
   CONFIRMADA: [37, 99, 235],
-  PAGADA: [22, 163, 74],
+  PAGADA: COLORS.brand,
   ANULADA: [220, 38, 38],
 }
 
 const ALMACEN = "KRENCO"
 const MARGIN = 14
 
-/** Estilo común de todas las tablas del PDF (resumen y detalle). */
+/** Zona reservada al pie de página (línea + texto). */
+const FOOTER_RESERVED = 20
+
+// Logo: public/krenco-logo-nombre-transparente.png (689 x 227 px)
+const LOGO_PATH = "/krenco-logo-nombre-transparente.png"
+const LOGO_RATIO = 689 / 227
+
 const TABLE_STYLE: Pick<
   UserOptions,
   "theme" | "styles" | "headStyles" | "alternateRowStyles"
@@ -60,7 +70,7 @@ const TABLE_STYLE: Pick<
     cellPadding: 3,
   },
   headStyles: {
-    fillColor: COLORS.navy,
+    fillColor: COLORS.black,
     textColor: COLORS.white,
     fontStyle: "bold",
     halign: "left",
@@ -71,6 +81,49 @@ const TABLE_STYLE: Pick<
 }
 
 // ============================================================
+// LOGO
+// ============================================================
+
+let logoCache: string | null = null
+
+async function cargarLogo(): Promise<string | null> {
+  if (logoCache) return logoCache
+  try {
+    const res = await fetch(LOGO_PATH)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(blob)
+    })
+    logoCache = dataUrl
+    return dataUrl
+  } catch {
+    return null
+  }
+}
+
+/** Dibuja el logo con ancho fijo (alto proporcional). Fallback: texto. */
+function dibujarLogo(
+  doc: jsPDF,
+  logo: string | null,
+  x: number,
+  y: number,
+  width: number
+) {
+  if (logo) {
+    doc.addImage(logo, "PNG", x, y, width, width / LOGO_RATIO)
+    return
+  }
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(16)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(ALMACEN, x, y + 8)
+}
+
+// ============================================================
 // HELPERS DE FORMATO
 // ============================================================
 
@@ -78,6 +131,16 @@ function formatFecha(fecha: string | Date | null | undefined): string {
   if (!fecha) return "-"
   const d = typeof fecha === "string" ? new Date(fecha) : fecha
   return formatDate(d)
+}
+
+/** Fecha y hora en una sola línea: "dd/mm/yyyy HH:mm". */
+function formatFechaHora(
+  fecha: string | Date | null | undefined,
+  hora: string | null | undefined
+): string {
+  const f = formatFecha(fecha)
+  if (f === "-") return "-"
+  return hora ? `${f} ${hora}` : f
 }
 
 function formatNumero(valor: number | null | undefined): string {
@@ -92,7 +155,6 @@ function formatMoneda(valor: number): string {
   return `S/ ${formatNumero(valor)}`
 }
 
-/** Concatena marca + número de contenedor en un solo campo, con fallback. */
 function formatContenedor(marca: string, numero: string): string {
   const m = marca?.trim()
   const n = numero?.trim()
@@ -107,18 +169,16 @@ function formatContenedor(marca: string, numero: string): string {
 // HELPERS DE LAYOUT
 // ============================================================
 
-/** Título de sección con un pequeño acento navy, consistente en todo el PDF. */
 function dibujarTituloSeccion(doc: jsPDF, texto: string, x: number, y: number) {
-  doc.setFillColor(...COLORS.navy)
-  doc.rect(x, y - 3.2, 2.4, 3.2, "F")
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(x, y - 3.4, 2, 3.4, "F")
 
   doc.setFont("helvetica", "bold")
   doc.setFontSize(11)
-  doc.setTextColor(...COLORS.navy)
-  doc.text(texto, x + 5, y)
+  doc.setTextColor(...COLORS.black)
+  doc.text(texto, x + 4.5, y)
 }
 
-/** Devuelve la posición Y donde terminó la última tabla dibujada con autoTable. */
 function getFinalY(doc: jsPDF): number {
   return (
     (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
@@ -130,79 +190,124 @@ function getFinalY(doc: jsPDF): number {
 // PÁGINA 1 — Portada + resumen ejecutivo
 // ============================================================
 
-function dibujarEncabezado(doc: jsPDF, l: LiquidacionDetalle): number {
+function dibujarEncabezado(
+  doc: jsPDF,
+  l: LiquidacionDetalle,
+  logo: string | null
+): number {
   const pageWidth = doc.internal.pageSize.getWidth()
 
+  // Logo a la izquierda
+  dibujarLogo(doc, logo, MARGIN, 10, 52)
+
+  // Título y número a la derecha
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(9)
+  doc.setFontSize(8.5)
   doc.setTextColor(...COLORS.muted)
-  doc.text(ALMACEN, MARGIN, 16)
+  doc.text("LIQUIDACIÓN DE GUÍAS DE INTERNAMIENTO", pageWidth - MARGIN, 14, {
+    align: "right",
+  })
 
-  doc.setFontSize(18)
-  doc.setTextColor(...COLORS.navy)
-  doc.text("Liquidación de guías de internamiento", MARGIN, 25)
+  doc.setFontSize(20)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(l.numero, pageWidth - MARGIN, 24, { align: "right" })
 
-  doc.setDrawColor(...COLORS.navy)
-  doc.setLineWidth(0.6)
-  doc.line(MARGIN, 29, pageWidth - MARGIN, 29)
+  // Línea de marca
+  doc.setDrawColor(...COLORS.brand)
+  doc.setLineWidth(0.8)
+  doc.line(MARGIN, 30, pageWidth - MARGIN, 30)
 
-  const labelX1 = MARGIN
-  const valueX1 = MARGIN + 32
-  const labelX2 = pageWidth / 2 + 10
-  const valueX2 = labelX2 + 32
-  let y = 37
+  // Caja de información
+  const boxY = 36
+  const boxH = 22
+  doc.setFillColor(...COLORS.greyLight)
+  doc.rect(MARGIN, boxY, pageWidth - MARGIN * 2, boxH, "F")
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(MARGIN, boxY, 1.6, boxH, "F")
 
-  const filaInfo = (
+  const campo = (
     label: string,
     valor: string,
-    labelX: number,
-    valueX: number,
-    fy: number
+    x: number,
+    maxW: number,
+    color: RGB = COLORS.text
   ) => {
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(9)
+    doc.setFontSize(7.5)
     doc.setTextColor(...COLORS.muted)
-    doc.text(label, labelX, fy)
+    doc.text(label.toUpperCase(), x, boxY + 7)
 
-    doc.setFont("helvetica", "normal")
-    doc.setTextColor(...COLORS.text)
-    doc.text(valor, valueX, fy)
+    doc.setFontSize(10)
+    doc.setTextColor(...color)
+    doc.text(doc.splitTextToSize(valor, maxW), x, boxY + 14)
   }
 
-  filaInfo("Liquidación N°:", l.numero, labelX1, valueX1, y)
-  filaInfo("Fecha de corte:", formatFecha(l.fechaCorte), labelX2, valueX2, y)
+  campo("Cliente", l.clienteNombre || "-", MARGIN + 8, 100)
+  campo("Documento", l.clienteDocumento || "-", MARGIN + 115, 50)
+  campo("Fecha de corte", formatFecha(l.fechaCorte), MARGIN + 170, 45)
+  campo(
+    "Estado",
+    ESTADO_LABEL[l.estado],
+    MARGIN + 225,
+    35,
+    ESTADO_COLOR[l.estado]
+  )
 
-  y += 6
-  filaInfo("Cliente:", l.clienteNombre, labelX1, valueX1, y)
-
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.muted)
-  doc.text("Estado:", labelX2, y)
-  doc.setTextColor(...ESTADO_COLOR[l.estado])
-  doc.text(ESTADO_LABEL[l.estado], valueX2, y)
-
-  y += 6
-  filaInfo("Documento:", l.clienteDocumento, labelX1, valueX1, y)
-
-  return y + 10 // y de inicio para lo que siga
+  return boxY + boxH + 12
 }
 
-/**
- * Resumen del corte en dos tablas a ancho completo (mismo estilo que el detalle):
- * 1) cifras clave: cuántos servicios, cuántos movimientos, periodo y total.
- * 2) desglose del cobro: servicios de ingreso/salida vs. movimientos adicionales.
- */
+/** Nota con la regla de cobro del almacenamiento. */
+function dibujarNotaReglaNegocio(doc: jsPDF, startY: number): number {
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const boxW = pageWidth - MARGIN * 2
+  const textX = MARGIN + 8
+  const textW = boxW - 14
+
+  const titulo = "Condiciones de cobro del almacenamiento"
+  const parrafos = [
+    "El precio de subida y bajada incluye el primer día de almacenamiento del contenedor.",
+    "El tiempo de almacenamiento se contabiliza por periodos completos de 24 horas, contados desde la fecha y hora exactas de ingreso. Superado el primer periodo de 24 horas, se considera un día adicional de almacenamiento, y así sucesivamente por cada nuevo periodo iniciado.",
+  ]
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(8.5)
+  const lineas = parrafos.map((p) => doc.splitTextToSize(p, textW) as string[])
+  const totalLineas = lineas.reduce((acc, l) => acc + l.length, 0)
+
+  const lineH = 4.2
+  const boxH = 6 + 5 + totalLineas * lineH + (parrafos.length - 1) * 1.5 + 3
+
+  doc.setFillColor(...COLORS.greyLight)
+  doc.rect(MARGIN, startY, boxW, boxH, "F")
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(MARGIN, startY, 1.6, boxH, "F")
+
+  let y = startY + 6
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(8.5)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(titulo.toUpperCase(), textX, y)
+
+  y += 5
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(...COLORS.text)
+  for (const bloque of lineas) {
+    for (const linea of bloque) {
+      doc.text(linea, textX, y)
+      y += lineH
+    }
+    y += 1.5
+  }
+
+  return startY + boxH + 8
+}
+
 function dibujarResumenEjecutivo(
   doc: jsPDF,
   l: LiquidacionDetalle,
   startY: number
 ): number {
   const resumen = calcularResumen(l)
-  const totalMovimientos = l.detalles.reduce(
-    (acc, d) => acc + (d.cantidadMovimientos ?? 0),
-    0
-  )
   const periodo =
     resumen.fechaMin && resumen.fechaMax
       ? `${formatFecha(resumen.fechaMin)} - ${formatFecha(resumen.fechaMax)}`
@@ -215,17 +320,11 @@ function dibujarResumenEjecutivo(
     startY: startY + 5,
     margin: { left: MARGIN, right: MARGIN },
     head: [
-      [
-        "Servicios de ingreso/salida",
-        "Movimientos adicionales",
-        "Periodo de salidas",
-        "Total a pagar",
-      ],
+      ["Servicios de subida y bajada", "Periodo de salidas", "Total a pagar"],
     ],
     body: [
       [
         `${resumen.cantidadSalidas} contenedores retirados`,
-        `${totalMovimientos} movimientos`,
         periodo,
         formatMoneda(resumen.total),
       ],
@@ -233,10 +332,10 @@ function dibujarResumenEjecutivo(
     ...TABLE_STYLE,
     styles: { ...TABLE_STYLE.styles, fontSize: 10, cellPadding: 4 },
     columnStyles: {
-      3: { halign: "right", fontStyle: "bold", textColor: COLORS.navy },
+      2: { halign: "right", fontStyle: "bold", textColor: COLORS.brand },
     },
     didParseCell: (data) => {
-      if (data.section === "head" && data.column.index === 3) {
+      if (data.section === "head" && data.column.index === 2) {
         data.cell.styles.halign = "right"
       }
     },
@@ -246,61 +345,66 @@ function dibujarResumenEjecutivo(
   autoTable(doc, {
     startY: getFinalY(doc) + 8,
     margin: { left: MARGIN, right: MARGIN },
-    head: [["Concepto", "Detalle", "Cantidad", "Importe"]],
+    head: [["Concepto", "Detalle", "Cantidad", "Precio", "Importe"]],
     body: [
       [
-        "Servicios de ingreso y salida",
-        "Cobro por el ingreso y la salida de cada contenedor retirado",
+        "Servicios de subida y bajada",
+        "Cobro por la subida y bajada de cada contenedor retirado (equivale al precio del primer día).",
         String(resumen.cantidadSalidas),
-        formatMoneda(resumen.montoPorSalidas),
+        formatMoneda(resumen.precioPromedioSubidaBajada),
+        formatMoneda(resumen.montoPorSubidaBajada),
       ],
       [
-        "Movimientos adicionales",
-        "Movimientos realizados por el almacén para retirar los contenedores",
-        String(totalMovimientos),
-        formatMoneda(resumen.montoPorMovimientos),
+        "Días adicionales de almacenamiento",
+        "Días de almacenamiento posteriores al primer día.",
+        String(resumen.totalDiasAdicionales),
+        formatMoneda(resumen.precioPromedioDiaAdicional),
+        formatMoneda(resumen.montoPorDiasAdicionales),
       ],
-      ["Total a pagar", "", "", formatMoneda(resumen.total)],
+      ["Total a pagar", "", "", "", formatMoneda(resumen.total)],
     ],
     ...TABLE_STYLE,
     styles: { ...TABLE_STYLE.styles, fontSize: 9, cellPadding: 3.5 },
     columnStyles: {
-      0: { cellWidth: 65, fontStyle: "bold" },
-      2: { cellWidth: 30, halign: "center" },
-      3: { cellWidth: 45, halign: "right", fontStyle: "bold" },
+      0: { cellWidth: 60, fontStyle: "bold" },
+      2: { cellWidth: 25, halign: "center" },
+      3: { cellWidth: 35, halign: "right" },
+      4: { cellWidth: 40, halign: "right", fontStyle: "bold" },
     },
     didParseCell: (data) => {
       if (data.section === "head") {
         if (data.column.index === 2) data.cell.styles.halign = "center"
-        if (data.column.index === 3) data.cell.styles.halign = "right"
+        if (data.column.index >= 3) data.cell.styles.halign = "right"
       }
-      // Última fila: Total a pagar resaltado
       if (data.section === "body" && data.row.index === 2) {
-        data.cell.styles.fillColor = COLORS.totalBg
-        data.cell.styles.textColor = COLORS.navy
+        data.cell.styles.fillColor = COLORS.brandSoft
+        data.cell.styles.textColor = COLORS.brand
         data.cell.styles.fontStyle = "bold"
         data.cell.styles.fontSize = 11
       }
     },
   })
 
-  return getFinalY(doc) + 10
+  return dibujarNotaReglaNegocio(doc, getFinalY(doc) + 8)
 }
 
 // ============================================================
 // PÁGINA 2+ — Detalle de guías
 // ============================================================
 
-/** Encabezado corto para la(s) página(s) de detalle: no repite todo lo de la portada. */
-function dibujarEncabezadoDetalle(doc: jsPDF, l: LiquidacionDetalle): number {
+function dibujarEncabezadoDetalle(
+  doc: jsPDF,
+  l: LiquidacionDetalle,
+  logo: string | null
+): number {
   const pageWidth = doc.internal.pageSize.getWidth()
 
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(ALMACEN, MARGIN, 16)
+  dibujarLogo(doc, logo, MARGIN, 9, 38)
 
-  dibujarTituloSeccion(doc, "Detalle de guías", MARGIN, 25)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(12)
+  doc.setTextColor(...COLORS.black)
+  doc.text("Detalle de guías", pageWidth - MARGIN, 15, { align: "right" })
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
@@ -308,15 +412,15 @@ function dibujarEncabezadoDetalle(doc: jsPDF, l: LiquidacionDetalle): number {
   doc.text(
     `Liquidación N° ${l.numero}  |  ${l.clienteNombre}`,
     pageWidth - MARGIN,
-    25,
+    21,
     { align: "right" }
   )
 
-  doc.setDrawColor(...COLORS.navy)
-  doc.setLineWidth(0.6)
-  doc.line(MARGIN, 29, pageWidth - MARGIN, 29)
+  doc.setDrawColor(...COLORS.brand)
+  doc.setLineWidth(0.8)
+  doc.line(MARGIN, 27, pageWidth - MARGIN, 27)
 
-  return 37
+  return 34
 }
 
 function dibujarTablaDetalle(
@@ -326,19 +430,18 @@ function dibujarTablaDetalle(
 ) {
   autoTable(doc, {
     startY,
-    margin: { left: MARGIN, right: MARGIN },
+    margin: { left: MARGIN, right: MARGIN, bottom: FOOTER_RESERVED },
     head: [
       [
         "N° Guía",
         "Contenedor",
         "Medida",
         "Tipo",
-        "F. Ingreso",
-        "F. Salida",
-        "Días", // ← NUEVO
-        "P. Ing/Sal",
-        "Movs",
-        "Subtotal movs",
+        "Ingreso",
+        "Salida",
+        "Días",
+        "P. Sub/Baj",
+        "P. días adic.",
         "Monto guía",
       ],
     ],
@@ -347,26 +450,27 @@ function dibujarTablaDetalle(
       formatContenedor(d.marcaContenedor, d.numeroContenedor),
       `${d.medidaContenedor}'`,
       d.tipoContenedor,
-      formatFecha(d.fechaIngreso),
-      formatFecha(d.fechaSalida),
-      d.diasAlmacenamiento ?? "-", // ← NUEVO
-      d.precioIngresoSalida !== null && d.precioIngresoSalida !== undefined
-        ? formatNumero(d.precioIngresoSalida)
-        : "-",
-      d.cantidadMovimientos ?? "-",
-      d.subtotalMovimientos !== null && d.subtotalMovimientos !== undefined
-        ? formatNumero(d.subtotalMovimientos)
-        : "-",
+      formatFechaHora(d.fechaIngreso, d.horaIngreso),
+      formatFechaHora(d.fechaSalida, d.horaSalida),
+      d.diasAlmacenamiento ?? "-",
+      formatNumero(d.precioPrimerDia),
+      formatNumero(d.subtotalDiasAdicionales),
       formatNumero(d.montoTotalGuia),
     ]),
     ...TABLE_STYLE,
     columnStyles: {
-      1: { fontStyle: "bold" }, // Contenedor
-      6: { halign: "center" }, // Días            ← NUEVO (era 6=P.Ing/Sal; ahora 6=Días)
-      7: { halign: "right" }, // P. Ing/Sal      ← antes 6
-      8: { halign: "center" }, // Movs            ← antes 7
-      9: { halign: "right" }, // Subtotal movs   ← antes 8
-      10: { halign: "right", fontStyle: "bold" }, // Monto guía ← antes 9
+      1: { fontStyle: "bold" },
+      4: { cellWidth: "wrap" }, // Ingreso: fecha + hora en una línea
+      5: { cellWidth: "wrap" }, // Salida: fecha + hora en una línea
+      6: { halign: "center" },
+      7: { halign: "right" },
+      8: { halign: "right" },
+      9: { halign: "right", fontStyle: "bold" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "head" && data.column.index >= 6) {
+        data.cell.styles.halign = data.column.index === 6 ? "center" : "right"
+      }
     },
     didDrawPage: (data) => {
       dibujarPiePagina(doc, data.pageNumber)
@@ -374,23 +478,35 @@ function dibujarTablaDetalle(
   })
 }
 
-/** Caja de total al cierre de la tabla, sin subtotal ni desglose de IGV. */
 function dibujarCajaTotal(doc: jsPDF, l: LiquidacionDetalle) {
   const pageWidth = doc.internal.pageSize.getWidth()
-  const finalY = getFinalY(doc) + 10
+  const pageHeight = doc.internal.pageSize.getHeight()
 
-  const boxWidth = 70
+  const boxWidth = 85
+  const boxHeight = 14
   const boxX = pageWidth - MARGIN - boxWidth
-  const boxHeight = 12
+  let boxY = getFinalY(doc) + 8
 
-  doc.setFillColor(...COLORS.totalBg)
-  doc.roundedRect(boxX, finalY, boxWidth, boxHeight, 2, 2, "F")
+  // Si no cabe sobre el pie de página, pasa a una página nueva
+  if (boxY + boxHeight > pageHeight - FOOTER_RESERVED) {
+    doc.addPage()
+    dibujarPiePagina(doc, doc.getNumberOfPages())
+    boxY = MARGIN + 6
+  }
+
+  doc.setFillColor(...COLORS.brandSoft)
+  doc.rect(boxX, boxY, boxWidth, boxHeight, "F")
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(boxX, boxY, 1.6, boxHeight, "F")
+
+  const textY = boxY + boxHeight / 2 + 1.4 // centrado vertical
 
   doc.setFont("helvetica", "bold")
   doc.setFontSize(11)
-  doc.setTextColor(...COLORS.navy)
-  doc.text("Total a pagar", boxX + 6, finalY + 7.8)
-  doc.text(formatMoneda(l.montoTotal), boxX + boxWidth - 6, finalY + 7.8, {
+  doc.setTextColor(...COLORS.black)
+  doc.text("Total a pagar", boxX + 7, textY)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(formatMoneda(l.montoTotal), boxX + boxWidth - 6, textY, {
     align: "right",
   })
 }
@@ -400,8 +516,8 @@ function dibujarPiePagina(doc: jsPDF, pagina: number) {
   const pageHeight = doc.internal.pageSize.getHeight()
   const y = pageHeight - 10
 
-  doc.setDrawColor(...COLORS.line)
-  doc.setLineWidth(0.2)
+  doc.setDrawColor(...COLORS.brand)
+  doc.setLineWidth(0.4)
   doc.line(MARGIN, y - 4, pageWidth - MARGIN, y - 4)
 
   doc.setFont("helvetica", "normal")
@@ -415,17 +531,18 @@ function dibujarPiePagina(doc: jsPDF, pagina: number) {
 // EXPORT PRINCIPAL
 // ============================================================
 
-export function exportLiquidacionToPDF(l: LiquidacionDetalle) {
+export async function exportLiquidacionToPDF(l: LiquidacionDetalle) {
+  const logo = await cargarLogo()
   const doc = new jsPDF({ orientation: "landscape" })
 
   // Página 1: portada + resumen ejecutivo
-  const startY = dibujarEncabezado(doc, l)
+  const startY = dibujarEncabezado(doc, l, logo)
   dibujarResumenEjecutivo(doc, l, startY)
   dibujarPiePagina(doc, 1)
 
   // Página 2+: detalle de guías
   doc.addPage()
-  const startTablaY = dibujarEncabezadoDetalle(doc, l)
+  const startTablaY = dibujarEncabezadoDetalle(doc, l, logo)
   dibujarTablaDetalle(doc, l, startTablaY)
   dibujarCajaTotal(doc, l)
 

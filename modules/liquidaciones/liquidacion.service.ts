@@ -22,6 +22,14 @@ function toNumber(v: Prisma.Decimal | number | null | undefined): number {
   return typeof v === "number" ? v : Number(v.toString())
 }
 
+/** Prisma devuelve @db.Time como Date en 1970-01-01 UTC; se lee con getters UTC. */
+function formatHora(v: Date | null | undefined): string | null {
+  if (!v) return null
+  const hh = String(v.getUTCHours()).padStart(2, "0")
+  const mm = String(v.getUTCMinutes()).padStart(2, "0")
+  return `${hh}:${mm}`
+}
+
 export const liquidacionService = {
   async list(input: unknown) {
     const { clienteId, estado, desde, hasta, page, pageSize } =
@@ -85,26 +93,35 @@ export const liquidacionService = {
       fechaPago: l.fechaPago,
       observaciones: l.observaciones,
       confirmadaAt: l.confirmadaAt,
-      detalles: l.detalles.map((d) => ({
-        id: d.id,
-        guiaId: d.guiaId,
-        numeroGuia: d.numeroGuia,
-        marcaContenedor: d.marcaContenedor,
-        numeroContenedor: d.numeroContenedor,
-        medidaContenedor: d.medidaContenedor,
-        tipoContenedor: d.tipoContenedor,
-        fechaIngreso: d.fechaIngreso,
-        fechaSalida: d.fechaSalida,
-        diasAlmacenamiento: d.diasAlmacenamiento,
-        precioIngresoSalida: d.precioIngresoSalida
-          ? toNumber(d.precioIngresoSalida)
-          : null,
-        cantidadMovimientos: d.cantidadMovimientos,
-        subtotalMovimientos: d.subtotalMovimientos
-          ? toNumber(d.subtotalMovimientos)
-          : null,
-        montoTotalGuia: toNumber(d.montoTotalGuia),
-      })),
+      detalles: l.detalles.map((d) => {
+        const precioPrimerDia = toNumber(d.guia.precioPrimerDia)
+        const precioDiaAdicional = toNumber(d.guia.precioDiaAdicional)
+        const diasAdicionales = Math.max((d.diasAlmacenamiento ?? 0) - 1, 0)
+
+        return {
+          id: d.id,
+          guiaId: d.guiaId,
+          numeroGuia: d.numeroGuia,
+          marcaContenedor: d.marcaContenedor,
+          numeroContenedor: d.numeroContenedor,
+          medidaContenedor: d.medidaContenedor,
+          tipoContenedor: d.tipoContenedor,
+          fechaIngreso: d.fechaIngreso,
+          horaIngreso: formatHora(d.guia.horaIngreso),
+          fechaSalida: d.fechaSalida,
+          horaSalida: formatHora(d.guia.horaSalida),
+          diasAlmacenamiento: d.diasAlmacenamiento,
+          precioIngresoSalida:
+            d.precioIngresoSalida == null
+              ? null
+              : toNumber(d.precioIngresoSalida),
+          precioPrimerDia,
+          precioDiaAdicional,
+          diasAdicionales,
+          subtotalDiasAdicionales: diasAdicionales * precioDiaAdicional,
+          montoTotalGuia: toNumber(d.montoTotalGuia),
+        }
+      }),
     }
   },
 
@@ -208,7 +225,7 @@ export const liquidacionService = {
           tipoContenedor: g.contenedor.tipo,
           fechaIngreso: g.fechaIngreso,
           fechaSalida: g.fechaSalida,
-          diasAlmacenamiento: g.diasAlmacenamiento, 
+          diasAlmacenamiento: g.diasAlmacenamiento,
           precioIngresoSalida: g.precioIngresoSalida,
           cantidadMovimientos: g.cantidadMovimientos,
           subtotalMovimientos: g.subtotalMovimientos,

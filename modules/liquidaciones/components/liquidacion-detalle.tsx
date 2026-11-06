@@ -17,7 +17,6 @@ import { confirmarLiquidacionAction } from "../liquidacion.actions"
 import { AnularLiquidacionDialog } from "./anular-liquidacion-dialog"
 import type { LiquidacionDetalle } from "../liquidacion.types"
 import { exportLiquidacionToPDF } from "../utils/pdf"
-import { exportLiquidacionToExcel } from "../utils/excel"
 import { LiquidacionBackButton } from "./liquidacion-back-button"
 import { RegistrarPagoLiquidacionDialog } from "./registrar-pago-liquidacion-dialog"
 import { calcularResumen } from "../utils/resumen"
@@ -25,6 +24,22 @@ import { formatDate } from "@/lib/date/format"
 
 function formatMoneda(valor: number) {
   return `S/ ${valor.toFixed(2)}`
+}
+
+function FechaHora({
+  fecha,
+  hora,
+}: {
+  fecha: Date | null
+  hora: string | null
+}) {
+  if (!fecha) return <>-</>
+  return (
+    <span className="whitespace-nowrap">
+      {formatDate(fecha)}
+      {hora ? ` ${hora}` : ""}
+    </span>
+  )
 }
 
 export function LiquidacionDetalleView({
@@ -69,13 +84,6 @@ export function LiquidacionDetalleView({
           Exportar PDF
         </Button>
 
-        <Button
-          variant="outline"
-          onClick={() => exportLiquidacionToExcel(liquidacion)}
-        >
-          Exportar Excel
-        </Button>
-
         {liquidacion.estado === "BORRADOR" && (
           <Button onClick={handleConfirmar}>Confirmar</Button>
         )}
@@ -102,8 +110,7 @@ export function LiquidacionDetalleView({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Servicios de ingreso/salida</TableHead>
-                <TableHead>Movimientos adicionales</TableHead>
+                <TableHead>Servicios de subida y bajada</TableHead>
                 <TableHead>Periodo de salidas</TableHead>
                 <TableHead className="text-right">Total a pagar</TableHead>
               </TableRow>
@@ -113,7 +120,6 @@ export function LiquidacionDetalleView({
                 <TableCell>
                   {resumen.cantidadSalidas} contenedores retirados
                 </TableCell>
-                <TableCell>{resumen.cantidadMovimientos} movimientos</TableCell>
                 <TableCell>{periodo}</TableCell>
                 <TableCell className="text-right font-semibold">
                   {formatMoneda(resumen.total)}
@@ -129,37 +135,44 @@ export function LiquidacionDetalleView({
                 <TableHead>Concepto</TableHead>
                 <TableHead>Detalle</TableHead>
                 <TableHead className="text-center">Cantidad</TableHead>
+                <TableHead className="text-right">Precio</TableHead>
                 <TableHead className="text-right">Importe</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell className="font-semibold">
-                  Servicios de ingreso y salida
+                  Servicios de subida y bajada
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  Cobro por el ingreso y la salida de cada contenedor retirado
+                  Cobro por la subida y bajada de cada contenedor retirado
+                  (equivale al precio del primer día).
                 </TableCell>
                 <TableCell className="text-center">
                   {resumen.cantidadSalidas}
                 </TableCell>
+                <TableCell className="text-right">
+                  {formatMoneda(resumen.precioPromedioSubidaBajada)}
+                </TableCell>
                 <TableCell className="text-right font-semibold">
-                  {formatMoneda(resumen.montoPorSalidas)}
+                  {formatMoneda(resumen.montoPorSubidaBajada)}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-semibold">
-                  Movimientos adicionales
+                  Días adicionales de almacenamiento
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  Movimientos realizados por el almacén para retirar los
-                  contenedores
+                  Días de almacenamiento posteriores al primer día.
                 </TableCell>
                 <TableCell className="text-center">
-                  {resumen.cantidadMovimientos}
+                  {resumen.totalDiasAdicionales}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatMoneda(resumen.precioPromedioDiaAdicional)}
                 </TableCell>
                 <TableCell className="text-right font-semibold">
-                  {formatMoneda(resumen.montoPorMovimientos)}
+                  {formatMoneda(resumen.montoPorDiasAdicionales)}
                 </TableCell>
               </TableRow>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -168,12 +181,30 @@ export function LiquidacionDetalleView({
                 </TableCell>
                 <TableCell />
                 <TableCell />
+                <TableCell />
                 <TableCell className="text-right text-base font-bold">
                   {formatMoneda(resumen.total)}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
+
+          <div className="rounded-md border-l-4 border-[#138830] bg-muted/40 p-4 text-sm">
+            <p className="mb-1 font-semibold text-[#138830]">
+              Condiciones de cobro del almacenamiento
+            </p>
+            <p className="text-muted-foreground">
+              El precio de subida y bajada incluye el primer día de
+              almacenamiento del contenedor.
+            </p>
+            <p className="mt-2 text-muted-foreground">
+              El tiempo de almacenamiento se contabiliza por periodos completos
+              de 24 horas, contados desde la fecha y hora exactas de ingreso.
+              Superado el primer periodo de 24 horas, se considera un día
+              adicional de almacenamiento, y así sucesivamente por cada nuevo
+              periodo iniciado.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -190,12 +221,11 @@ export function LiquidacionDetalleView({
                 <TableHead>N° Contenedor</TableHead>
                 <TableHead>Medida</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>F. Ingreso</TableHead>
-                <TableHead>F. Salida</TableHead>
+                <TableHead>Ingreso</TableHead>
+                <TableHead>Salida</TableHead>
                 <TableHead className="text-right">Días</TableHead>
-                <TableHead className="text-right">P. Ing/Sal</TableHead>
-                <TableHead className="text-right">Movs</TableHead>
-                <TableHead className="text-right">Subtotal movs</TableHead>
+                <TableHead className="text-right">P. Sub/Baj</TableHead>
+                <TableHead className="text-right">P. días adic.</TableHead>
                 <TableHead className="text-right">Monto guía</TableHead>
               </TableRow>
             </TableHeader>
@@ -207,19 +237,55 @@ export function LiquidacionDetalleView({
                   <TableCell>{d.numeroContenedor}</TableCell>
                   <TableCell>{d.medidaContenedor}</TableCell>
                   <TableCell>{d.tipoContenedor}</TableCell>
-                  <TableCell>{formatDate(d.fechaIngreso)}</TableCell>
-                  <TableCell>{formatDate(d.fechaSalida)}</TableCell>
+                  <TableCell>
+                    <FechaHora fecha={d.fechaIngreso} hora={d.horaIngreso} />
+                  </TableCell>
+                  <TableCell>
+                    <FechaHora fecha={d.fechaSalida} hora={d.horaSalida} />
+                  </TableCell>
                   <TableCell className="text-right">
                     {d.diasAlmacenamiento ?? "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    {d.precioIngresoSalida?.toFixed(2) ?? "-"}
+                    {d.precioPrimerDia.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {d.cantidadMovimientos ?? "-"}
+                    {d.subtotalDiasAdicionales.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
+                    S/ {d.montoTotalGuia.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableBody>
+              {liquidacion.detalles.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell className="font-mono">{d.numeroGuia}</TableCell>
+                  <TableCell>{d.marcaContenedor}</TableCell>
+                  <TableCell>{d.numeroContenedor}</TableCell>
+                  <TableCell>{d.medidaContenedor}</TableCell>
+                  <TableCell>{d.tipoContenedor}</TableCell>
+                  <TableCell>
+                    <FechaHora fecha={d.fechaIngreso} hora={d.horaIngreso} />
+                  </TableCell>
+                  <TableCell>
+                    <FechaHora fecha={d.fechaSalida} hora={d.horaSalida} />
                   </TableCell>
                   <TableCell className="text-right">
-                    {d.subtotalMovimientos?.toFixed(2) ?? "-"}
+                    {d.diasAlmacenamiento ?? "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(d.precioPrimerDia > 0
+                      ? d.precioPrimerDia
+                      : (d.precioIngresoSalida ?? 0)
+                    ).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {d.diasAdicionales}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {d.subtotalDiasAdicionales.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
                     S/ {d.montoTotalGuia.toFixed(2)}
