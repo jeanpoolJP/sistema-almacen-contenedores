@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+// modules\reporte-inventario\repository\reporte-inventario.repository.ts
+
+import { prisma } from "@/lib/prisma"
 
 /**
  * Repositorio: solo acceso a datos, sin lógica de negocio ni formateo.
@@ -8,7 +10,7 @@ export const reporteInventarioRepository = {
   async obtenerCliente(clienteId: number) {
     return prisma.cliente.findUnique({
       where: { id: clienteId },
-    });
+    })
   },
 
   /**
@@ -27,7 +29,7 @@ export const reporteInventarioRepository = {
       orderBy: {
         fechaIngreso: "asc",
       },
-    });
+    })
   },
 
   /**
@@ -51,10 +53,10 @@ export const reporteInventarioRepository = {
         },
       },
       distinct: ["clienteId"],
-    });
+    })
 
     return guias
       .map((g) => g.cliente)
-      .filter((c): c is NonNullable<typeof c> => c !== null);
+      .filter((c): c is NonNullable<typeof c> => c !== null)
   },
-};
+}

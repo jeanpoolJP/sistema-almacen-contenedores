@@ -2,6 +2,8 @@
 
 "use server"
 
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
 import { renderToBuffer } from "@react-pdf/renderer"
 import { generarReporteInventarioSchema } from "../schema/reporte-inventario.schema"
 import { reporteInventarioService } from "../service/reporte-inventario.service"
@@ -55,7 +57,16 @@ export async function generarReporteInventarioPdf(
       }
     }
 
-    const buffer = await renderToBuffer(<ReporteInventarioPdf data={data} />)
+    const logoPath = join(
+      process.cwd(),
+      "public",
+      "krenco-logo-nombre-transparente.png"
+    )
+    const logo = await readFile(logoPath)
+    const logoSrc = `data:image/png;base64,${logo.toString("base64")}`
+    const buffer = await renderToBuffer(
+      <ReporteInventarioPdf data={data} logoSrc={logoSrc} />
+    )
     const fecha = new Date().toISOString().slice(0, 10)
     const nombreArchivo = `Inventario_${data.cliente.nombre.replace(
       /\s+/g,
