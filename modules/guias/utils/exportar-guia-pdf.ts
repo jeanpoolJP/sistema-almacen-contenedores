@@ -1,25 +1,46 @@
 // modules/guias/utils/exportar-guia-pdf.ts
 
 import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
+import autoTable, { type CellHookData } from "jspdf-autotable"
 
 import { formatearHora } from "./formatear-hora"
 import { formatearFecha } from "./formatear-fecha"
 import type { GuiaConRelaciones } from "../components/guia-con-relaciones.type"
 
-// ---------- Paleta KRENCO ----------
-const COLOR_PRIMARIO: [number, number, number] = [15, 23, 42] // slate-900
-const COLOR_ACENTO: [number, number, number] = [234, 88, 12] // orange-600
-const COLOR_GRIS_TEXTO: [number, number, number] = [100, 116, 139] // slate-500
-const COLOR_GRIS_CLARO: [number, number, number] = [241, 245, 249] // slate-100
-const COLOR_BLANCO: [number, number, number] = [255, 255, 255]
-const COLOR_VERDE: [number, number, number] = [22, 163, 74] // green-600
-const COLOR_AMBAR: [number, number, number] = [217, 119, 6] // amber-600
+// ============================================================
+// DISEÑO — identidad KRENCO: negro + verde #138830
+// ============================================================
 
-function formatMoneda(valor: number | null | undefined) {
-  if (valor === null || valor === undefined) return "—"
-  return `S/ ${valor.toFixed(2)}`
+type RGB = [number, number, number]
+
+const COLORS: Record<
+  | "brand"
+  | "brandSoft"
+  | "black"
+  | "greyLight"
+  | "line"
+  | "text"
+  | "muted"
+  | "amber",
+  RGB
+> = {
+  brand: [19, 136, 48], // #138830
+  brandSoft: [231, 244, 235],
+  black: [20, 20, 20],
+  greyLight: [245, 246, 247],
+  line: [215, 219, 224],
+  text: [34, 34, 34],
+  muted: [102, 112, 133],
+  amber: [217, 119, 6],
 }
+
+const MARGIN = 14
+const GAP = 6
+const FOOTER_Y_OFFSET = 10
+
+// Logo: public/krenco-logo-nombre-transparente.png (689 x 227 px)
+const LOGO_PATH = "/krenco-logo-nombre-transparente.png"
+const LOGO_RATIO = 689 / 227
 
 const METODOS_PAGO: Record<string, string> = {
   EFECTIVO: "Efectivo",
@@ -31,187 +52,269 @@ const METODOS_PAGO: Record<string, string> = {
 }
 
 const ESTADOS_GUIA: Record<string, string> = {
-  EN_ALMACEN: "En almacén",
-  DESPACHADO: "Despachado",
-  PENDIENTE: "Pendiente",
+  ALMACENADO: "Almacenado",
+  RETIRADO: "Retirado",
+  ANULADO: "Anulado",
 }
 
-export function exportarGuiaPDF(guia: GuiaConRelaciones) {
+const ESTADO_GUIA_COLOR: Record<string, RGB> = {
+  ALMACENADO: COLORS.brand,
+  RETIRADO: COLORS.black,
+  ANULADO: [220, 38, 38],
+}
+
+type Fila = [string, string]
+
+// ============================================================
+// LOGO
+// ============================================================
+
+let logoCache: string | null = null
+
+async function cargarLogo(): Promise<string | null> {
+  if (logoCache) return logoCache
+  try {
+    const res = await fetch(LOGO_PATH)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    logoCache = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(blob)
+    })
+    return logoCache
+  } catch {
+    return null
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function formatMoneda(valor: number | null | undefined): string {
+  if (valor === null || valor === undefined) return "—"
+  return `S/ ${valor.toFixed(2)}`
+}
+
+function getFinalY(doc: jsPDF): number {
+  return (
+    (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
+      ?.finalY ?? 0
+  )
+}
+
+function tituloSeccion(doc: jsPDF, texto: string, x: number, y: number) {
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(x, y - 3.4, 2, 3.4, "F")
+
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(9.5)
+  doc.setTextColor(...COLORS.black)
+  doc.text(texto, x + 4.5, y)
+}
+
+/** Dibuja título + tabla de datos (etiqueta / valor) y devuelve la Y final. */
+function bloque(
+  doc: jsPDF,
+  titulo: string,
+  filas: Fila[],
+  x: number,
+  y: number,
+  w: number,
+  onCell?: (data: CellHookData) => void
+): number {
+  const pageWidth = doc.internal.pageSize.getWidth()
+  tituloSeccion(doc, titulo, x, y)
+
+  autoTable(doc, {
+    startY: y + 2.5,
+    margin: { left: x, right: pageWidth - x - w },
+    tableWidth: w,
+    body: filas,
+    theme: "plain",
+    styles: {
+      fontSize: 8,
+      cellPadding: { top: 1.4, bottom: 1.4, left: 2, right: 2 },
+      textColor: COLORS.text,
+      lineColor: COLORS.line,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", textColor: COLORS.muted, cellWidth: 33 },
+      1: { cellWidth: "auto" },
+    },
+    alternateRowStyles: { fillColor: COLORS.greyLight },
+    didParseCell: (data) => {
+      if (data.column.index === 1 && data.cell.raw === "—") {
+        data.cell.styles.textColor = [148, 163, 184]
+        data.cell.styles.fontStyle = "italic"
+      }
+      onCell?.(data)
+    },
+  })
+
+  return getFinalY(doc)
+}
+
+// ============================================================
+// EXPORT PRINCIPAL
+// ============================================================
+
+export async function exportarGuiaPDF(guia: GuiaConRelaciones) {
+  const logo = await cargarLogo()
   const doc = new jsPDF({ unit: "mm", format: "a4" })
   const pageWidth = doc.internal.pageSize.getWidth()
-  const marginX = 14
-  let cursorY = 0
+  const pageHeight = doc.internal.pageSize.getHeight()
 
-  // ================= ENCABEZADO =================
-  doc.setFillColor(...COLOR_PRIMARIO)
-  doc.rect(0, 0, pageWidth, 32, "F")
+  const colW = (pageWidth - MARGIN * 2 - GAP) / 2
+  const xL = MARGIN
+  const xR = MARGIN + colW + GAP
 
-  // Franja de acento
-  doc.setFillColor(...COLOR_ACENTO)
-  doc.rect(0, 32, pageWidth, 1.5, "F")
-
-  doc.setTextColor(...COLOR_BLANCO)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(20)
-  doc.text("KRENCO", marginX, 14)
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(203, 213, 225) // slate-300
-  doc.text("Almacén de Contenedores", marginX, 20)
-
-  // Bloque derecho: número de guía + estado
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(13)
-  doc.setTextColor(...COLOR_BLANCO)
-  doc.text(`GUÍA N.° ${guia.numeroGuia}`, pageWidth - marginX, 14, {
-    align: "right",
-  })
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(203, 213, 225)
-  const estadoLabel = ESTADOS_GUIA[guia.estado] ?? guia.estado
-  doc.text(`Estado: ${estadoLabel}`, pageWidth - marginX, 20, {
-    align: "right",
-  })
-
-  const fechaGeneracion = formatearFecha(new Date())
-  doc.text(`Generado: ${fechaGeneracion}`, pageWidth - marginX, 25, {
-    align: "right",
-  })
-
-  cursorY = 40
-
-  // ================= HELPERS DE SECCIÓN =================
-  function tituloSeccion(titulo: string) {
-    doc.setFillColor(...COLOR_ACENTO)
-    doc.rect(marginX, cursorY, 3, 4.5, "F")
-
+  // ---------------- ENCABEZADO ----------------
+  if (logo) {
+    const logoW = 52
+    doc.addImage(logo, "PNG", MARGIN, 9, logoW, logoW / LOGO_RATIO)
+  } else {
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(10)
-    doc.setTextColor(...COLOR_PRIMARIO)
-    doc.text(titulo, marginX + 6, cursorY + 3.8)
-
-    cursorY += 8
+    doc.setFontSize(20)
+    doc.setTextColor(...COLORS.brand)
+    doc.text("KRENCO", MARGIN, 20)
   }
 
-  function tablaDatos(filas: [string, string][]) {
-    autoTable(doc, {
-      startY: cursorY,
-      pageBreak: "avoid",
-      rowPageBreak: "avoid",
-      margin: { left: marginX, right: marginX },
-      body: filas,
-      theme: "plain",
-      styles: {
-        fontSize: 8.5,
-        cellPadding: { top: 1.5, bottom: 1.5, left: 2, right: 2 },
-        textColor: [30, 41, 59],
-      },
-      columnStyles: {
-        0: {
-          fontStyle: "bold",
-          textColor: COLOR_GRIS_TEXTO,
-          cellWidth: 55,
-        },
-        1: { cellWidth: "auto" },
-      },
-      alternateRowStyles: { fillColor: COLOR_GRIS_CLARO },
-      didParseCell: (data) => {
-        if (data.column.index === 1 && data.cell.raw === "—") {
-          data.cell.styles.textColor = [148, 163, 184]
-          data.cell.styles.fontStyle = "italic"
-        }
-      },
-    })
-    // @ts-expect-error - jspdf-autotable añade esta propiedad en runtime
-    cursorY = doc.lastAutoTable.finalY + 8
-  }
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.muted)
+  doc.text("GUÍA DE INTERNAMIENTO", pageWidth - MARGIN, 13, { align: "right" })
 
-  function lineaSeparadora() {
-    doc.setDrawColor(226, 232, 240)
-    doc.setLineWidth(0.2)
-    doc.line(marginX, cursorY - 4, pageWidth - marginX, cursorY - 4)
-  }
+  doc.setFontSize(18)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(guia.numeroGuia, pageWidth - MARGIN, 21.5, { align: "right" })
 
-  // ================= CLIENTE =================
-  tituloSeccion("Datos del cliente")
-  tablaDatos([
+  doc.setFontSize(8)
+  doc.setTextColor(...(ESTADO_GUIA_COLOR[guia.estado] ?? COLORS.text))
+  doc.text(
+    `Estado: ${ESTADOS_GUIA[guia.estado] ?? guia.estado}`,
+    pageWidth - MARGIN,
+    27,
+    { align: "right" }
+  )
+
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(...COLORS.muted)
+  doc.text(`Generado: ${formatearFecha(new Date())}`, pageWidth - MARGIN, 31, {
+    align: "right",
+  })
+
+  doc.setDrawColor(...COLORS.brand)
+  doc.setLineWidth(0.8)
+  doc.line(MARGIN, 34, pageWidth - MARGIN, 34)
+
+  let y = 44
+
+  // ---------------- FILA 1: CONTENEDOR | CLIENTE ----------------
+  const cargaLabel =
+    guia.cargaContenedor === "LLENO"
+      ? "Lleno"
+      : guia.cargaContenedor === "VACIO"
+        ? "Vacío"
+        : "—"
+
+  const yContenedor = bloque(
+    doc,
+    "Contenedor",
     [
-      "Documento",
-      guia.cliente
-        ? `${guia.cliente.tipoDocumento} ${guia.cliente.numeroDocumento}`
+      ["Número", guia.contenedor.numeroContenedor],
+      ["Marca", guia.contenedor.marca],
+      ["Medida", `${guia.contenedor.medida} pies`],
+      ["Tipo", guia.contenedor.tipo === "REEFER" ? "Reefer" : "Normal"],
+      ["Estado de carga", cargaLabel],
+    ],
+    xL,
+    y,
+    colW
+  )
+
+  const yCliente = bloque(
+    doc,
+    "Cliente",
+    [
+      [
+        "Documento",
+        guia.cliente
+          ? `${guia.cliente.tipoDocumento} ${guia.cliente.numeroDocumento}`
+          : "—",
+      ],
+      ["Nombre / Razón social", guia.cliente?.nombreCompleto ?? "—"],
+    ],
+    xR,
+    y,
+    colW
+  )
+
+  y = Math.max(yContenedor, yCliente) + 9
+
+  // ---------------- FILA 2: INGRESO | SALIDA ----------------
+  const yIngreso = bloque(
+    doc,
+    "Ingreso al almacén",
+    [
+      ["Fecha", formatearFecha(guia.fechaIngreso)],
+      ["Hora", formatearHora(guia.horaIngreso)],
+      ["Empresa de transporte", guia.empresaTransporteIngreso.nombre],
+      ["Placa", guia.vehiculoIngreso.placa],
+      ["Conductor", guia.conductorIngreso.nombreCompleto],
+      ["Licencia", guia.conductorIngreso.numeroLicencia],
+    ],
+    xL,
+    y,
+    colW
+  )
+
+  const salidaFilas: Fila[] = guia.fechaSalida
+    ? [
+        ["Fecha", formatearFecha(guia.fechaSalida)],
+        ["Hora", guia.horaSalida ? formatearHora(guia.horaSalida) : "—"],
+        ["Empresa de transporte", guia.empresaTransporteSalida?.nombre ?? "—"],
+        ["Placa", guia.vehiculoSalida?.placa ?? "—"],
+        ["Conductor", guia.conductorSalida?.nombreCompleto ?? "—"],
+        ["Licencia", guia.conductorSalida?.numeroLicencia ?? "—"],
+      ]
+    : [
+        ["Fecha", "—"],
+        ["Hora", "—"],
+        ["Empresa de transporte", "—"],
+        ["Placa", "—"],
+        ["Conductor", "—"],
+        ["Licencia", "—"],
+      ]
+
+  const ySalida = bloque(doc, "Salida del almacén", salidaFilas, xR, y, colW)
+
+  y = Math.max(yIngreso, ySalida) + 9
+
+  // ---------------- FILA 3: PRECIO | PAGO ----------------
+  const tipoPrecioLabel =
+    guia.tipoPrecio === "ESTANDAR"
+      ? "Estándar"
+      : guia.tipoPrecio === "PERSONALIZADO"
+        ? "Personalizado"
+        : "Espacio alquilado"
+
+  const filasPrecio: Fila[] = [
+    [
+      "Días de almacenamiento",
+      guia.diasAlmacenamiento !== null && guia.diasAlmacenamiento !== undefined
+        ? String(guia.diasAlmacenamiento)
         : "—",
     ],
-    ["Nombre / Razón social", guia.cliente?.nombreCompleto ?? "—"],
-  ])
-
-  // ================= CONTENEDOR =================
-  tituloSeccion("Contenedor")
-  tablaDatos([
-    ["Número", guia.contenedor.numeroContenedor],
-    ["Marca", guia.contenedor.marca],
-    ["Medida", `${guia.contenedor.medida} pies`],
-    ["Tipo", guia.contenedor.tipo === "REEFER" ? "Reefer" : "Normal"],
-  ])
-
-  // ================= INGRESO =================
-  tituloSeccion("Ingreso al almacén")
-  tablaDatos([
-    ["Fecha", formatearFecha(guia.fechaIngreso)],
-    ["Hora", formatearHora(guia.horaIngreso)],
-    ["Empresa de transporte", guia.empresaTransporteIngreso.nombre],
-    ["Placa", guia.vehiculoIngreso.placa],
-    ["Conductor", guia.conductorIngreso.nombreCompleto],
-    ["Licencia", guia.conductorIngreso.numeroLicencia],
-  ])
-
-  // ================= SALIDA =================
-  tituloSeccion("Salida del almacén")
-  if (guia.fechaSalida) {
-    tablaDatos([
-      ["Fecha", formatearFecha(guia.fechaSalida)],
-      ["Hora", guia.horaSalida ? formatearHora(guia.horaSalida) : "—"],
-      ["Empresa de transporte", guia.empresaTransporteSalida?.nombre ?? "—"],
-      ["Placa", guia.vehiculoSalida?.placa ?? "—"],
-      ["Conductor", guia.conductorSalida?.nombreCompleto ?? "—"],
-      ["Licencia", guia.conductorSalida?.numeroLicencia ?? "—"],
-    ])
-  } else {
-    doc.setFont("helvetica", "italic")
-    doc.setFontSize(9.5)
-    doc.setTextColor(...COLOR_GRIS_TEXTO)
-    doc.text(
-      "El contenedor aún no ha salido del almacén.",
-      marginX,
-      cursorY + 2
-    )
-    cursorY += 10
-  }
-
-  // ================= ALMACENAMIENTO Y PRECIO =================
-  doc.addPage()
-  cursorY = 20
-
-  tituloSeccion("Almacenamiento y precio")
-
-  const filasPrecio: [string, string][] = [
-    ["Días de almacenamiento", String(guia.diasAlmacenamiento)],
-    [
-      "Tipo de precio",
-      guia.tipoPrecio === "ESTANDAR"
-        ? "Estándar"
-        : guia.tipoPrecio === "PERSONALIZADO"
-          ? "Personalizado"
-          : "Espacio alquilado",
-    ],
+    ["Tipo de precio", tipoPrecioLabel],
   ]
 
   if (guia.tipoPrecio === "ESPACIO_ALQUILADO") {
     filasPrecio.push(
       ["Precio ingreso / salida", formatMoneda(guia.precioIngresoSalida)],
-      ["Cantidad de movimientos", String(guia.cantidadMovimientos ?? 0)],
+      ["Cant. de movimientos", String(guia.cantidadMovimientos ?? 0)],
       ["Precio por movimiento", formatMoneda(guia.precioMovimiento)],
       ["Subtotal movimientos", formatMoneda(guia.subtotalMovimientos)]
     )
@@ -223,7 +326,6 @@ export function exportarGuiaPDF(guia: GuiaConRelaciones) {
   }
 
   filasPrecio.push(["Subtotal", formatMoneda(guia.subtotal)])
-
   filasPrecio.push([
     guia.tratamientoIGV === "CON_IGV"
       ? `IGV (${guia.porcentajeIGV ?? 18}%)`
@@ -233,39 +335,20 @@ export function exportarGuiaPDF(guia: GuiaConRelaciones) {
       : "No incluye",
   ])
 
-  tablaDatos(filasPrecio)
-
-  // Caja de Monto Total destacada
-  doc.setFillColor(...COLOR_PRIMARIO)
-  doc.roundedRect(marginX, cursorY, pageWidth - marginX * 2, 16, 2, 2, "F")
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(203, 213, 225)
-  doc.text("MONTO TOTAL", marginX + 5, cursorY + 6.5)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(15)
-  doc.setTextColor(...COLOR_BLANCO)
-  doc.text(
-    guia.montoTotal !== null && guia.montoTotal !== undefined
-      ? formatMoneda(guia.montoTotal)
-      : "Pendiente de calcular",
-    pageWidth - marginX - 5,
-    cursorY + 10,
-    { align: "right" }
+  const yPrecio = bloque(
+    doc,
+    "Almacenamiento y precio",
+    filasPrecio,
+    xL,
+    y,
+    colW
   )
-  cursorY += 24
-
-  // ================= PAGO =================
-  tituloSeccion("Información de pago")
 
   const esPagado = guia.estadoPago === "PAGADO"
-
-  autoTable(doc, {
-    startY: cursorY,
-    pageBreak: "avoid",
-    rowPageBreak: "avoid",
-    margin: { left: marginX, right: marginX },
-    body: [
+  const yPago = bloque(
+    doc,
+    "Información de pago",
+    [
       ["Estado", esPagado ? "Pagado" : "Pendiente"],
       [
         "Método de pago",
@@ -275,66 +358,83 @@ export function exportarGuiaPDF(guia: GuiaConRelaciones) {
       ["Fecha de pago", guia.fechaPago ? formatearFecha(guia.fechaPago) : "—"],
       ["Hora de pago", guia.horaPago ? formatearHora(guia.horaPago) : "—"],
     ],
-    theme: "plain",
-    styles: {
-      fontSize: 8.5,
-      cellPadding: { top: 1.5, bottom: 1.5, left: 2, right: 2 },
-      textColor: [30, 41, 59],
-    },
-    columnStyles: {
-      0: { fontStyle: "bold", textColor: COLOR_GRIS_TEXTO, cellWidth: 55 },
-      1: { cellWidth: "auto" },
-    },
-    alternateRowStyles: { fillColor: COLOR_GRIS_CLARO },
-    didParseCell: (data) => {
+    xR,
+    y,
+    colW,
+    (data) => {
       if (data.column.index === 1 && data.row.index === 0) {
         data.cell.styles.fontStyle = "bold"
-        data.cell.styles.textColor = esPagado ? COLOR_VERDE : COLOR_AMBAR
+        data.cell.styles.textColor = esPagado ? COLORS.brand : COLORS.amber
       }
-    },
-  })
-  // @ts-expect-error - runtime prop
-  cursorY = doc.lastAutoTable.finalY + 8
+    }
+  )
 
-  // ================= OBSERVACIONES =================
+  y = Math.max(yPrecio, yPago) + 8
+
+  // ---------------- MONTO TOTAL ----------------
+  const boxH = 15
+  doc.setFillColor(...COLORS.brandSoft)
+  doc.rect(MARGIN, y, pageWidth - MARGIN * 2, boxH, "F")
+  doc.setFillColor(...COLORS.brand)
+  doc.rect(MARGIN, y, 1.8, boxH, "F")
+
+  const textY = y + boxH / 2 + 1.6
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(10)
+  doc.setTextColor(...COLORS.black)
+  doc.text("MONTO TOTAL", MARGIN + 8, textY)
+
+  doc.setFontSize(15)
+  doc.setTextColor(...COLORS.brand)
+  doc.text(
+    guia.montoTotal !== null && guia.montoTotal !== undefined
+      ? formatMoneda(guia.montoTotal)
+      : "Pendiente de calcular",
+    pageWidth - MARGIN - 6,
+    textY,
+    { align: "right" }
+  )
+
+  y += boxH + 9
+
+  // ---------------- OBSERVACIONES ----------------
   if (guia.observaciones) {
-    tituloSeccion("Observaciones")
+    tituloSeccion(doc, "Observaciones", MARGIN, y)
+
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(9.5)
-    doc.setTextColor(51, 65, 85)
-    const lineas = doc.splitTextToSize(
+    doc.setFontSize(8.5)
+    doc.setTextColor(...COLORS.text)
+
+    const MAX_LINEAS = 5
+    let lineas = doc.splitTextToSize(
       guia.observaciones,
-      pageWidth - marginX * 2
-    )
-    doc.text(lineas, marginX, cursorY)
-    cursorY += lineas.length * 4.5 + 6
+      pageWidth - MARGIN * 2
+    ) as string[]
+    if (lineas.length > MAX_LINEAS) {
+      lineas = lineas.slice(0, MAX_LINEAS)
+      lineas[MAX_LINEAS - 1] =
+        lineas[MAX_LINEAS - 1].replace(/\s*\S*$/, "") + "…"
+    }
+    doc.text(lineas, MARGIN, y + 6)
   }
 
-  // ================= PIE DE PÁGINA (todas las páginas) =================
-  const totalPaginas = doc.getNumberOfPages()
-  for (let i = 1; i <= totalPaginas; i++) {
-    doc.setPage(i)
-    const pageHeight = doc.internal.pageSize.getHeight()
+  // ---------------- PIE DE PÁGINA ----------------
+  const footerY = pageHeight - FOOTER_Y_OFFSET
+  doc.setDrawColor(...COLORS.brand)
+  doc.setLineWidth(0.4)
+  doc.line(MARGIN, footerY - 4, pageWidth - MARGIN, footerY - 4)
 
-    doc.setDrawColor(226, 232, 240)
-    doc.setLineWidth(0.2)
-    doc.line(marginX, pageHeight - 14, pageWidth - marginX, pageHeight - 14)
-
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(8)
-    doc.setTextColor(...COLOR_GRIS_TEXTO)
-    doc.text(
-      "KRENCO — Almacén de Contenedores · Documento generado automáticamente",
-      marginX,
-      pageHeight - 9
-    )
-    doc.text(
-      `Página ${i} de ${totalPaginas}`,
-      pageWidth - marginX,
-      pageHeight - 9,
-      { align: "right" }
-    )
-  }
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.muted)
+  doc.text(
+    "KRENCO | Almacén de contenedores · Documento generado automáticamente",
+    MARGIN,
+    footerY
+  )
+  doc.text(`Guía ${guia.numeroGuia}`, pageWidth - MARGIN, footerY, {
+    align: "right",
+  })
 
   doc.save(`Guia-${guia.numeroGuia}-KRENCO.pdf`)
 }
